@@ -1,209 +1,202 @@
-# Prototype — intention de mouvement des bougies
+# Éditeur de scène — groupe Bougies
 
-**Statut :** aperçu local de **diagnostic**, non approuvé. Le fond
-`reconstruction-seed-4243.png` n’est ni un master ni une œuvre validée. Ce
-prototype ne génère aucune vidéo, n’appelle aucun moteur et ne modifie aucun
-média.
+**Statut :** prototype local de **diagnostic**, non approuvé. Le fond
+`reconstruction-seed-4243.png` n’est ni un master ni une œuvre validée. Cette
+passe ne produit aucune vidéo, n’appelle aucun moteur et ne modifie aucun média.
 
 Libellé affiché, exact :
 
 > Motion intention preview—not a prediction of AI output.
 
-## 1. Ouvrir l’aperçu
+## 1. Ouvrir
 
-Le navigateur bloque la lecture pixel d’une image locale en `file://`. Servir le
-dépôt en statique, puis ouvrir la page :
+La lecture pixel d’une image locale est bloquée en `file://`. Servir le dépôt en
+statique :
 
 ```sh
-cd studio-ltx
-python3 -m http.server 8791
+cd candle-motion-public
+python3 -m http.server 8794
 ```
 
-Adresse : `localhost:8791/docs/prototypes/candle-motion/`.
-
-Aucun build, aucune dépendance, aucun réseau au-delà du fichier local. La page
-est un HTML autonome (CSS + JS embarqués) ; seul le PNG de fond est lu à côté.
+Puis ouvrir `localhost:8791/docs/prototypes/candle-motion/`. Aucun build, aucune
+dépendance, aucun service. Une seule requête locale est faite **à l’import d’un
+projet** pour relire les octets du PNG et vérifier son SHA-256.
 
 ## 2. Fichiers
 
 | Fichier | Rôle |
 |---|---|
-| `index.html` | page autonome, cœur de rendu, interface, contrôles |
-| `motion-plan.candles-4243.json` | instance de plan, source de vérité |
-| `motion-plan.schema.json` | schéma JSON du plan |
-| `EXCALIDRAW.md` | étude d’une page, recommandation de non-adoption |
-| `../../../tests/test_candle_motion_plan.mjs` | tests déterministes Node |
+| `index.html` | page autonome, cœur, interface, sauvegarde/import |
+| `motion-plan.candles-4243.json` | projet v2, source de vérité |
+| `motion-plan.schema.json` | schéma du projet v2 |
+| `RECIPES.md` | trois recettes : bougies, feuillage, tissu |
+| `EXCALIDRAW.md` | étude de non-adoption |
+| `../../../tests/test_candle_motion_plan.mjs` | tests Node déterministes |
 
-Le plan est aussi **embarqué** dans la page entre les marqueurs
-`PLAN:BEGIN` / `PLAN:END`. Le test vérifie qu’il est **identique** au JSON
-externe ; toute divergence doit être corrigée dans les deux.
+Le projet est aussi **embarqué** entre `PLAN:BEGIN` / `PLAN:END`. Le test exige
+l’égalité exacte avec le JSON externe.
 
-## 3. Structure du plan
+## 3. Projet v2
 
-Trois couches restent séparées :
+Le format `candle-motion-project/v2` contient :
 
-- `artistIntent` — intention et non-objectifs ; jamais une garantie.
-- `previewSettings` — preset, régions visibles, vitesse de lecture.
-- `engineControls` — `conditioningSignals: []`. **Une annotation n’est pas un
-  signal de conditionnement LTX.**
+- l’asset source : `id`, chemin relatif, dimensions, SHA-256, espace couleur ;
+- les **éléments** : support polygonal, ancres, animation, opération, overrides ;
+- un **groupe** `Bougies` qui référence 8 flammes et 7 lumières ;
+- des **presets versionnés** ; `vivant` est le défaut, `sobre` est le preset
+  retenu ;
+- une **timeline/loop** : `T = 6,000 s`, 24 fps, 144 échantillons `k·T/N`,
+  endpoint exclusif, aucune frame finale dupliquée ;
+- la graine déterministe `4243` ;
+- le statut d’approbation ;
+- des **propositions** de détection, vides dans cette instance.
 
-Le record MOTION existant (`motion.bougies.flame-lock@1.0.0`) est réutilisé par
-référence conceptuelle : même caméra fixe `A-01`, mêmes invariants, même statut
-provisoire. Le plan ajoute uniquement les données de régions nécessaires.
+Le fichier projet ne duplique **jamais** l’image. L’import vérifie d’abord les
+dimensions et le SHA-256 ; une différence bloque le chargement et demande un
+remappage des masques. Le format privilégie les fichiers JSON à une base : aucune
+migration SQLite n’est nécessaire pour ce prototype.
 
-### Régions
+## 4. Précédence et couches
 
-Coordonnées normalisées `[x, y]` (x divisé par la largeur, y par la hauteur) ;
-les valeurs entre parenthèses sont les pixels correspondants en 1280×1024, pour
-l’audit.
+Ordre strict :
 
-| ID | Rôle | Support (px) | Ancre / centre (px) | Phase |
-|---|---|---|---:|---:|
-| `flame.tl-blue` | animé | 331,288 → 364,321 | ancre 347,5 · 315 | 0,00 |
-| `flame.tr-brown-a` | animé | 946,236 → 993,285 | ancre 969,5 · 279 | 0,37 |
-| `flame.tr-brown-b` | animé | 1018,239 → 1065,283 | ancre 1042 · 277 | 0,71 |
-| `flame.mr-blue` | animé | 1064,485 → 1091,512 | ancre 1077 · 508 | 0,12 |
-| `flame.left-a` | animé | 176,604 → 203,630 | ancre 189 · 626 | 0,55 |
-| `flame.left-b` | animé | 244,604 → 271,632 | ancre 257,5 · 628 | 0,83 |
-| `flame.lr-a` | animé | 1026,718 → 1068,756 | ancre 1047 · 751 | 0,26 |
-| `flame.lr-b` | animé | 1069,721 → 1111,755 | ancre 1090 · 750 | 0,64 |
-| `light.tl-niche` | lumière | 285,210 → 402,356 | centre 347 · 316 | 0,00 |
-| `light.tr-niche` | lumière | 898,198 → 1118,320 | centre 1005 · 268 | 0,18 |
-| `light.mr-niche` | lumière | 1040,452 → 1128,550 | centre 1077 · 508 | 0,42 |
-| `light.left-niche` | lumière | 98,518 → 328,662 | centre 222 · 608 | 0,27 |
-| `light.lr-niche` | lumière | 1002,698 → 1118,798 | centre 1065 · 752 | 0,61 |
-| `light.left-floor` | lumière | 110,838 → 340,990 | centre 225 · 918 | 0,35 |
-| `light.lr-floor` | lumière | 990,812 → 1128,942 | centre 1060 · 878 | 0,72 |
+```
+override d’élément  >  réglage du groupe  >  défaut du preset
+```
 
-Chaque flamme porte `anchor` (mèche), `height` et `width` normalisés, une
-amplitude, une harmonique entière, une phase et une inclinaison. Chaque région
-de lumière porte un centre, des rayons, un gain linéaire, une couleur chaude et
-la liste de ses flammes sources.
+L’inspecteur affiche la couche réellement utilisée :
 
-Les huit flammes correspondent au comptage de la frame 0 de la vidéo rejetée :
-**5 ouvertures, 8 flammes**. Les rebords éclairés ne sont pas des flammes.
+- badge `preset` : valeur par défaut ;
+- badge `groupe` : réglage partagé ;
+- badge `surchargé` : override local ;
+- badge `élément` : valeur intrinsèque (phase, ancre, taille, support).
 
-## 4. Rendu déterministe
+Le bouton `↺` retire l’override quand il existe. `Hériter de tout le groupe`
+efface toutes les surcharges d’un élément. `Réinitialiser au preset` retire les
+réglages du groupe ; les overrides d’éléments restent, par choix explicite.
 
-`renderFrame(fond, plan, temps, …)` est une fonction pure vis-à-vis de ses
-entrées : même fond décodé, mêmes réglages, même graine et même temps donnent
-les mêmes octets. L’interface n’utilise `requestAnimationFrame` que pour faire
-avancer l’horloge de lecture ; le rendu reçoit toujours un temps explicite.
+## 5. Workflow Bougies
 
-- Espace de travail : **sRGB linéaire**, décodage par table 256, encodage par
-  table 65536.
-- Lumière additive bornée ; épaulement doux au-dessus de **0,78** linéaire.
-  Aucun clipping dur par défaut.
-- Aucun `Math.random`, `Date.now` ou `performance.now` dans le cœur.
-- Bruit micro déterministe dérivé de `sha` non cryptographique de
-  `id + ":" + seed` (FNV-1a) ; il ne change jamais avec le temps.
-- Le seed `4243` ne sert qu’à ces micro-déphasages, pas à une génération.
+1. Le groupe est sélectionné dans la scène ; ses réglages partagés s’appliquent
+   aux 15 éléments.
+2. Choisir un preset versionné. `Sobre` est destiné à un mouvement retenu ;
+   `Courant d’air` est volontairement plus démonstratif.
+3. Ajuster amplitude, vitesse harmonique, inclinaison, intensité, variation et
+   vent (direction, force, réponse par défaut). La graine est projet-globale.
+4. Sélectionner une flamme dans la scène **ou dans l’image**. `Maj`/`Ctrl`/`Cmd`
+   ajoute ou retire un élément à la sélection. Le groupe reste sélectionnable.
+5. Régler ses overrides : amplitude, vitesse, inclinaison, multiplicateur
+   d’intensité, réponse au vent, variation, phase, taille, ancre de mèche.
+6. Vérifier sa ou ses lumières liées. Chaque flamme doit rester reliée à une
+   région de lumière locale ; les pools sont additifs et bornés.
+7. Désactiver l’animation d’un élément ou du groupe conserve l’image statique et
+   le support. Rien n’est masqué, aucune flamme n’est dupliquée.
+8. `Comparer` partage le canvas de scène entre le fond original et le rendu ;
+   le curseur règle la séparation. C’est un avant/après de preview, pas un rendu
+   final.
 
-### Boucle
+Le vent est **commun** (même signal périodique) mais chaque flamme garde sa phase
+et sa réponse. Le mode `synchronisée` supprime le bruit individuel ajouté ;
+`corrélée` combine vent commun et micro-réponse ; `indépendante` privilégie la
+micro-réponse. Aucun mode ne copie une flamme sur l’autre.
 
-- `T = 6,000 s`, `fps = 24`, `N = 144`.
-- `u = ((t / T) mod 1 + 1) mod 1` ; toutes les oscillations utilisent des
-  harmoniques **entières**, donc valeur et vitesse sont compatibles au bord.
-- `render(0)` et `render(T)` sont **bit-identiques** (tolérance 0) ; le test le
-  vérifie octet par octet.
-- Aucun adoucissement de chaque flamme vers l’arrêt au bord.
-- Temps d’échantillonnage : `k·T/N` pour `k = 0…N−1`, **sans** frame finale
-  dupliquée. Le dernier temps est `5,958333 s`.
+## 6. Sélection et corrections de masque
 
-## 5. Protection et nettoyage local
+- Sélection depuis l’image ou la liste de scène.
+- Multi-sélection et inspecteur de sélection multiple.
+- Outil **polygone** : déplacement des sommets, ajout/retrait, suppression d’un
+  sommet sélectionné.
+- Outil **rectangle** : ajoute une zone autorisée au support.
+- Outil **brosse** : ajoute des cercles au support.
+- Les extras étendent le support, pas l’ancre. Une correction de masque ne crée
+  pas de patch rectangulaire de suppression : la suppression de la flamme
+  statique reste elliptique et bornée par le support.
+- Les supports de flammes restent disjoints ; une lumière peut chevaucher une
+  flamme. La lumière est appliquée avant la flamme.
 
-**Pixels protégés :** tout ce qui est hors de l’union des supports déclarés. Ces
-pixels sont recopiés **octet pour octet** depuis le fond décodé ; ils ne sont
-jamais décodés puis ré-encodés. Le test compare le rendu au fond décodé dans le
-même pipeline — pas au fichier PNG compressé.
+## 7. Opérations
 
-**Chevauchement :** les supports animés sont disjoints (vérifié par le test).
-Un support de lumière peut chevaucher un support animé. Dans ce cas la lumière
-est appliquée d’abord, la flamme ensuite ; l’union reste protégée.
+| Opération | Effet réel |
+|---|---|
+| **Protéger** | aucune écriture procédurale ; le pixel d’origine reste |
+| **Animer** | applique la recette bougies si l’animation est active |
+| **Transformer** | stocke un plan proposé ; **aucune exécution** |
 
-**Nettoyage de la flamme statique :** dans chaque support animé, l’ancienne
-flamme est atténuée vers une couleur de fond sombre estimée sur le pourtour du
-support (30ᵉ percentile), avec une ellipse douce. La flamme procédurale est
-ensuite dessinée par-dessus. Ce n’est **pas** une reconstruction du mur : les
-pixels résiduels de l’ancien halo peuvent subsister. Aucune flamme fixe n’est
-laissée à côté d’une seconde flamme mobile ; la flamme d’origine est remplacée
-dans son support.
+Une transformation comme « faire la nuit » exige un plan couvrant ciel, sources,
+ombres et reflets. Le champ texte est une note de proposition, pas un contrôle
+moteur. Aucun adaptateur de transformation n’est branché.
 
-**Lumière :** pools additifs locaux, modulés par la moyenne de leurs flammes
-sources. Pas de pompage global synchronisé, pas de variation de l’architecture,
-pas de nouvel objet, pas de particule. Les reflets de sol sont deux pools
-faibles et bornés.
+## 8. Détection
 
-## 6. Interface
+La détection automatique n’est **pas** implémentée dans cet incrément. Le format
+prévoit des propositions avec catégorie, support/masque, confiance ou incertitude
+et statut. Une proposition confirmée est créée en **Protéger** : elle ne devient
+jamais une animation silencieuse. Les catégories non supportées restent non
+exécutables. La segmentation promptable et la reconnaissance sémantique sont deux
+capacités distinctes ; aucune n’est revendiquée ici.
 
-- Lecture / pause, remise à zéro, scrub temporel, numéro de frame.
-- Quatre presets : Calme, Bougies vivantes, Courant d’air, Veilleuse.
-- Sélection d’une région, réglage amplitude / gain, vitesse (harmonique),
-  phase, inclinaison.
-- Édition des sommets du support à la souris ; le support protège, il ne
-  déplace pas la mèche.
-- Superposition des régions activable.
-- Contrôles : déterminisme, bord de boucle, continuité de vitesse, protection
-  pixel, mouvement réel, échantillons, luminance et tableau des phases.
+## 9. Boucle, déterminisme, lumière
 
-Les contrôles tournent à **320×256** pour rester réactifs. La protection est
-indépendante de la résolution ; les valeurs de luminance sont des mesures
-réduites, pas une preuve artistique.
+- `renderFrame(fond, projet, temps, …)` reste la seule autorité de rendu ;
+  `requestAnimationFrame` ne fait qu’avancer l’horloge de lecture.
+- Toutes les oscillations utilisent des fréquences entières de `u`; le bruit de
+  vent est composé de sinus seedés. `render(0)` et `render(T)` sont
+  bit-identiques.
+- Même projet, même graine, même temps ⇒ même image. Aucun `Math.random`,
+  `Date.now` ou `performance.now` dans le cœur.
+- La lumière est additive, locale, liée aux flammes sources. Ce n’est pas une
+  reconstruction physique : pas d’occlusion, diffusion ou température mesurée.
+- Les flammes restent stylisées. Le nettoyage atténue la flamme statique ; il ne
+  reconstruit pas la paroi.
 
-## 7. Tests
+## 10. Contrôles
+
+Le bouton `Lancer les vérifications` mesure à **320×256** :
+
+- précédence élément/groupe/preset ;
+- déterminisme et boucle bit-identique ;
+- continuité de vitesse au bord ;
+- protection hors supports ;
+- mouvement réel ;
+- désactivation complète : frame identique au fond, éléments conservés ;
+- échantillons sans endpoint dupliqué ;
+- variation de luminance.
+
+Puis il vérifie à **1280×1024 natif** la boucle et la protection sur le fond
+décodé réel. Ces contrôles ne prouvent ni le photoréalisme, ni un accord LTX, ni
+un export.
+
+## 11. Tests
 
 ```sh
 node tests/test_candle_motion_plan.mjs
 ```
 
-Le test vérifie : contrat de page sans réseau, plan embarqué identique au JSON,
-schéma, 8 flammes / 7 lumières, phases distinctes, supports dans `[0,1]`,
-géométrie PNG et SHA-256 (si le média est présent), déterminisme, boucle
-bit-identique, absence d’horloge/aléatoire dans le cœur, protection hors
-supports, disjonction des flammes, chevauchement lumière/flamme documenté,
-mouvement réel, continuité de vitesse et variation de luminance.
+Le test vérifie le contrat de page (un script, un style, deux canvas, aucune URL
+réseau, une seule requête locale d’asset), le projet embarqué, le schéma v2, les
+8 flammes / 7 lumières, le groupe, les cinq presets, les supports, le PNG et son
+SHA-256, la précédence, le déterminisme, la boucle, la continuité, les masques
+étendus, la désactivation, le rendu natif, l’historique, le round-trip JSON, la
+compatibilité d’asset et la confirmation d’une proposition en Protéger.
 
-Le média source est **hors Git** : si le PNG est absent, le test l’indique et
-saute uniquement la vérification d’empreinte.
+## 12. Limites connues
 
-## 8. Limites
+- Le groupe Bougies est le seul groupe implémenté. Feuillage et tissu sont des
+  recettes documentées, pas des démos exécutables.
+- Pas de détection automatique, pas de segmentation promptable intégrée.
+- Pas d’exécution de transformation, pas de retouche générative.
+- Pas d’export vidéo, pas d’encodeur, pas de master, pas d’intégration LTX.
+- Les overrides ne changent pas le support ; une correction de masque est une
+  opération distincte.
+- Le SHA-256 n’est vérifié qu’à l’import ; le chargement initial est celui du
+  prototype.
+- Ce dépôt public correspond à la v2 issue de `studio-ltx`, branche
+  `feature/candle-group-editor`, commit `c36bfbe`. Il ne vaut ni approbation
+  visuelle, ni master, ni validation LTX.
 
-- Les flammes sont procédurales et **stylisées**, pas photoréalistes.
-- Le nettoyage atténue la flamme statique ; il ne reconstruit pas la paroi.
-- La lumière n’est pas une simulation physique : pas d’occlusion, de diffusion
-  ni de température de couleur mesurée.
-- Les supports sont des rectangles déclarés à la main, pas une segmentation.
-- Aucun exporteur, aucun encodeur, aucun enregistrement vidéo dans cette passe.
-- Aucune prédiction de ce que LTX produira ; aucune preuve que ces réglages
-  seront acceptés par le moteur.
-- Le rendu dépend du navigateur pour l’affichage, mais les octets produits par
-  le cœur sont déterministes.
+## 13. Suite
 
-## 9. Prochain test proposé
-
-Faire un **verdict visuel humain** sur cet aperçu : les flammes remplacent-elles
-crédiblement les flammes statiques, la lumière reste-t-elle locale, et le
-raccord de boucle est-il invisible ? Si le verdict est positif, le test suivant
-est une **unique** génération LTX avec caméra fixe et image d’entrée approuvée,
-puis une comparaison côte à côte — sans modifier ce prototype pour imiter LTX.
-
-## 10. Comparaison des trois approches
-
-| Approche | Ce qu’elle préserve | Ce qui reste incertain |
-|---|---|---|
-| **Procédural / compositing** (ce prototype) | géométrie, cadrage, exposition et pixels hors supports ; contrôle exact du temps, de la phase et de la boucle | réalisme des flammes, nettoyage non reconstructif de la flamme statique, lumière additive non physique ; aucune garantie que LTX suive ce plan |
-| **LTX pleine image** | matière, lumière et mouvement générés de façon cohérente sur toute l’image, sans masque | caméra et géométrie non verrouillées (observé sur 4243), dérive couleur/exposition, apparition d’ouvertures et d’objets, boucle non garantie |
-| **Éléments générés localisés sous masques** | le fond reste exact ; seules les zones autorisées changent ; contrôle du raccord | qualité du bord, cohérence de lumière avec le fond, contour du masque, moteur de masque non installé pour LTX ; **non testé ici** |
-
-Le procédural ne produit **pas** des flammes photoréalistes et **aucun pipeline
-d’export n’existe**. LTX pleine image est la seule approche qui génère de la
-matière réelle, mais elle ne verrouille pas encore la caméra. La génération
-localisée sous masque demanderait un moteur capable de masque, absent du
-workflow actuel. Ce prototype ne tranche pas entre les trois : il isole
-l’intention de mouvement pour qu’elle puisse être jugée avant une génération.
-
-## 11. Portail récursif
-
-Concept **séparé**, non implémenté ici : `PORTAL.md`. Il décrit un zoom
-récursif, l’alignement de similarité nécessaire, la transition et les limites
-2D. Il ne doit pas être ajouté au prototype des bougies.
+Verdict visuel humain sur cette passe, en particulier : mouvement retenu de
+`Sobre`, cohérence vent/flamme/lumière, lisibilité de la précédence, propreté des
+bords de masque et absence de flamme doublée. Aucune génération LTX ni vidéo ne
+doit être lancée avant ce verdict.

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "candle-motion-plan/v1",
-  "title": "Candle motion plan",
-  "description": "Plan d’intention de mouvement pour un aperçu procédural local. Ce schéma ne décrit ni une entrée moteur LTX ni un export.",
+  "$id": "candle-motion-project/v2",
+  "title": "Candle grouped-scene project",
+  "description": "Projet local versionné pour l’éditeur de scène par éléments. Ce schéma ne décrit ni une entrée moteur LTX ni un export.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -21,16 +21,16 @@
     "loop",
     "protection",
     "seed",
+    "groups",
     "regions",
-    "presets"
+    "presets",
+    "proposals"
   ],
   "properties": {
-    "schema": { "const": "candle-motion-plan/v1" },
+    "schema": { "const": "candle-motion-project/v2" },
     "id": { "type": "string", "minLength": 3 },
     "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
-    "status": {
-      "enum": ["diagnostic-not-approved", "provisional", "approved-preview"]
-    },
+    "status": { "enum": ["diagnostic-not-approved", "provisional", "approved-preview"] },
     "approval": {
       "type": "object",
       "additionalProperties": false,
@@ -60,6 +60,8 @@
         "preset": { "type": "string", "minLength": 2 },
         "showRegions": { "type": "boolean" },
         "playbackRate": { "type": "number", "exclusiveMinimum": 0 },
+        "compare": { "type": "boolean" },
+        "compareSplit": { "type": "number", "minimum": 0.05, "maximum": 0.95 },
         "note": { "type": "string", "minLength": 3 }
       }
     },
@@ -70,7 +72,7 @@
       "properties": {
         "conditioningSignals": {
           "type": "array",
-          "description": "Doit rester vide : une annotation de ce plan n’est pas un signal LTX.",
+          "description": "Doit rester vide : une annotation de ce projet n’est pas un signal LTX.",
           "maxItems": 0,
           "items": { "type": "string" }
         },
@@ -116,15 +118,7 @@
     "loop": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "durationSeconds",
-        "fps",
-        "samples",
-        "endpoint",
-        "boundaryTolerance",
-        "phaseRule",
-        "note"
-      ],
+      "required": ["durationSeconds", "fps", "samples", "endpoint", "boundaryTolerance", "phaseRule", "note"],
       "properties": {
         "durationSeconds": { "type": "number", "exclusiveMinimum": 0 },
         "fps": { "type": "integer", "minimum": 1 },
@@ -146,6 +140,11 @@
       }
     },
     "seed": { "type": "integer" },
+    "groups": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/group" }
+    },
     "regions": {
       "type": "array",
       "minItems": 1,
@@ -155,10 +154,15 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/preset" }
+    },
+    "proposals": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/proposal" }
     }
   },
   "$defs": {
     "normalized": { "type": "number", "minimum": 0, "maximum": 1 },
+    "positiveNormalized": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
     "point": {
       "type": "array",
       "prefixItems": [{ "$ref": "#/$defs/normalized" }, { "$ref": "#/$defs/normalized" }],
@@ -170,37 +174,102 @@
       "minItems": 3,
       "items": { "$ref": "#/$defs/point" }
     },
+    "rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x0", "y0", "x1", "y1"],
+      "properties": {
+        "x0": { "$ref": "#/$defs/normalized" },
+        "y0": { "$ref": "#/$defs/normalized" },
+        "x1": { "$ref": "#/$defs/normalized" },
+        "y1": { "$ref": "#/$defs/normalized" }
+      }
+    },
+    "circle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "rx", "ry"],
+      "properties": {
+        "x": { "$ref": "#/$defs/normalized" },
+        "y": { "$ref": "#/$defs/normalized" },
+        "rx": { "$ref": "#/$defs/positiveNormalized" },
+        "ry": { "$ref": "#/$defs/positiveNormalized" }
+      }
+    },
     "support": {
       "type": "object",
       "additionalProperties": false,
       "required": ["type", "points"],
       "properties": {
         "type": { "const": "polygon" },
-        "points": { "$ref": "#/$defs/polygon" }
+        "points": { "$ref": "#/$defs/polygon" },
+        "extraRects": { "type": "array", "items": { "$ref": "#/$defs/rect" } },
+        "extraCircles": { "type": "array", "items": { "$ref": "#/$defs/circle" } }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "flame": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "amplitude": { "type": "number", "minimum": 0, "maximum": 0.5 },
+            "harmonic": { "type": "integer", "minimum": 1, "maximum": 4 },
+            "lean": { "type": "number", "minimum": 0, "maximum": 0.6 },
+            "windResponse": { "type": "number", "minimum": 0, "maximum": 2 }
+          }
+        },
+        "lightScale": { "type": "number", "exclusiveMinimum": 0, "maximum": 3 },
+        "lightModulation": { "type": "number", "minimum": 0, "maximum": 1 },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 2 },
+        "wind": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "direction": { "type": "number", "minimum": 0, "maximum": 360 },
+            "strength": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "variation": { "enum": ["synchronized", "correlated", "independent"] }
       }
     },
     "motion": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["action", "amplitude", "harmonic", "phase"],
+      "required": ["action", "phase"],
       "properties": {
         "action": { "enum": ["flame-shape", "warm-pool"] },
-        "amplitude": { "type": "number", "minimum": 0, "maximum": 1 },
-        "harmonic": { "type": "integer", "minimum": 1, "maximum": 4 },
-        "phase": { "type": "number", "minimum": 0, "exclusiveMaximum": 1 },
-        "lean": { "type": "number", "minimum": 0, "maximum": 0.6 }
+        "phase": { "type": "number", "minimum": 0, "exclusiveMaximum": 1 }
       }
     },
     "region": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "role", "label", "supportStatus", "support", "motion", "render", "notes"],
+      "required": ["id", "role", "label", "supportStatus", "support", "motion", "render", "notes", "groupId", "category", "operation", "overrides"],
       "properties": {
         "id": { "type": "string", "pattern": "^(flame|light)\\.[a-z0-9-]+$" },
         "role": { "enum": ["animated", "light-influence"] },
+        "category": { "enum": ["flame", "light"] },
+        "groupId": { "type": "string", "pattern": "^group\\.[a-z0-9-]+$" },
         "label": { "type": "string", "minLength": 3 },
         "supportStatus": { "enum": ["declared", "visually-checked"] },
         "support": { "$ref": "#/$defs/support" },
+        "operation": { "enum": ["animate", "protect", "transform"] },
+        "animationEnabled": { "type": "boolean" },
+        "transformPlan": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "description"],
+          "properties": {
+            "status": { "const": "proposed" },
+            "description": { "type": "string" },
+            "operations": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "overrides": { "$ref": "#/$defs/settings" },
+        "size": { "type": "number", "minimum": 0.25, "maximum": 3 },
         "anchor": { "$ref": "#/$defs/point" },
         "height": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
         "width": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
@@ -256,7 +325,7 @@
       "allOf": [
         {
           "if": { "properties": { "role": { "const": "animated" } } },
-          "then": { "required": ["anchor", "height", "width"] }
+          "then": { "required": ["anchor", "height", "width", "size"] }
         },
         {
           "if": { "properties": { "role": { "const": "light-influence" } } },
@@ -264,27 +333,77 @@
         }
       ]
     },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "category", "elementIds", "presetId", "presetVersion", "animationEnabled", "settings"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^group\\.[a-z0-9-]+$" },
+        "label": { "type": "string", "minLength": 2 },
+        "category": { "enum": ["candles", "foliage", "fabric"] },
+        "elementIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string" }
+        },
+        "presetId": { "type": "string", "minLength": 2 },
+        "presetVersion": { "type": "integer", "minimum": 1 },
+        "animationEnabled": { "type": "boolean" },
+        "settings": { "$ref": "#/$defs/settings" }
+      }
+    },
     "preset": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "flame", "lightScale", "lightModulation"],
+      "required": ["id", "label", "version", "category", "flame", "lightScale", "lightModulation", "intensity", "wind", "variation"],
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
         "label": { "type": "string", "minLength": 3 },
         "note": { "type": "string" },
         "default": { "type": "boolean" },
+        "version": { "type": "integer", "minimum": 1 },
+        "category": { "enum": ["candles", "foliage", "fabric"] },
         "flame": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["amplitude", "harmonic", "lean"],
+          "required": ["amplitude", "harmonic", "lean", "windResponse"],
           "properties": {
             "amplitude": { "type": "number", "minimum": 0, "maximum": 0.5 },
             "harmonic": { "type": "integer", "minimum": 1, "maximum": 4 },
-            "lean": { "type": "number", "minimum": 0, "maximum": 0.6 }
+            "lean": { "type": "number", "minimum": 0, "maximum": 0.6 },
+            "windResponse": { "type": "number", "minimum": 0, "maximum": 2 }
           }
         },
         "lightScale": { "type": "number", "exclusiveMinimum": 0, "maximum": 3 },
-        "lightModulation": { "type": "number", "minimum": 0, "maximum": 1 }
+        "lightModulation": { "type": "number", "minimum": 0, "maximum": 1 },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 2 },
+        "wind": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["direction", "strength"],
+          "properties": {
+            "direction": { "type": "number", "minimum": 0, "maximum": 360 },
+            "strength": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "variation": { "enum": ["synchronized", "correlated", "independent"] }
+      }
+    },
+    "proposal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "category", "label", "support", "confidence", "status"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^proposal\\.[a-z0-9-]+$" },
+        "category": { "enum": ["flame", "light", "other"] },
+        "label": { "type": "string", "minLength": 2 },
+        "support": { "$ref": "#/$defs/support" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "status": { "enum": ["proposed", "confirmed", "rejected"] },
+        "notes": { "type": "string" },
+        "confirmedElementId": { "type": "string" },
+        "uncertainty": { "type": "string" }
       }
     }
   }

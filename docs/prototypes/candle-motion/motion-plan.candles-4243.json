@@ -1,7 +1,7 @@
 {
-  "schema": "candle-motion-plan/v1",
+  "schema": "candle-motion-project/v2",
   "id": "motion.candles-4243.preview",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "status": "diagnostic-not-approved",
   "approval": {
     "status": "not-approved",
@@ -10,23 +10,28 @@
   },
   "label": "Motion intention preview—not a prediction of AI output.",
   "artistIntent": {
-    "summary": "Garder l’architecture, la caméra et les bougies fixes ; animer uniquement la forme des flammes existantes et la lumière chaude locale qui les accompagne.",
+    "summary": "Éditer les huit flammes et les sept lumières chaudes comme un groupe Bougies : mouvement partagé, réponses individuelles, overrides locaux et comparaison avant/après.",
     "constraints": [
       "Caméra fixe, aucun pan, tilt, zoom, travelling, parallaxe ni coupe.",
-      "Aucun objet, particule, texte, audio ou flamme supplémentaire.",
-      "La lumière chaude reste locale et cohérente ; aucun pompage global de luminosité.",
-      "Chaque flamme remplace la flamme statique dans son support déclaré ; pas de flamme fixe doublée."
+      "Chaque flamme remplace la flamme statique dans son support déclaré ; aucun objet, particule, texte ou flamme supplémentaire.",
+      "La lumière chaude reste locale et liée aux flammes ; aucun pompage global d’exposition.",
+      "Le vent est un signal partagé et périodique ; chaque flamme garde sa phase, sa taille et sa réponse propres.",
+      "Désactiver l’animation conserve l’élément statique et son support ; cela ne masque rien.",
+      "Protéger, animer et transformer sont trois opérations distinctes ; transformer reste proposé et non exécutable."
     ],
     "nonGoals": [
       "Prédire la sortie LTX ou son rendu.",
       "Produire un master, une image approuvée ou un export vidéo.",
-      "Simuler physiquement la combustion, la cire ou la profondeur de champ."
+      "Simuler physiquement la combustion, la cire ou la profondeur de champ.",
+      "Détecter automatiquement ou classer chaque point brillant."
     ]
   },
   "previewSettings": {
     "preset": "vivant",
     "showRegions": true,
     "playbackRate": 1,
+    "compare": false,
+    "compareSplit": 0.5,
     "note": "Réglages d’aperçu uniquement ; ils ne sont pas transmis à un moteur."
   },
   "engineControls": {
@@ -64,11 +69,43 @@
     "note": "T = 6,000 s et N = 144 donnent 24 images/s. Les temps d’export sont k·T/N pour k = 0…N−1 ; aucune frame finale dupliquée."
   },
   "protection": {
-    "definition": "Tout pixel hors de l’union des supports déclarés est protégé : il est recopié octet pour octet depuis le fond décodé.",
-    "overlapPolicy": "Les supports animés sont disjoints. Un support de lumière peut chevaucher un support animé : la lumière est appliquée d’abord, la flamme ensuite. L’union reste protégée ; le chevauchement est intentionnel et documenté.",
-    "edgePolicy": "Les dégradés s’annulent avant le bord des polygones ; les bords de support ne produisent pas de couture visible."
+    "definition": "Tout pixel hors de l’union des supports actifs est recopié octet pour octet depuis le fond décodé. Un élément désactivé, protégé ou en transformation proposée n’autorise aucune écriture.",
+    "overlapPolicy": "Les supports de flammes restent disjoints. Un support de lumière peut chevaucher une flamme : la lumière est appliquée d’abord, la flamme ensuite. Les corrections rectangle/brosse étendent le support de l’élément sans créer de patch rectangulaire de suppression.",
+    "edgePolicy": "Les dégradés s’annulent avant le bord du support ; la suppression de la flamme statique est elliptique et bornée par le support."
   },
   "seed": 4243,
+  "groups": [
+    {
+      "id": "group.candles",
+      "label": "Bougies",
+      "category": "candles",
+      "elementIds": [
+        "flame.tl-blue",
+        "flame.tr-brown-a",
+        "flame.tr-brown-b",
+        "flame.mr-blue",
+        "flame.left-a",
+        "flame.left-b",
+        "flame.lr-a",
+        "flame.lr-b",
+        "light.tl-niche",
+        "light.tr-niche",
+        "light.mr-niche",
+        "light.left-niche",
+        "light.lr-niche",
+        "light.left-floor",
+        "light.lr-floor"
+      ],
+      "presetId": "vivant",
+      "presetVersion": 1,
+      "animationEnabled": true,
+      "settings": {
+        "wind": {
+          "direction": 12
+        }
+      }
+    }
+  ],
   "regions": [
     {
       "id": "flame.tl-blue",
@@ -94,7 +131,9 @@
             0.258594,
             0.313477
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.271484,
@@ -104,17 +143,19 @@
       "width": 0.007812,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.0,
-        "lean": 0.2
+        "phase": 0.0
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme unique. Support serré autour de la flamme et de son halo immédiat ; la bougie et le rebord restent hors support."
+      "notes": "Flamme unique. Support serré autour de la flamme et de son halo immédiat ; la bougie et le rebord restent hors support.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.tr-brown-a",
@@ -140,7 +181,9 @@
             0.739062,
             0.27832
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.757422,
@@ -150,17 +193,19 @@
       "width": 0.011719,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.37,
-        "lean": 0.2
+        "phase": 0.37
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme gauche de la niche jumelle. Support disjoint de la flamme voisine."
+      "notes": "Flamme gauche de la niche jumelle. Support disjoint de la flamme voisine.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.tr-brown-b",
@@ -186,7 +231,9 @@
             0.795312,
             0.276367
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.814063,
@@ -196,17 +243,19 @@
       "width": 0.009375,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.71,
-        "lean": 0.2
+        "phase": 0.71
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme droite de la niche jumelle. Le rebord éclairé n’est pas compté comme flamme."
+      "notes": "Flamme droite de la niche jumelle. Le rebord éclairé n’est pas compté comme flamme.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.mr-blue",
@@ -232,7 +281,9 @@
             0.83125,
             0.5
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.841406,
@@ -242,17 +293,19 @@
       "width": 0.007031,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.12,
-        "lean": 0.2
+        "phase": 0.12
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme unique. Le liseré chaud du rebord droit est exclu du support."
+      "notes": "Flamme unique. Le liseré chaud du rebord droit est exclu du support.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.left-a",
@@ -278,7 +331,9 @@
             0.1375,
             0.615234
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.147656,
@@ -288,17 +343,19 @@
       "width": 0.00625,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.55,
-        "lean": 0.2
+        "phase": 0.55
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme gauche de la niche gauche. Le montant central reste hors support."
+      "notes": "Flamme gauche de la niche gauche. Le montant central reste hors support.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.left-b",
@@ -324,7 +381,9 @@
             0.190625,
             0.617188
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.201172,
@@ -334,17 +393,19 @@
       "width": 0.007031,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.83,
-        "lean": 0.2
+        "phase": 0.83
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme droite de la niche gauche. Support disjoint du montant et de la flamme voisine."
+      "notes": "Flamme droite de la niche gauche. Support disjoint du montant et de la flamme voisine.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.lr-a",
@@ -370,7 +431,9 @@
             0.801562,
             0.738281
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.817969,
@@ -380,17 +443,19 @@
       "width": 0.007812,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.26,
-        "lean": 0.2
+        "phase": 0.26
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme basse gauche. Le corps de bougie est exclu ; seule la flamme et son halo sont nettoyés."
+      "notes": "Flamme basse gauche. Le corps de bougie est exclu ; seule la flamme et son halo sont nettoyés.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.lr-b",
@@ -416,7 +481,9 @@
             0.835156,
             0.737305
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.851562,
@@ -426,17 +493,19 @@
       "width": 0.007031,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.64,
-        "lean": 0.2
+        "phase": 0.64
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme basse droite. Support réduit pour rester disjoint de la flamme voisine."
+      "notes": "Flamme basse droite. Support réduit pour rester disjoint de la flamme voisine.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "light.tl-niche",
@@ -462,7 +531,9 @@
             0.222656,
             0.347656
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.271094,
@@ -477,8 +548,6 @@
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.0
       },
       "render": {
@@ -492,7 +561,11 @@
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Léger relèvement chaud de la niche ; le bleu de la façade n’est pas touché."
+      "notes": "Léger relèvement chaud de la niche ; le bleu de la façade n’est pas touché.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.tr-niche",
@@ -518,7 +591,9 @@
             0.701562,
             0.3125
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.785156,
@@ -534,8 +609,6 @@
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.18
       },
       "render": {
@@ -549,7 +622,11 @@
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Pool commun aux deux flammes ; la modulation suit leur moyenne, sans pompage global."
+      "notes": "Pool commun aux deux flammes ; la modulation suit leur moyenne, sans pompage global.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.mr-niche",
@@ -575,7 +652,9 @@
             0.8125,
             0.537109
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.841406,
@@ -590,8 +669,6 @@
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.42
       },
       "render": {
@@ -605,7 +682,11 @@
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Pool local autour de la flamme ; le bleu de la masse reste hors du dégradé fort."
+      "notes": "Pool local autour de la flamme ; le bleu de la masse reste hors du dégradé fort.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.left-niche",
@@ -631,7 +712,9 @@
             0.076563,
             0.646484
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.173437,
@@ -647,8 +730,6 @@
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.27
       },
       "render": {
@@ -662,7 +743,11 @@
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Pool commun aux deux flammes, centré entre elles. La tablette reste inchangée hors support."
+      "notes": "Pool commun aux deux flammes, centré entre elles. La tablette reste inchangée hors support.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.lr-niche",
@@ -688,7 +773,9 @@
             0.782813,
             0.779297
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.832031,
@@ -704,8 +791,6 @@
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.61
       },
       "render": {
@@ -719,7 +804,11 @@
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Pool local de la niche basse droite."
+      "notes": "Pool local de la niche basse droite.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.left-floor",
@@ -745,7 +834,9 @@
             0.085938,
             0.966797
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.175781,
@@ -761,8 +852,6 @@
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.35
       },
       "render": {
@@ -776,7 +865,11 @@
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Reflet de sol très faible, borné. Il ne déplace aucune architecture."
+      "notes": "Reflet de sol très faible, borné. Il ne déplace aucune architecture.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.lr-floor",
@@ -802,7 +895,9 @@
             0.773438,
             0.919922
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.828125,
@@ -818,8 +913,6 @@
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.72
       },
       "render": {
@@ -833,7 +926,11 @@
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Reflet de sol très faible, borné, aligné sur la niche."
+      "notes": "Reflet de sol très faible, borné, aligné sur la niche.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     }
   ],
   "presets": [
@@ -841,50 +938,108 @@
       "id": "calme",
       "label": "Calme",
       "note": "cordes lentes",
+      "version": 1,
+      "category": "candles",
       "flame": {
         "amplitude": 0.07,
         "harmonic": 1,
-        "lean": 0.1
+        "lean": 0.1,
+        "windResponse": 0.8
       },
       "lightScale": 0.6,
-      "lightModulation": 0.25
+      "lightModulation": 0.25,
+      "intensity": 0.9,
+      "wind": {
+        "direction": 0,
+        "strength": 0.04
+      },
+      "variation": "correlated"
     },
     {
       "id": "vivant",
       "label": "Bougies vivantes",
       "note": "référence",
       "default": true,
+      "version": 1,
+      "category": "candles",
       "flame": {
         "amplitude": 0.16,
         "harmonic": 1,
-        "lean": 0.2
+        "lean": 0.2,
+        "windResponse": 1.0
       },
       "lightScale": 1.0,
-      "lightModulation": 0.35
+      "lightModulation": 0.35,
+      "intensity": 1.0,
+      "wind": {
+        "direction": 0,
+        "strength": 0.12
+      },
+      "variation": "correlated"
     },
     {
       "id": "courant",
       "label": "Courant d’air",
       "note": "plus ample",
+      "version": 1,
+      "category": "candles",
       "flame": {
         "amplitude": 0.27,
         "harmonic": 2,
-        "lean": 0.34
+        "lean": 0.34,
+        "windResponse": 1.3
       },
       "lightScale": 1.15,
-      "lightModulation": 0.42
+      "lightModulation": 0.42,
+      "intensity": 1.05,
+      "wind": {
+        "direction": 25,
+        "strength": 0.38
+      },
+      "variation": "synchronized"
     },
     {
       "id": "veilleuse",
       "label": "Veilleuse",
       "note": "lumière haute",
+      "version": 1,
+      "category": "candles",
       "flame": {
         "amplitude": 0.09,
         "harmonic": 1,
-        "lean": 0.12
+        "lean": 0.12,
+        "windResponse": 0.7
       },
       "lightScale": 1.5,
-      "lightModulation": 0.3
+      "lightModulation": 0.3,
+      "intensity": 1.1,
+      "wind": {
+        "direction": 0,
+        "strength": 0.03
+      },
+      "variation": "independent"
+    },
+    {
+      "id": "sobre",
+      "label": "Sobre",
+      "note": "mouvement retenu",
+      "version": 1,
+      "category": "candles",
+      "flame": {
+        "amplitude": 0.055,
+        "harmonic": 1,
+        "lean": 0.08,
+        "windResponse": 0.75
+      },
+      "lightScale": 0.75,
+      "lightModulation": 0.2,
+      "intensity": 0.85,
+      "wind": {
+        "direction": 0,
+        "strength": 0.07
+      },
+      "variation": "correlated"
     }
-  ]
+  ],
+  "proposals": []
 }

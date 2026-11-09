@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Intention de mouvement — bougies — Studio LTX</title>
+<title>Éditeur de scène — bougies — Studio LTX</title>
 <style>
   :root {
     --bg: #070a0e;
@@ -151,6 +151,69 @@
   @media (prefers-reduced-motion: reduce) {
     .toast { transition: none; }
   }
+
+  [hidden] { display: none !important; }
+  .toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .btn:disabled { opacity: .38; cursor: not-allowed; }
+  .group-row { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-soft); border-radius: 9px; padding: 7px 8px; margin: 2px 0 4px; background: rgba(240,179,91,.035); }
+  .group-row.active { border-color: rgba(240,179,91,.45); background: var(--amber-soft); }
+  .group-row input, .scene-item input[type="checkbox"], .toggle-row input, .link-row input { accent-color: var(--amber); width: 14px; height: 14px; flex: none; }
+  .group-select { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: 0; background: transparent; color: var(--text); padding: 0; }
+  .group-select strong { display: block; font-size: .78rem; font-weight: 620; }
+  .group-select small { display: block; color: var(--faint); font-size: .62rem; margin-top: 1px; }
+  .group-mark { color: var(--amber); font-size: .8rem; }
+  .scene-section { color: var(--faint); font-family: var(--mono); font-size: .59rem; letter-spacing: .08em; text-transform: uppercase; padding: 8px 3px 3px; }
+  .scene-item { display: flex; align-items: center; gap: 5px; }
+  .scene-item .region-row { flex: 1; min-width: 0; }
+  .scene-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .scene-item .anim-toggle { margin-right: 5px; }
+  .mini-badge { border: 1px solid var(--line); border-radius: 999px; padding: 1px 5px; font-size: .55rem; color: var(--muted); white-space: nowrap; }
+  .mini-badge.override { color: var(--amber); border-color: rgba(240,179,91,.35); }
+  .mini-badge.protect { color: #b9c5ff; border-color: rgba(147,168,255,.4); }
+  .mini-badge.transform { color: #e2b6ff; border-color: rgba(216,155,255,.4); }
+  .mini-badge.warn { color: #f3b0a8; border-color: rgba(244,119,107,.4); }
+  .scene-summary { margin: 0 0 7px; }
+  .editor-section { color: var(--amber); font-size: .64rem; letter-spacing: .08em; text-transform: uppercase; margin-top: 12px; border-top: 1px solid var(--line-soft); padding-top: 9px; }
+  .editor .control { display: flex; flex-direction: column; gap: 4px; }
+  .control-head { display: flex; align-items: center; gap: 6px; width: 100%; min-width: 0; }
+  .control-head > span:first-child { min-width: 0; }
+  .control-head output { margin-left: auto; }
+  .editor .control input[type="range"] { grid-column: auto; width: 100%; }
+  .editor select, .editor input[type="number"], .editor textarea { width: 100%; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); border-radius: 6px; padding: 5px 6px; font-size: .7rem; }
+  .editor textarea { resize: vertical; font-family: var(--font); line-height: 1.4; }
+  .source-badge { border: 1px solid var(--line); border-radius: 999px; padding: 1px 5px; font-family: var(--mono); font-size: .52rem; letter-spacing: .02em; color: var(--muted); white-space: nowrap; }
+  .source-badge.src-preset { color: var(--faint); }
+  .source-badge.src-group { color: var(--teal); border-color: rgba(90,209,200,.35); }
+  .source-badge.src-element { color: var(--amber); border-color: rgba(240,179,91,.4); background: var(--amber-soft); }
+  .source-badge.src-project { color: #e2b6ff; border-color: rgba(216,155,255,.35); }
+  .source-badge.src-intrinsic { color: #c5d2e0; }
+  .reset-mini { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 5px; font-size: .62rem; line-height: 1; padding: 2px 4px; }
+  .reset-mini:disabled { opacity: .22; cursor: not-allowed; }
+  .toggle-row { display: flex; align-items: center; gap: 7px; font-size: .7rem; color: var(--muted); flex-wrap: wrap; }
+  .toggle-row small { width: 100%; color: var(--faint); font-size: .6rem; margin-left: 21px; }
+  .multi-list { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; max-height: 160px; overflow: auto; }
+  .multi-list p { font-size: .67rem; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .multi-list .mono { color: var(--faint); font-size: .58rem; margin-left: auto; }
+  .link-list { display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow: auto; }
+  .link-row { display: flex; align-items: center; gap: 6px; font-size: .67rem; color: var(--muted); }
+  .proposal-wrap { border-top: 1px solid var(--line-soft); margin-top: 12px; }
+  .proposal { border: 1px solid var(--line); border-radius: 8px; padding: 7px; margin-top: 6px; font-size: .68rem; }
+  .proposal strong { margin-right: 5px; }
+  .proposal p { margin-top: 3px; }
+  .project-status { margin-top: 10px; border-top: 1px solid var(--line-soft); padding-top: 8px; font-family: var(--mono); font-size: .58rem; color: var(--faint); line-height: 1.35; }
+  .project-status.ok { color: var(--ok); }
+  .project-status.bad { color: #f3b0a8; }
+  .project-status.pending { color: var(--amber); }
+  .compare-label { position: absolute; top: 10px; z-index: 4; font-family: var(--mono); font-size: .63rem; color: #fff; background: rgba(4,7,10,.7); border: 1px solid rgba(232,238,245,.35); border-radius: 5px; padding: 2px 6px; pointer-events: none; }
+  .compare-label.before { left: 10px; }
+  .compare-label.after { right: 10px; }
+  .compare-split-wrap { flex: 1 1 230px; display: flex; align-items: center; gap: 6px; min-width: 180px; }
+  .compare-split-wrap input { flex: 1; }
+  .region-list { max-height: 320px; }
+  @media (max-width: 640px) {
+    .toolbar { margin-top: 10px; }
+    .compare-split-wrap { flex-basis: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -158,9 +221,9 @@
   <div class="wrap">
     <div class="head-row">
       <div class="head-copy">
-        <p class="eyebrow">Studio LTX · prototype local · planification de mouvement</p>
-        <h1>Intention de mouvement — bougies</h1>
-        <p class="lede">Un aperçu procédural déterministe des huit flammes et des régions de lumière chaude de la graine 4243. Caméra fixe, aucune inférence, aucune vidéo produite.</p>
+        <p class="eyebrow">Studio LTX · prototype local · éditeur de scène</p>
+        <h1>Scène de bougies — éditeur groupé</h1>
+        <p class="lede">Un aperçu procédural déterministe des huit flammes et des régions de lumière chaude de la graine 4243. Éditeur de groupe, overrides locaux, caméra fixe, aucune inférence, aucune vidéo produite.</p>
         <p class="label-exact" id="exact-label">Motion intention preview—not a prediction of AI output.</p>
         <div class="pills">
           <span class="pill"><strong>8</strong> flammes</span>
@@ -168,6 +231,13 @@
           <span class="pill">boucle <strong>6,000 s</strong></span>
           <span class="pill">144 échantillons</span>
           <span class="pill danger">fond non approuvé</span>
+        </div>
+        <div class="toolbar" aria-label="Édition et projet">
+          <button class="btn small" id="undo" type="button" disabled>Annuler</button>
+          <button class="btn small" id="redo" type="button" disabled>Rétablir</button>
+          <button class="btn small ghost" id="save-project" type="button">Enregistrer JSON</button>
+          <button class="btn small ghost" id="open-project" type="button">Ouvrir JSON</button>
+          <input id="project-file" type="file" accept="application/json,.json" hidden>
         </div>
       </div>
       <div class="status-card">
@@ -187,11 +257,14 @@
       <span class="tag live">caméra fixe</span>
       <span class="tag" id="frame-tag">frame 0</span>
       <button class="btn small ghost" id="toggle-regions" type="button" aria-pressed="true">Régions</button>
+      <button class="btn small ghost" id="compare" type="button" aria-pressed="false">Comparer</button>
     </div>
     <div class="frame-wrap" id="frame-wrap">
       <canvas id="view" width="1280" height="1024" aria-label="Aperçu animé des flammes de bougies"></canvas>
       <canvas id="overlay" width="1280" height="1024" aria-label="Régions animées et régions de lumière"></canvas>
       <p class="frame-note">Motion intention preview—not a prediction of AI output.</p>
+      <span class="compare-label before" id="compare-before" hidden>Avant</span>
+      <span class="compare-label after" id="compare-after" hidden>Après</span>
       <div class="load-state" id="load-state">
         <h3 id="load-title">Chargement du fond…</h3>
         <p id="load-detail">Lecture de la graine 4243.</p>
@@ -204,35 +277,48 @@
         <input id="scrub" type="range" min="0" max="6" step="0.001" value="0" aria-label="Position dans la boucle">
         <span class="readout" id="readout">0,000 s · frame 0</span>
       </div>
+      <div class="compare-split-wrap" id="compare-split-wrap" hidden>
+        <span class="readout">Avant</span>
+        <input id="compare-split" type="range" min="0.05" max="0.95" step="0.01" value="0.5" aria-label="Partage avant/après">
+        <span class="readout">Après</span>
+      </div>
     </div>
-    <p class="stage-foot">Le temps affiché est la seule horloge du rendu. <span class="mono">requestAnimationFrame</span> ne sert qu’à faire avancer la lecture ; chaque image est calculée par <span class="mono">renderAtTime</span>. Aucun zoom, panoramique ou recadrage.</p>
+    <p class="stage-foot">Le temps affiché est la seule horloge du rendu. <span class="mono">requestAnimationFrame</span> ne sert qu’à faire avancer la lecture ; chaque image est calculée par <span class="mono">renderAt</span>. Aucun zoom, panoramique ou recadrage.</p>
   </section>
 
   <aside class="panel">
     <section class="card">
-      <div class="card-head"><h2>Presets</h2><p>4 intentions</p></div>
+      <div class="card-head"><h2>Presets du groupe</h2><p id="preset-meta">Bougies · vivant v1</p></div>
       <div class="preset-grid" id="preset-grid"></div>
-      <p class="micro" style="margin-top:7px">Les presets changent amplitude, harmonique et inclinaison. Les déphasages par flamme sont conservés.</p>
+      <p class="micro" style="margin-top:7px">Changer de preset change la couche de défaut du groupe. Les réglages de groupe et les surcharges d’élément restent prioritaires. Chaque flamme conserve sa phase.</p>
     </section>
 
     <section class="card">
-      <div class="card-head"><h2>Régions</h2><p id="region-count">15 supports</p></div>
-      <div class="region-list" id="region-list" role="group" aria-label="Régions du plan"></div>
+      <div class="card-head"><h2>Scène</h2><p id="region-count">15 éléments</p></div>
+      <p class="micro scene-summary" id="scene-summary">8 flammes · 7 lumières · 1 groupe</p>
+      <div class="region-list" id="region-list" role="group" aria-label="Scène groupée"></div>
       <div class="editor" id="editor"></div>
+      <div class="proposal-wrap">
+        <p class="editor-section">Propositions</p>
+        <div id="proposal-box"></div>
+      </div>
+      <p class="project-status" id="project-status">Projet v2 local · non approuvé</p>
     </section>
 
     <section class="card">
-      <div class="card-head"><h2>Contrôles déterministes</h2><p>résolution réduite 320×256</p></div>
+      <div class="card-head"><h2>Contrôles déterministes</h2><p>réduite + native 1280×1024</p></div>
       <button class="btn" id="run-checks" type="button">Lancer les vérifications</button>
       <ul class="check-list" id="check-list" aria-live="polite"></ul>
       <div class="metrics" id="metrics"></div>
     </section>
 
     <section class="card">
-      <div class="card-head"><h2>Trois couches séparées</h2></div>
+      <div class="card-head"><h2>Couches et opérations</h2></div>
       <div class="split">
-        <p><b>Intention artistique</b> — décrite dans le plan, jamais une garantie.</p>
-        <p><b>Réglages d’aperçu</b> — preset, régions visibles, vitesse de lecture.</p>
+        <p><b>Intention artistique</b> — décrite dans le projet, jamais une garantie.</p>
+        <p><b>Réglages d’aperçu</b> — preset, région visible, comparaison, lecture.</p>
+        <p><b>Opérations</b> — <b>Protéger</b> ne dessine rien ; <b>Animer</b> applique la recette bougies ; <b>Transformer</b> reste une proposition non exécutable.</p>
+        <p><b>Détection</b> — aucune détection automatique ici. Une proposition future devra afficher catégorie, masque, confiance et demander confirmation.</p>
         <p><b>Contrôles moteur</b> — <span class="mono">[]</span>. Aucune annotation n’est un signal de conditionnement LTX.</p>
       </div>
     </section>
@@ -245,7 +331,7 @@
       <div>
         <h3>Ce que c’est</h3>
         <ul>
-          <li>Un rendu procédural local, déterministe et sans dépendance.</li>
+          <li>Un éditeur de scène local, déterministe et sans dépendance.</li>
           <li>Un plan JSON versionné avec supports normalisés.</li>
           <li>Une vérification de protection pixel et de boucle.</li>
         </ul>
@@ -263,7 +349,8 @@
         <ul>
           <li>Le nettoyage atténue la flamme statique ; il ne reconstruit pas le mur.</li>
           <li>La lumière est additive et bornée, sans simulation physique.</li>
-          <li>Les mesures de contrôle sont faites à résolution réduite.</li>
+          <li>La boucle et le mouvement sont contrôlés à 320×256 ; la protection est aussi vérifiée à 1280×1024 natif.</li>
+          <li>La détection et la transformation ne sont pas exécutées ; aucune ne doit être présentée comme un contrôle moteur.</li>
         </ul>
       </div>
       <div>
@@ -275,14 +362,14 @@
         </ul>
       </div>
     </div>
-    <p>Prototype local · aucun réseau, aucune dépendance, aucun traitement du MP4 · fond diagnostique non approuvé. Le fichier <span class="mono">motion-plan.candles-4243.json</span> est la source du plan ; le plan embarqué dans cette page est vérifié contre lui.</p>
+    <p>Prototype local · aucune dépendance, aucun traitement du MP4 · fond diagnostique non approuvé. Le fichier <span class="mono">motion-plan.candles-4243.json</span> est la source du projet v2 ; le projet embarqué est vérifié contre lui. À l’import, une requête locale lit les octets de l’asset pour vérifier dimensions et SHA-256 ; aucune image n’est dupliquée dans le JSON.</p>
   </div>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module">
 /* === CORE:BEGIN === */
-export const CORE_VERSION = "candle-motion-core/1.0.0";
+export const CORE_VERSION = "candle-motion-core/2.0.0";
 
 /* Décodage sRGB -> linéaire, table 256 entrées. */
 const S2L = (() => {
@@ -318,6 +405,97 @@ function shoulder(v) {
   return k + (1 - k) * (1 - Math.exp(-(v - k) / (1 - k)));
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getPath(object, path) {
+  let node = object;
+  for (const key of path.split(".")) {
+    if (!node || typeof node !== "object" || !(key in node)) return undefined;
+    node = node[key];
+  }
+  return node;
+}
+
+function groupOf(plan, element) {
+  return (plan.groups || []).find((group) => group.id === element.groupId) || (plan.groups || [])[0] || null;
+}
+
+function presetOf(plan, group) {
+  return (plan.presets || []).find((preset) => preset.id === group?.presetId)
+    || (plan.presets || []).find((preset) => preset.default)
+    || (plan.presets || [])[0]
+    || null;
+}
+
+const FIELD_DEFAULTS = {
+  "flame.amplitude": 0.16,
+  "flame.harmonic": 1,
+  "flame.lean": 0.2,
+  "flame.windResponse": 1,
+  lightScale: 1,
+  lightModulation: 0.35,
+  intensity: 1,
+  "wind.direction": 0,
+  "wind.strength": 0,
+  variation: "correlated"
+};
+
+/*
+ * Précédence explicite : override d’élément > réglage de groupe > preset.
+ * Les valeurs intrinsèques (phase, taille, ancre, support) ne passent pas ici.
+ */
+export function resolveField(plan, element, path) {
+  const group = groupOf(plan, element);
+  const preset = presetOf(plan, group);
+  const fromElement = getPath(element.overrides || {}, path);
+  if (fromElement !== undefined) return { value: fromElement, source: "element" };
+  const fromGroup = getPath(group?.settings || {}, path);
+  if (fromGroup !== undefined) return { value: fromGroup, source: "group" };
+  const fromPreset = getPath(preset || {}, path);
+  if (fromPreset !== undefined) return { value: fromPreset, source: "preset" };
+  return { value: FIELD_DEFAULTS[path], source: "preset" };
+}
+
+export function resolveSettings(plan, element) {
+  const amplitude = resolveField(plan, element, "flame.amplitude").value;
+  const harmonic = resolveField(plan, element, "flame.harmonic").value;
+  const lean = resolveField(plan, element, "flame.lean").value;
+  const windResponse = resolveField(plan, element, "flame.windResponse").value;
+  const lightScale = resolveField(plan, element, "lightScale").value;
+  const lightModulation = resolveField(plan, element, "lightModulation").value;
+  const intensity = resolveField(plan, element, "intensity").value;
+  const direction = resolveField(plan, element, "wind.direction").value;
+  const strength = resolveField(plan, element, "wind.strength").value;
+  const variation = resolveField(plan, element, "variation").value;
+  return {
+    flame: {
+      amplitude: clamp(Number(amplitude) || 0, 0, 0.5),
+      harmonic: clamp(Math.round(Number(harmonic) || 1), 1, 4),
+      lean: clamp(Number(lean) || 0, 0, 0.6),
+      windResponse: clamp(Number(windResponse) || 0, 0, 2)
+    },
+    lightScale: clamp(Number(lightScale) || 0, 0.0001, 3),
+    lightModulation: clamp(Number(lightModulation) || 0, 0, 1),
+    intensity: clamp(Number(intensity) || 0, 0, 2),
+    wind: {
+      direction: ((Number(direction) || 0) % 360 + 360) % 360,
+      strength: clamp(Number(strength) || 0, 0, 1)
+    },
+    variation: ["synchronized", "correlated", "independent"].includes(variation) ? variation : "correlated"
+  };
+}
+
+/* Une opération non animée ou un élément désactivé reste dans la scène et dans le fond. */
+export function isElementAnimated(plan, element) {
+  if ((element.operation || "animate") !== "animate") return false;
+  if (element.animationEnabled === true) return true;
+  if (element.animationEnabled === false) return false;
+  const group = groupOf(plan, element);
+  return group ? group.animationEnabled !== false : true;
+}
+
 export function phaseAt(time, duration) {
   const u = time / duration;
   return ((u % 1) + 1) % 1;
@@ -336,12 +514,38 @@ export function seededUnit(key) {
   return hash32(key) / 4294967296;
 }
 
+/* Bruit périodique : fréquences entières, donc raccord bit-identique à u=0/u=1. */
+function loopNoise(key, seed, u) {
+  const p1 = seededUnit(key + ":p1:" + seed);
+  const p2 = seededUnit(key + ":p2:" + seed);
+  const p3 = seededUnit(key + ":p3:" + seed);
+  const w = 2 * Math.PI;
+  return 0.58 * Math.sin(w * (2 * u + p1))
+    + 0.30 * Math.sin(w * (3 * u + p2))
+    + 0.12 * Math.sin(w * (5 * u + p3));
+}
+
+export function windAt(plan, element, time) {
+  const group = groupOf(plan, element);
+  const settings = resolveSettings(plan, element);
+  const u = phaseAt(time, plan.loop.durationSeconds);
+  const common = loopNoise("wind:" + (group?.id || "group"), plan.seed, u);
+  const individual = loopNoise("wind:" + element.id, plan.seed, u);
+  const weights = settings.variation === "synchronized"
+    ? [1, 0]
+    : settings.variation === "independent"
+      ? [0.25, 0.75]
+      : [0.72, 0.28];
+  const direction = (settings.wind.direction * Math.PI) / 180;
+  return settings.wind.strength * Math.cos(direction) * (weights[0] * common + weights[1] * individual);
+}
+
 /* Signal périodique, borné, sans aléatoire temporel. */
 export function flameSignal(flame, time, plan) {
   const duration = plan.loop.durationSeconds;
   const u = phaseAt(time, duration);
   const ph = flame.motion.phase;
-  const n = flame.motion.harmonic;
+  const n = resolveSettings(plan, flame).flame.harmonic;
   const micro = seededUnit(flame.id + ":" + plan.seed);
   const w = 2 * Math.PI;
   return 0.62 * Math.sin(w * (n * u + ph))
@@ -353,7 +557,7 @@ export function flameSway(flame, time, plan) {
   const duration = plan.loop.durationSeconds;
   const u = phaseAt(time, duration);
   const ph = flame.motion.phase;
-  const n = flame.motion.harmonic;
+  const n = resolveSettings(plan, flame).flame.harmonic;
   const micro = seededUnit(flame.id + ":" + plan.seed);
   const w = 2 * Math.PI;
   return 0.68 * Math.sin(w * (n * u + ph + 0.17))
@@ -361,19 +565,14 @@ export function flameSway(flame, time, plan) {
 }
 
 export function lightSignal(light, plan, time) {
-  const sources = light.sources || [];
+  const sources = (light.sources || [])
+    .map((id) => plan.regions.find((region) => region.id === id))
+    .filter((flame) => flame && isElementAnimated(plan, flame));
   if (!sources.length) return 0;
-  const shifted = time * (light.motion.harmonic || 1)
-    + (light.motion.phase || 0) * plan.loop.durationSeconds;
+  const shifted = time + (light.motion.phase || 0) * plan.loop.durationSeconds;
   let sum = 0;
-  let count = 0;
-  for (const id of sources) {
-    const flame = plan.regions.find((r) => r.id === id);
-    if (!flame) continue;
-    sum += flameSignal(flame, shifted, plan);
-    count++;
-  }
-  return count ? sum / count : 0;
+  for (const flame of sources) sum += flameSignal(flame, shifted, plan);
+  return sum / sources.length;
 }
 
 export function pointInPolygon(px, py, points) {
@@ -388,6 +587,25 @@ export function pointInPolygon(px, py, points) {
     }
   }
   return inside;
+}
+
+/* Test normalisé, utilisé par la sélection et les outils de correction. */
+export function pointInSupport(region, nx, ny) {
+  const support = region.support || {};
+  if (pointInPolygon(nx, ny, support.points || [])) return true;
+  for (const rect of support.extraRects || []) {
+    const x0 = Math.min(rect.x0, rect.x1);
+    const x1 = Math.max(rect.x0, rect.x1);
+    const y0 = Math.min(rect.y0, rect.y1);
+    const y1 = Math.max(rect.y0, rect.y1);
+    if (nx >= x0 && nx <= x1 && ny >= y0 && ny <= y1) return true;
+  }
+  for (const circle of support.extraCircles || []) {
+    const dx = (nx - circle.x) / circle.rx;
+    const dy = (ny - circle.y) / circle.ry;
+    if (dx * dx + dy * dy <= 1) return true;
+  }
+  return false;
 }
 
 function smoothstep(a, b, x) {
@@ -418,19 +636,62 @@ function boundsOf(poly, width, height) {
   };
 }
 
+function prepareSupport(region, width, height) {
+  const poly = toPixels(region.support.points, width, height);
+  const rects = (region.support.extraRects || []).map((rect) => ({
+    x0: Math.min(rect.x0, rect.x1) * width,
+    x1: Math.max(rect.x0, rect.x1) * width,
+    y0: Math.min(rect.y0, rect.y1) * height,
+    y1: Math.max(rect.y0, rect.y1) * height,
+  }));
+  const circles = (region.support.extraCircles || []).map((circle) => ({
+    x: circle.x * width,
+    y: circle.y * height,
+    rx: Math.max(1, circle.rx * width),
+    ry: Math.max(1, circle.ry * height),
+  }));
+  const bounds = boundsOf(poly, width, height);
+  for (const rect of rects) {
+    bounds.x0 = Math.min(bounds.x0, Math.max(0, Math.floor(rect.x0)));
+    bounds.y0 = Math.min(bounds.y0, Math.max(0, Math.floor(rect.y0)));
+    bounds.x1 = Math.max(bounds.x1, Math.min(width - 1, Math.ceil(rect.x1)));
+    bounds.y1 = Math.max(bounds.y1, Math.min(height - 1, Math.ceil(rect.y1)));
+  }
+  for (const circle of circles) {
+    bounds.x0 = Math.min(bounds.x0, Math.max(0, Math.floor(circle.x - circle.rx)));
+    bounds.y0 = Math.min(bounds.y0, Math.max(0, Math.floor(circle.y - circle.ry)));
+    bounds.x1 = Math.max(bounds.x1, Math.min(width - 1, Math.ceil(circle.x + circle.rx)));
+    bounds.y1 = Math.max(bounds.y1, Math.min(height - 1, Math.ceil(circle.y + circle.ry)));
+  }
+  return { poly, rects, circles, bounds };
+}
+
+function containsPrepared(support, x, y) {
+  if (pointInPolygon(x, y, support.poly)) return true;
+  for (const rect of support.rects) {
+    if (x >= rect.x0 && x <= rect.x1 && y >= rect.y0 && y <= rect.y1) return true;
+  }
+  for (const circle of support.circles) {
+    const dx = (x - circle.x) / circle.rx;
+    const dy = (y - circle.y) / circle.ry;
+    if (dx * dx + dy * dy <= 1) return true;
+  }
+  return false;
+}
+
 export function regionPixelBounds(region, width, height) {
-  return boundsOf(toPixels(region.support.points, width, height), width, height);
+  return prepareSupport(region, width, height).bounds;
 }
 
 /* Fond local estimé : médiane des luminances du pourtour du support. */
-function supportBackground(out, poly, bounds, width) {
+function supportBackground(out, support, width) {
   const samples = [];
-  const xs = [bounds.x0 + 2, (bounds.x0 + bounds.x1) >> 1, bounds.x1 - 2];
-  const ys = [bounds.y0 + 2, (bounds.y0 + bounds.y1) >> 1, bounds.y1 - 2];
-  for (const x of xs) {
-    for (const y of ys) {
-      if (x < bounds.x0 || x > bounds.x1 || y < bounds.y0 || y > bounds.y1) continue;
-      if (!pointInPolygon(x + 0.5, y + 0.5, poly)) continue;
+  const { bounds } = support;
+  for (let gy = 0; gy < 5; gy++) {
+    for (let gx = 0; gx < 5; gx++) {
+      const x = Math.round(bounds.x0 + ((bounds.x1 - bounds.x0) * gx) / 4);
+      const y = Math.round(bounds.y0 + ((bounds.y1 - bounds.y0) * gy) / 4);
+      if (!containsPrepared(support, x + 0.5, y + 0.5)) continue;
       const i = (y * width + x) * 4;
       const r = S2L[out[i]];
       const g = S2L[out[i + 1]];
@@ -444,22 +705,28 @@ function supportBackground(out, poly, bounds, width) {
   return [pick[0], pick[1], pick[2]];
 }
 
-function paintLight(ctx, region) {
+function paintLight(ctx, region, support) {
   const { out, width, height, plan, time } = ctx;
-  const poly = toPixels(region.support.points, width, height);
-  const bounds = boundsOf(poly, width, height);
+  const settings = resolveSettings(plan, region);
+  const sources = (region.sources || [])
+    .map((id) => plan.regions.find((candidate) => candidate.id === id))
+    .filter((flame) => flame && isElementAnimated(plan, flame));
+  if (!sources.length) return;
+  const signal = lightSignal(region, plan, time);
+  const linkIntensity = sources.reduce((sum, flame) => sum + resolveSettings(plan, flame).intensity, 0) / sources.length;
+  const gain = region.render.gain * settings.lightScale * linkIntensity
+    * (1 + settings.lightModulation * signal);
+  if (!(gain > 0)) return;
   const cx = region.center[0] * width;
   const cy = region.center[1] * height;
   const rx = Math.max(2, region.radii[0] * width);
   const ry = Math.max(2, region.radii[1] * height);
-  const modulation = lightSignal(region, plan, time);
-  const gain = region.render.gain * (1 + region.motion.amplitude * modulation);
-  if (!(gain > 0)) return;
   const color = region.render.color;
   const falloff = region.render.falloff;
+  const { bounds } = support;
   for (let y = bounds.y0; y <= bounds.y1; y++) {
     for (let x = bounds.x0; x <= bounds.x1; x++) {
-      if (!pointInPolygon(x + 0.5, y + 0.5, poly)) continue;
+      if (!containsPrepared(support, x + 0.5, y + 0.5)) continue;
       const nx = (x + 0.5 - cx) / rx;
       const ny = (y + 0.5 - cy) / ry;
       const radius = Math.hypot(nx, ny);
@@ -475,20 +742,24 @@ function paintLight(ctx, region) {
 }
 
 /* Remplace la flamme statique dans son support, puis dessine une flamme animée. */
-function paintFlame(ctx, region) {
+function paintFlame(ctx, region, support) {
   const { out, width, height, plan, time } = ctx;
-  const poly = toPixels(region.support.points, width, height);
-  const bounds = boundsOf(poly, width, height);
+  const settings = resolveSettings(plan, region);
+  const { amplitude, lean, windResponse } = settings.flame;
+  const intensity = settings.intensity;
+  const wind = windAt(plan, region, time);
+  const size = clamp(region.size || 1, 0.5, 1.8);
   const cx = region.anchor[0] * width;
   const by = region.anchor[1] * height;
-  const h0 = Math.max(2, region.height * height);
-  const w0 = Math.max(1.5, region.width * width);
+  const h0 = Math.max(2, region.height * height * size);
+  const w0 = Math.max(1.5, region.width * width * size);
   const signal = flameSignal(region, time, plan);
-  const heightNow = Math.max(2, h0 * (1 + region.motion.amplitude * signal));
-  const leanPx = h0 * region.motion.lean * flameSway(region, time, plan);
+  const heightNow = Math.max(2, h0 * clamp(1 + amplitude * signal + 0.08 * wind * windResponse, 0.55, 1.55));
+  const leanNow = clamp(lean * flameSway(region, time, plan) + 0.30 * wind * windResponse, -0.65, 0.65);
+  const leanPx = h0 * leanNow;
   const u = phaseAt(time, plan.loop.durationSeconds);
-  const widthNow = w0 * (1 + 0.10 * Math.sin(2 * Math.PI * (2 * u + region.motion.phase * 1.3)));
-  const bg = supportBackground(out, poly, bounds, width);
+  const widthNow = Math.max(w0 * 0.65, w0 * (1 + 0.10 * Math.sin(2 * Math.PI * (2 * u + region.motion.phase * 1.3))));
+  const bg = supportBackground(out, support, width);
   const bgLum = 0.2126 * bg[0] + 0.7152 * bg[1] + 0.0722 * bg[2];
   const scx = cx;
   const scy = by - 0.52 * h0;
@@ -496,9 +767,11 @@ function paintFlame(ctx, region) {
   const sry = Math.max(2, h0 * 0.58);
   const haloX = Math.max(2, 0.60 * heightNow);
   const haloY = Math.max(2, 0.52 * heightNow);
+  const brightness = clamp(0.9 + 0.10 * signal + 0.04 * wind * windResponse, 0.70, 1.05);
+  const { bounds } = support;
   for (let y = bounds.y0; y <= bounds.y1; y++) {
     for (let x = bounds.x0; x <= bounds.x1; x++) {
-      if (!pointInPolygon(x + 0.5, y + 0.5, poly)) continue;
+      if (!containsPrepared(support, x + 0.5, y + 0.5)) continue;
       const dx = x + 0.5 - cx;
       const dyUp = by - (y + 0.5);
       const i = (y * width + x) * 4;
@@ -525,13 +798,13 @@ function paintFlame(ctx, region) {
           const envelope = Math.pow(Math.sin(Math.PI * Math.pow(sN, 0.52)), 0.55);
           const center = leanPx * Math.pow(sN, 1.55)
             + widthNow * 0.10 * Math.sin(2 * Math.PI * sN * 0.8 + region.motion.phase * 6.283 + 2 * Math.PI * u);
-          const halfWidth = 0.5 * widthNow * envelope;
+          const halfWidth = Math.max(0.34, 0.5 * widthNow * envelope);
           const distance = Math.abs(dx - center);
           if (distance < halfWidth + 1.2) {
             const alpha = Math.min(1, (halfWidth + 1.2 - distance) / 1.6);
             const q = halfWidth > 0 ? Math.max(0, 1 - distance / halfWidth) : 0;
             const temp = Math.min(1, Math.max(0, 0.26 + 0.58 * q - 0.20 * sN));
-            const radiance = 0.98 * envelope * alpha * (0.30 + 0.82 * q);
+            const radiance = 0.98 * envelope * alpha * (0.30 + 0.82 * q) * intensity * brightness;
             fr += radiance;
             fg += radiance * (0.30 + 0.48 * temp);
             fb += radiance * (0.055 + 0.30 * temp);
@@ -542,7 +815,7 @@ function paintFlame(ctx, region) {
       const hy = (y + 0.5 - (by - 0.46 * heightNow)) / haloY;
       const haloDistance = Math.hypot(hx, hy);
       if (haloDistance < 1) {
-        const glow = (1 - haloDistance) * (1 - haloDistance) * 0.13;
+        const glow = (1 - haloDistance) * (1 - haloDistance) * 0.13 * intensity;
         fr += glow;
         fg += glow * 0.36;
         fb += glow * 0.10;
@@ -564,10 +837,11 @@ export function renderFrame(base, plan, time, options = {}) {
   const out = options.out || new Uint8ClampedArray(base.length);
   if (out !== base) out.set(base);
   const ctx = { base, out, width, height, plan, time };
-  const lights = plan.regions.filter((r) => r.role === "light-influence");
-  const flames = plan.regions.filter((r) => r.role === "animated");
-  for (const region of lights) paintLight(ctx, region);
-  for (const region of flames) paintFlame(ctx, region);
+  const active = (plan.regions || []).filter((region) => isElementAnimated(plan, region));
+  const lights = active.filter((region) => region.role === "light-influence");
+  const flames = active.filter((region) => region.role === "animated");
+  for (const region of lights) paintLight(ctx, region, prepareSupport(region, width, height));
+  for (const region of flames) paintFlame(ctx, region, prepareSupport(region, width, height));
   return { rgba: out, width, height };
 }
 
@@ -587,15 +861,15 @@ export function sampleTimes(plan) {
   return times;
 }
 
-export function supportMask(plan, width, height, roles = ["animated", "light-influence"]) {
+export function supportMask(plan, width, height, roles = ["animated", "light-influence"], options = {}) {
   const mask = new Uint8Array(width * height);
-  for (const region of plan.regions) {
+  for (const region of plan.regions || []) {
     if (!roles.includes(region.role)) continue;
-    const poly = toPixels(region.support.points, width, height);
-    const bounds = boundsOf(poly, width, height);
-    for (let y = bounds.y0; y <= bounds.y1; y++) {
-      for (let x = bounds.x0; x <= bounds.x1; x++) {
-        if (pointInPolygon(x + 0.5, y + 0.5, poly)) mask[y * width + x] = 1;
+    if (options.activeOnly && !isElementAnimated(plan, region)) continue;
+    const support = prepareSupport(region, width, height);
+    for (let y = support.bounds.y0; y <= support.bounds.y1; y++) {
+      for (let x = support.bounds.x0; x <= support.bounds.x1; x++) {
+        if (containsPrepared(support, x + 0.5, y + 0.5)) mask[y * width + x] = 1;
       }
     }
   }
@@ -614,13 +888,143 @@ export function meanLuminance(rgba, width, height, step = 2) {
   }
   return count ? total / count : 0;
 }
+
+export function createHistory(limit = 50) {
+  const past = [];
+  const future = [];
+  return {
+    push(snapshot) {
+      past.push(snapshot);
+      if (past.length > limit) past.shift();
+      future.length = 0;
+    },
+    undo(current) {
+      if (!past.length) return null;
+      const previous = past.pop();
+      future.push(current);
+      return previous;
+    },
+    redo(current) {
+      if (!future.length) return null;
+      const next = future.pop();
+      past.push(current);
+      return next;
+    },
+    canUndo() { return past.length > 0; },
+    canRedo() { return future.length > 0; },
+    clear() { past.length = 0; future.length = 0; },
+    size() { return past.length; }
+  };
+}
+
+export function serializeProject(plan) {
+  return JSON.stringify(plan, null, 2) + "\n";
+}
+
+export function parseProject(text) {
+  const project = JSON.parse(text);
+  if (!project || typeof project !== "object") throw new Error("Projet JSON invalide.");
+  if (project.schema !== "candle-motion-project/v2") {
+    throw new Error("Format de projet non pris en charge : candle-motion-project/v2 attendu.");
+  }
+  for (const key of ["source", "loop", "groups", "regions", "presets", "proposals"]) {
+    if (!(key in project)) throw new Error("Projet incomplet : " + key + " absent.");
+  }
+  if (!Array.isArray(project.groups) || !project.groups.length) throw new Error("Aucun groupe dans le projet.");
+  if (!Array.isArray(project.regions) || !project.regions.length) throw new Error("Aucun élément dans le projet.");
+  if (!Array.isArray(project.presets) || !project.presets.length) throw new Error("Aucun preset dans le projet.");
+  if (!/^[0-9a-f]{64}$/.test(project.source.sha256 || "")) throw new Error("Empreinte source absente ou invalide.");
+  return project;
+}
+
+export function checkSourceCompatibility(project, actual) {
+  if (!project?.source || !actual) return { ok: false, code: "source-missing", message: "Source absente." };
+  if (project.source.width !== actual.width || project.source.height !== actual.height) {
+    return {
+      ok: false,
+      code: "asset-dimensions-mismatch",
+      message: `Dimensions incompatibles : projet ${project.source.width}×${project.source.height}, asset ${actual.width}×${actual.height}. Remappage requis.`
+    };
+  }
+  if (project.source.sha256 !== actual.sha256) {
+    return {
+      ok: false,
+      code: "asset-hash-mismatch",
+      message: "Empreinte de l’asset différente. Le projet vient probablement d’une autre image : remappage des masques requis."
+    };
+  }
+  return { ok: true, code: "match", message: "Asset compatible : dimensions et empreinte vérifiées." };
+}
+
+/* Une proposition confirmée crée un élément Protéger, jamais une animation silencieuse. */
+export function confirmProposal(plan, proposalId) {
+  const proposal = (plan.proposals || []).find((item) => item.id === proposalId);
+  if (!proposal) throw new Error("Proposition introuvable.");
+  if (proposal.status !== "proposed") throw new Error("Cette proposition a déjà été traitée.");
+  if (proposal.category !== "flame" && proposal.category !== "light") {
+    throw new Error("Catégorie non supportée par l’éditeur de bougies ; la proposition reste non exécutable.");
+  }
+  const group = (plan.groups || []).find((item) => item.category === "candles") || plan.groups[0];
+  const points = proposal.support.points;
+  const xs = points.map(([x]) => x);
+  const ys = points.map(([, y]) => y);
+  const x0 = Math.min(...xs);
+  const x1 = Math.max(...xs);
+  const y0 = Math.min(...ys);
+  const y1 = Math.max(...ys);
+  const baseId = (proposal.category === "flame" ? "flame." : "light.") + proposal.id.replace(/^proposal\./, "");
+  let id = baseId;
+  let suffix = 2;
+  while (plan.regions.some((region) => region.id === id)) id = baseId + "-" + suffix++;
+  const region = proposal.category === "flame"
+    ? {
+        id,
+        role: "animated",
+        category: "flame",
+        groupId: group.id,
+        label: proposal.label,
+        supportStatus: "visually-checked",
+        support: JSON.parse(JSON.stringify(proposal.support)),
+        operation: "protect",
+        overrides: {},
+        size: 1,
+        anchor: [(x0 + x1) / 2, y1],
+        height: Math.max(0.012, (y1 - y0) * 0.9),
+        width: Math.max(0.004, (x1 - x0) * 0.55),
+        motion: { action: "flame-shape", phase: 0.5 },
+        render: { method: "procedural-flame-v1", suppression: 0.92, workingSpace: "linear" },
+        notes: "Proposition confirmée manuellement. Opération Protéger par défaut ; activer Animer après contrôle du support et de l’ancre."
+      }
+    : {
+        id,
+        role: "light-influence",
+        category: "light",
+        groupId: group.id,
+        label: proposal.label,
+        supportStatus: "visually-checked",
+        support: JSON.parse(JSON.stringify(proposal.support)),
+        operation: "protect",
+        overrides: {},
+        center: [(x0 + x1) / 2, (y0 + y1) / 2],
+        radii: [Math.max(0.01, (x1 - x0) / 2), Math.max(0.01, (y1 - y0) / 2)],
+        sources: [],
+        motion: { action: "warm-pool", phase: 0.2 },
+        render: { method: "local-warm-pool-v1", gain: 0.008, color: [1, 0.42, 0.12], falloff: 2, workingSpace: "linear" },
+        notes: "Proposition confirmée manuellement. Aucune source liée : la lumière reste inactive jusqu’à liaison explicite."
+      };
+  plan.regions.push(region);
+  if (!group.elementIds.includes(id)) group.elementIds.push(id);
+  proposal.status = "confirmed";
+  proposal.confirmedElementId = id;
+  return { region, proposal };
+}
 /* === CORE:END === */
 
 const PLAN_JSON = /* === PLAN:BEGIN === */
 {
-  "schema": "candle-motion-plan/v1",
+  "schema": "candle-motion-project/v2",
   "id": "motion.candles-4243.preview",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "status": "diagnostic-not-approved",
   "approval": {
     "status": "not-approved",
@@ -629,23 +1033,28 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
   },
   "label": "Motion intention preview—not a prediction of AI output.",
   "artistIntent": {
-    "summary": "Garder l’architecture, la caméra et les bougies fixes ; animer uniquement la forme des flammes existantes et la lumière chaude locale qui les accompagne.",
+    "summary": "Éditer les huit flammes et les sept lumières chaudes comme un groupe Bougies : mouvement partagé, réponses individuelles, overrides locaux et comparaison avant/après.",
     "constraints": [
       "Caméra fixe, aucun pan, tilt, zoom, travelling, parallaxe ni coupe.",
-      "Aucun objet, particule, texte, audio ou flamme supplémentaire.",
-      "La lumière chaude reste locale et cohérente ; aucun pompage global de luminosité.",
-      "Chaque flamme remplace la flamme statique dans son support déclaré ; pas de flamme fixe doublée."
+      "Chaque flamme remplace la flamme statique dans son support déclaré ; aucun objet, particule, texte ou flamme supplémentaire.",
+      "La lumière chaude reste locale et liée aux flammes ; aucun pompage global d’exposition.",
+      "Le vent est un signal partagé et périodique ; chaque flamme garde sa phase, sa taille et sa réponse propres.",
+      "Désactiver l’animation conserve l’élément statique et son support ; cela ne masque rien.",
+      "Protéger, animer et transformer sont trois opérations distinctes ; transformer reste proposé et non exécutable."
     ],
     "nonGoals": [
       "Prédire la sortie LTX ou son rendu.",
       "Produire un master, une image approuvée ou un export vidéo.",
-      "Simuler physiquement la combustion, la cire ou la profondeur de champ."
+      "Simuler physiquement la combustion, la cire ou la profondeur de champ.",
+      "Détecter automatiquement ou classer chaque point brillant."
     ]
   },
   "previewSettings": {
     "preset": "vivant",
     "showRegions": true,
     "playbackRate": 1,
+    "compare": false,
+    "compareSplit": 0.5,
     "note": "Réglages d’aperçu uniquement ; ils ne sont pas transmis à un moteur."
   },
   "engineControls": {
@@ -683,11 +1092,43 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
     "note": "T = 6,000 s et N = 144 donnent 24 images/s. Les temps d’export sont k·T/N pour k = 0…N−1 ; aucune frame finale dupliquée."
   },
   "protection": {
-    "definition": "Tout pixel hors de l’union des supports déclarés est protégé : il est recopié octet pour octet depuis le fond décodé.",
-    "overlapPolicy": "Les supports animés sont disjoints. Un support de lumière peut chevaucher un support animé : la lumière est appliquée d’abord, la flamme ensuite. L’union reste protégée ; le chevauchement est intentionnel et documenté.",
-    "edgePolicy": "Les dégradés s’annulent avant le bord des polygones ; les bords de support ne produisent pas de couture visible."
+    "definition": "Tout pixel hors de l’union des supports actifs est recopié octet pour octet depuis le fond décodé. Un élément désactivé, protégé ou en transformation proposée n’autorise aucune écriture.",
+    "overlapPolicy": "Les supports de flammes restent disjoints. Un support de lumière peut chevaucher une flamme : la lumière est appliquée d’abord, la flamme ensuite. Les corrections rectangle/brosse étendent le support de l’élément sans créer de patch rectangulaire de suppression.",
+    "edgePolicy": "Les dégradés s’annulent avant le bord du support ; la suppression de la flamme statique est elliptique et bornée par le support."
   },
   "seed": 4243,
+  "groups": [
+    {
+      "id": "group.candles",
+      "label": "Bougies",
+      "category": "candles",
+      "elementIds": [
+        "flame.tl-blue",
+        "flame.tr-brown-a",
+        "flame.tr-brown-b",
+        "flame.mr-blue",
+        "flame.left-a",
+        "flame.left-b",
+        "flame.lr-a",
+        "flame.lr-b",
+        "light.tl-niche",
+        "light.tr-niche",
+        "light.mr-niche",
+        "light.left-niche",
+        "light.lr-niche",
+        "light.left-floor",
+        "light.lr-floor"
+      ],
+      "presetId": "vivant",
+      "presetVersion": 1,
+      "animationEnabled": true,
+      "settings": {
+        "wind": {
+          "direction": 12
+        }
+      }
+    }
+  ],
   "regions": [
     {
       "id": "flame.tl-blue",
@@ -713,7 +1154,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.258594,
             0.313477
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.271484,
@@ -723,17 +1166,19 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       "width": 0.007812,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.0,
-        "lean": 0.2
+        "phase": 0.0
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme unique. Support serré autour de la flamme et de son halo immédiat ; la bougie et le rebord restent hors support."
+      "notes": "Flamme unique. Support serré autour de la flamme et de son halo immédiat ; la bougie et le rebord restent hors support.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.tr-brown-a",
@@ -759,7 +1204,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.739062,
             0.27832
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.757422,
@@ -769,17 +1216,19 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       "width": 0.011719,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.37,
-        "lean": 0.2
+        "phase": 0.37
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme gauche de la niche jumelle. Support disjoint de la flamme voisine."
+      "notes": "Flamme gauche de la niche jumelle. Support disjoint de la flamme voisine.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.tr-brown-b",
@@ -805,7 +1254,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.795312,
             0.276367
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.814063,
@@ -815,17 +1266,19 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       "width": 0.009375,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.71,
-        "lean": 0.2
+        "phase": 0.71
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme droite de la niche jumelle. Le rebord éclairé n’est pas compté comme flamme."
+      "notes": "Flamme droite de la niche jumelle. Le rebord éclairé n’est pas compté comme flamme.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.mr-blue",
@@ -851,7 +1304,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.83125,
             0.5
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.841406,
@@ -861,17 +1316,19 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       "width": 0.007031,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.12,
-        "lean": 0.2
+        "phase": 0.12
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme unique. Le liseré chaud du rebord droit est exclu du support."
+      "notes": "Flamme unique. Le liseré chaud du rebord droit est exclu du support.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.left-a",
@@ -897,7 +1354,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.1375,
             0.615234
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.147656,
@@ -907,17 +1366,19 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       "width": 0.00625,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.55,
-        "lean": 0.2
+        "phase": 0.55
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme gauche de la niche gauche. Le montant central reste hors support."
+      "notes": "Flamme gauche de la niche gauche. Le montant central reste hors support.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.left-b",
@@ -943,7 +1404,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.190625,
             0.617188
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.201172,
@@ -953,17 +1416,19 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       "width": 0.007031,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.83,
-        "lean": 0.2
+        "phase": 0.83
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme droite de la niche gauche. Support disjoint du montant et de la flamme voisine."
+      "notes": "Flamme droite de la niche gauche. Support disjoint du montant et de la flamme voisine.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.lr-a",
@@ -989,7 +1454,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.801562,
             0.738281
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.817969,
@@ -999,17 +1466,19 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       "width": 0.007812,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.26,
-        "lean": 0.2
+        "phase": 0.26
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme basse gauche. Le corps de bougie est exclu ; seule la flamme et son halo sont nettoyés."
+      "notes": "Flamme basse gauche. Le corps de bougie est exclu ; seule la flamme et son halo sont nettoyés.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "flame.lr-b",
@@ -1035,7 +1504,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.835156,
             0.737305
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "anchor": [
         0.851562,
@@ -1045,17 +1516,19 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       "width": 0.007031,
       "motion": {
         "action": "flame-shape",
-        "amplitude": 0.16,
-        "harmonic": 1,
-        "phase": 0.64,
-        "lean": 0.2
+        "phase": 0.64
       },
       "render": {
         "method": "procedural-flame-v1",
         "suppression": 0.92,
         "workingSpace": "linear"
       },
-      "notes": "Flamme basse droite. Support réduit pour rester disjoint de la flamme voisine."
+      "notes": "Flamme basse droite. Support réduit pour rester disjoint de la flamme voisine.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1.0
     },
     {
       "id": "light.tl-niche",
@@ -1081,7 +1554,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.222656,
             0.347656
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.271094,
@@ -1096,8 +1571,6 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.0
       },
       "render": {
@@ -1111,7 +1584,11 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Léger relèvement chaud de la niche ; le bleu de la façade n’est pas touché."
+      "notes": "Léger relèvement chaud de la niche ; le bleu de la façade n’est pas touché.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.tr-niche",
@@ -1137,7 +1614,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.701562,
             0.3125
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.785156,
@@ -1153,8 +1632,6 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.18
       },
       "render": {
@@ -1168,7 +1645,11 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Pool commun aux deux flammes ; la modulation suit leur moyenne, sans pompage global."
+      "notes": "Pool commun aux deux flammes ; la modulation suit leur moyenne, sans pompage global.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.mr-niche",
@@ -1194,7 +1675,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.8125,
             0.537109
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.841406,
@@ -1209,8 +1692,6 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.42
       },
       "render": {
@@ -1224,7 +1705,11 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Pool local autour de la flamme ; le bleu de la masse reste hors du dégradé fort."
+      "notes": "Pool local autour de la flamme ; le bleu de la masse reste hors du dégradé fort.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.left-niche",
@@ -1250,7 +1735,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.076563,
             0.646484
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.173437,
@@ -1266,8 +1753,6 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.27
       },
       "render": {
@@ -1281,7 +1766,11 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Pool commun aux deux flammes, centré entre elles. La tablette reste inchangée hors support."
+      "notes": "Pool commun aux deux flammes, centré entre elles. La tablette reste inchangée hors support.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.lr-niche",
@@ -1307,7 +1796,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.782813,
             0.779297
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.832031,
@@ -1323,8 +1814,6 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.61
       },
       "render": {
@@ -1338,7 +1827,11 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Pool local de la niche basse droite."
+      "notes": "Pool local de la niche basse droite.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.left-floor",
@@ -1364,7 +1857,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.085938,
             0.966797
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.175781,
@@ -1380,8 +1875,6 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.35
       },
       "render": {
@@ -1395,7 +1888,11 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Reflet de sol très faible, borné. Il ne déplace aucune architecture."
+      "notes": "Reflet de sol très faible, borné. Il ne déplace aucune architecture.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     },
     {
       "id": "light.lr-floor",
@@ -1421,7 +1918,9 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
             0.773438,
             0.919922
           ]
-        ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
       },
       "center": [
         0.828125,
@@ -1437,8 +1936,6 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       ],
       "motion": {
         "action": "warm-pool",
-        "amplitude": 0.35,
-        "harmonic": 1,
         "phase": 0.72
       },
       "render": {
@@ -1452,7 +1949,11 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
         "falloff": 1.6,
         "workingSpace": "linear"
       },
-      "notes": "Reflet de sol très faible, borné, aligné sur la niche."
+      "notes": "Reflet de sol très faible, borné, aligné sur la niche.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
     }
   ],
   "presets": [
@@ -1460,73 +1961,139 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
       "id": "calme",
       "label": "Calme",
       "note": "cordes lentes",
+      "version": 1,
+      "category": "candles",
       "flame": {
         "amplitude": 0.07,
         "harmonic": 1,
-        "lean": 0.1
+        "lean": 0.1,
+        "windResponse": 0.8
       },
       "lightScale": 0.6,
-      "lightModulation": 0.25
+      "lightModulation": 0.25,
+      "intensity": 0.9,
+      "wind": {
+        "direction": 0,
+        "strength": 0.04
+      },
+      "variation": "correlated"
     },
     {
       "id": "vivant",
       "label": "Bougies vivantes",
       "note": "référence",
       "default": true,
+      "version": 1,
+      "category": "candles",
       "flame": {
         "amplitude": 0.16,
         "harmonic": 1,
-        "lean": 0.2
+        "lean": 0.2,
+        "windResponse": 1.0
       },
       "lightScale": 1.0,
-      "lightModulation": 0.35
+      "lightModulation": 0.35,
+      "intensity": 1.0,
+      "wind": {
+        "direction": 0,
+        "strength": 0.12
+      },
+      "variation": "correlated"
     },
     {
       "id": "courant",
       "label": "Courant d’air",
       "note": "plus ample",
+      "version": 1,
+      "category": "candles",
       "flame": {
         "amplitude": 0.27,
         "harmonic": 2,
-        "lean": 0.34
+        "lean": 0.34,
+        "windResponse": 1.3
       },
       "lightScale": 1.15,
-      "lightModulation": 0.42
+      "lightModulation": 0.42,
+      "intensity": 1.05,
+      "wind": {
+        "direction": 25,
+        "strength": 0.38
+      },
+      "variation": "synchronized"
     },
     {
       "id": "veilleuse",
       "label": "Veilleuse",
       "note": "lumière haute",
+      "version": 1,
+      "category": "candles",
       "flame": {
         "amplitude": 0.09,
         "harmonic": 1,
-        "lean": 0.12
+        "lean": 0.12,
+        "windResponse": 0.7
       },
       "lightScale": 1.5,
-      "lightModulation": 0.3
+      "lightModulation": 0.3,
+      "intensity": 1.1,
+      "wind": {
+        "direction": 0,
+        "strength": 0.03
+      },
+      "variation": "independent"
+    },
+    {
+      "id": "sobre",
+      "label": "Sobre",
+      "note": "mouvement retenu",
+      "version": 1,
+      "category": "candles",
+      "flame": {
+        "amplitude": 0.055,
+        "harmonic": 1,
+        "lean": 0.08,
+        "windResponse": 0.75
+      },
+      "lightScale": 0.75,
+      "lightModulation": 0.2,
+      "intensity": 0.85,
+      "wind": {
+        "direction": 0,
+        "strength": 0.07
+      },
+      "variation": "correlated"
     }
-  ]
+  ],
+  "proposals": []
 }
 /* === PLAN:END === */;
 const PRISTINE = JSON.parse(JSON.stringify(PLAN_JSON));
 const W = PLAN_JSON.source.width;
 const H = PLAN_JSON.source.height;
-const T = PLAN_JSON.loop.durationSeconds;
-const FPS = PLAN_JSON.loop.fps;
-const N = PLAN_JSON.loop.samples;
+let T = PLAN_JSON.loop.durationSeconds;
+let FPS = PLAN_JSON.loop.fps;
+let N = PLAN_JSON.loop.samples;
 
 const state = {
   plan: JSON.parse(JSON.stringify(PRISTINE)),
-  preset: (PLAN_JSON.presets.find((p) => p.default) || PLAN_JSON.presets[0]).id,
+  basePlan: JSON.parse(JSON.stringify(PRISTINE)),
   time: 0,
   playing: false,
-  selected: "flame.tl-blue",
-  showRegions: true,
-  edit: false,
   ready: false,
   raf: null,
   last: 0,
   playback: 0,
+  selectedGroupId: PLAN_JSON.groups[0].id,
+  selectedIds: new Set(PLAN_JSON.groups[0].elementIds),
+  primaryId: PLAN_JSON.groups[0].elementIds[0],
+  showRegions: true,
+  edit: false,
+  maskTool: null,
+  brushSize: 8,
+  vertexIndex: null,
+  compare: PLAN_JSON.previewSettings.compare === true,
+  compareSplit: PLAN_JSON.previewSettings.compareSplit || 0.5,
+  projectStatusKind: "",
 };
 
 const $ = (id) => document.getElementById(id);
@@ -1538,10 +2105,13 @@ const baseCanvas = document.createElement("canvas");
 baseCanvas.width = W;
 baseCanvas.height = H;
 const baseCtx = baseCanvas.getContext("2d", { willReadFrequently: true });
-
 let baseRGBA = null;
 let outImage = null;
+let drag = null;
+let editBefore = null;
+let editDirty = false;
 
+const history = createHistory(60);
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const fmt = (value, digits = 2) => value.toLocaleString("fr-FR", {
   minimumFractionDigits: digits,
@@ -1553,7 +2123,7 @@ function toast(message) {
   node.textContent = message;
   node.classList.add("show");
   clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => node.classList.remove("show"), 1800);
+  toast.timer = setTimeout(() => node.classList.remove("show"), 2000);
 }
 
 function setReady(kind, text) {
@@ -1561,57 +2131,1209 @@ function setReady(kind, text) {
   $("ready-text").textContent = text;
 }
 
-/* ---------- chargement du fond ---------- */
-
-const img = new Image();
-img.decoding = "async";
-img.onload = () => {
-  baseCtx.drawImage(img, 0, 0, W, H);
-  try {
-    baseRGBA = baseCtx.getImageData(0, 0, W, H).data;
-  } catch (error) {
-    showLoadError(
-      "Lecture pixel impossible",
-      "Le navigateur bloque la lecture d’une image locale en file://. Servez le dossier avec un serveur statique local, par exemple : python3 -m http.server 8791 — puis ouvrez localhost:8791/docs/prototypes/candle-motion/.",
-    );
-    setReady("bad", "pixels indisponibles");
-    return;
-  }
-  outImage = viewCtx.createImageData(W, H);
-  /* Le canvas de base reste intact : les contrôles le redimensionnent pour
-     mesurer la luminance et la protection sur le vrai fond. */
-  $("load-state").hidden = true;
-  state.ready = true;
-  setReady("ok", "prêt · rendu déterministe");
-  buildPresets();
-  buildRegionList();
-  selectRegion(state.selected, false);
-  draw();
-  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) startPlayback();
-};
-img.onerror = () => {
-  showLoadError(
-    "Fond introuvable",
-    "Le fichier reconstruction-seed-4243.png n’est pas accessible depuis cette page. Vérifiez le chemin relatif du plan : validation/2026-11-09-reconstruction-v2/outputs/reconstruction-seed-4243.png.",
-  );
-  setReady("bad", "fond introuvable");
-};
-img.src = new URL("../../../" + PLAN_JSON.source.path, location.href).href;
-
-function showLoadError(title, detail) {
-  $("load-title").textContent = title;
-  $("load-detail").textContent = detail;
-  $("load-state").hidden = false;
+function setProjectStatus(kind, text) {
+  const node = $("project-status");
+  node.className = "project-status " + kind;
+  node.textContent = text;
+  state.projectStatusKind = kind;
 }
 
-/* ---------- rendu ---------- */
+function updateHistoryButtons() {
+  $("undo").disabled = !history.canUndo();
+  $("redo").disabled = !history.canRedo();
+  $("undo").textContent = history.canUndo() ? `Annuler (${history.size()})` : "Annuler";
+  $("redo").textContent = history.canRedo() ? "Rétablir" : "Rétablir";
+}
+
+/* ---------- édition et précédence ---------- */
+
+function setPath(object, path, value) {
+  const keys = path.split(".");
+  let node = object;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!node[keys[i]] || typeof node[keys[i]] !== "object") node[keys[i]] = {};
+    node = node[keys[i]];
+  }
+  node[keys[keys.length - 1]] = value;
+}
+
+function deletePath(object, path) {
+  const keys = path.split(".");
+  let node = object;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!node[keys[i]] || typeof node[keys[i]] !== "object") return;
+    node = node[keys[i]];
+  }
+  delete node[keys[keys.length - 1]];
+}
+
+function beginEdit() {
+  if (!editBefore) {
+    editBefore = clone(state.plan);
+    editDirty = false;
+  }
+}
+
+function cancelEdit() {
+  editBefore = null;
+  editDirty = false;
+}
+
+function commitEdit() {
+  if (!editBefore) return false;
+  if (editDirty) history.push(editBefore);
+  editBefore = null;
+  editDirty = false;
+  updateHistoryButtons();
+  return true;
+}
+
+function mutate(mutator, message) {
+  const before = clone(state.plan);
+  mutator();
+  history.push(before);
+  editBefore = null;
+  editDirty = false;
+  afterPlanChange(message);
+}
+
+function afterPlanChange(message) {
+  ensureSelection();
+  buildPresets();
+  buildSceneList();
+  buildEditor();
+  buildProposals();
+  updateHistoryButtons();
+  updateCompareUI();
+  draw();
+  if (message) toast(message);
+}
+
+function undo() {
+  const previous = history.undo(clone(state.plan));
+  if (!previous) return;
+  state.plan = previous;
+  ensureSelection();
+  buildPresets();
+  buildSceneList();
+  buildEditor();
+  buildProposals();
+  updateHistoryButtons();
+  updateCompareUI();
+  draw();
+  toast("Édition annulée.");
+}
+
+function redo() {
+  const next = history.redo(clone(state.plan));
+  if (!next) return;
+  state.plan = next;
+  ensureSelection();
+  buildPresets();
+  buildSceneList();
+  buildEditor();
+  buildProposals();
+  updateHistoryButtons();
+  updateCompareUI();
+  draw();
+  toast("Édition rétablie.");
+}
+
+function groups() {
+  return state.plan.groups || [];
+}
+
+function groupFor(element) {
+  return groups().find((group) => group.id === element.groupId) || groups()[0];
+}
+
+function elementById(id) {
+  return state.plan.regions.find((element) => element.id === id);
+}
+
+function selectedGroup() {
+  return groups().find((group) => group.id === state.selectedGroupId) || null;
+}
+
+function primaryElement() {
+  return elementById(state.primaryId) || selectedElements()[0] || null;
+}
+
+function selectedElements() {
+  return state.plan.regions.filter((element) => state.selectedIds.has(element.id));
+}
+
+function presetFor(group) {
+  return state.plan.presets.find((preset) => preset.id === group?.presetId)
+    || state.plan.presets.find((preset) => preset.default)
+    || state.plan.presets[0];
+}
+
+function countLeaves(object) {
+  if (!object || typeof object !== "object") return 0;
+  let count = 0;
+  for (const value of Object.values(object)) {
+    count += value && typeof value === "object" ? countLeaves(value) : 1;
+  }
+  return count;
+}
+
+function ensureSelection() {
+  const ids = new Set(state.plan.regions.map((element) => element.id));
+  state.selectedIds = new Set([...state.selectedIds].filter((id) => ids.has(id)));
+  if (state.selectedGroupId && !groups().some((group) => group.id === state.selectedGroupId)) {
+    state.selectedGroupId = null;
+  }
+  if (!state.primaryId || !ids.has(state.primaryId)) state.primaryId = [...state.selectedIds][0] || state.plan.regions[0]?.id || null;
+  if (!state.selectedIds.size && state.selectedGroupId) {
+    const group = selectedGroup();
+    if (group) state.selectedIds = new Set(group.elementIds.filter((id) => ids.has(id)));
+  }
+  if (groups().length === 1 && !state.selectedGroupId && state.selectedIds.size === state.plan.regions.length) {
+    state.selectedGroupId = groups()[0].id;
+  }
+}
+
+/* ---------- scène ---------- */
+
+function selectGroup(groupId) {
+  const group = groups().find((item) => item.id === groupId);
+  if (!group) return;
+  state.selectedGroupId = group.id;
+  state.selectedIds = new Set(group.elementIds);
+  state.primaryId = group.elementIds[0] || state.plan.regions[0]?.id;
+  state.edit = false;
+  state.maskTool = null;
+  state.vertexIndex = null;
+  overlay.classList.remove("editing");
+  buildSceneList();
+  buildEditor();
+  drawOverlay();
+}
+
+function selectElement(id, additive = false) {
+  const element = elementById(id);
+  if (!element) return;
+  if (additive) {
+    if (state.selectedIds.has(id)) {
+      state.selectedIds.delete(id);
+      if (state.primaryId === id) state.primaryId = [...state.selectedIds][0] || null;
+    } else {
+      state.selectedIds.add(id);
+      state.primaryId = id;
+    }
+    state.selectedGroupId = null;
+  } else {
+    state.selectedGroupId = null;
+    state.selectedIds = new Set([id]);
+    state.primaryId = id;
+  }
+  state.edit = false;
+  state.maskTool = null;
+  state.vertexIndex = null;
+  overlay.classList.remove("editing");
+  buildSceneList();
+  buildEditor();
+  drawOverlay();
+}
+
+function isAnimated(element) {
+  return isElementAnimated(state.plan, element);
+}
+
+function sceneItem(element, group) {
+  const item = document.createElement("div");
+  item.className = "scene-item";
+  item.dataset.id = element.id;
+  const row = document.createElement("button");
+  row.type = "button";
+  row.className = "region-row";
+  row.dataset.id = element.id;
+  row.setAttribute("aria-pressed", String(state.selectedIds.has(element.id)));
+  const overrides = countLeaves(element.overrides);
+  const linked = element.role === "animated"
+    ? state.plan.regions.filter((light) => light.role === "light-influence" && (light.sources || []).includes(element.id)).length
+    : (element.sources || []).length;
+  const status = element.operation === "protect" ? "protégé"
+    : element.operation === "transform" ? "transform. proposée"
+      : !isAnimated(element) ? "statique" : "";
+  row.innerHTML = `<span class="swatch ${element.role === "animated" ? "flame" : "light"}"></span>
+    <span class="scene-label">${element.label}</span>
+    ${status ? `<span class="mini-badge ${element.operation}">${status}</span>` : ""}
+    ${overrides ? `<span class="mini-badge override">${overrides} surch.</span>` : ""}
+    ${element.role === "animated" && !linked ? `<span class="mini-badge warn">sans lumière</span>` : ""}
+    <span class="rid">${element.id.replace(/^(flame|light)\./, "")}</span>`;
+  row.addEventListener("click", (event) => {
+    selectElement(element.id, event.shiftKey || event.metaKey || event.ctrlKey);
+  });
+  const toggle = document.createElement("input");
+  toggle.type = "checkbox";
+  toggle.className = "anim-toggle";
+  toggle.checked = isAnimated(element);
+  toggle.title = "Activer ou désactiver l’animation sans masquer l’élément";
+  toggle.setAttribute("aria-label", `Animer ${element.label}`);
+  toggle.addEventListener("click", (event) => event.stopPropagation());
+  toggle.addEventListener("change", () => {
+    const groupEnabled = group.animationEnabled !== false;
+    if (toggle.checked === groupEnabled) delete element.animationEnabled;
+    else element.animationEnabled = toggle.checked;
+    mutate(() => {}, toggle.checked ? "Animation activée pour cet élément." : "Animation désactivée ; l’élément statique reste visible.");
+  });
+  item.append(row, toggle);
+  return item;
+}
+
+function buildSceneList() {
+  const list = $("region-list");
+  list.replaceChildren();
+  for (const group of groups()) {
+    const groupRow = document.createElement("div");
+    groupRow.className = "group-row";
+    if (state.selectedGroupId === group.id) groupRow.classList.add("active");
+    const toggle = document.createElement("input");
+    toggle.type = "checkbox";
+    toggle.checked = group.animationEnabled !== false;
+    toggle.title = "Active ou désactive tout le groupe sans masquer les éléments";
+    toggle.setAttribute("aria-label", `Animer le groupe ${group.label}`);
+    toggle.addEventListener("change", () => {
+      mutate(() => { group.animationEnabled = toggle.checked; }, toggle.checked ? "Groupe animé." : "Groupe désactivé ; les éléments restent visibles.");
+    });
+    const select = document.createElement("button");
+    select.type = "button";
+    select.className = "group-select";
+    const preset = presetFor(group);
+    select.innerHTML = `<span class="group-mark">◆</span><span><strong>${group.label}</strong><small>${group.elementIds.length} éléments · preset ${preset.label} v${preset.version}</small></span>`;
+    select.addEventListener("click", () => selectGroup(group.id));
+    groupRow.append(toggle, select);
+    list.append(groupRow);
+    for (const [role, label] of [["animated", "Flammes"], ["light-influence", "Lumières"]]) {
+      const section = document.createElement("div");
+      section.className = "scene-section";
+      const elements = group.elementIds.map(elementById).filter((element) => element && element.role === role);
+      section.textContent = `${label} (${elements.length})`;
+      list.append(section);
+      for (const element of elements) list.append(sceneItem(element, group));
+    }
+  }
+  const flames = state.plan.regions.filter((element) => element.role === "animated");
+  const lights = state.plan.regions.filter((element) => element.role === "light-influence");
+  $("region-count").textContent = `${state.plan.regions.length} éléments · ${state.selectedIds.size} sélectionné(s)`;
+  $("scene-summary").textContent = `${flames.length} flammes · ${lights.length} lumières · ${groups().length} groupe`;
+}
+
+/* ---------- presets ---------- */
+
+function buildPresets() {
+  const grid = $("preset-grid");
+  grid.replaceChildren();
+  const group = selectedGroup() || groups()[0];
+  const preset = presetFor(group);
+  const items = state.plan.presets.filter((item) => !group || item.category === group.category);
+  for (const item of items.length ? items : state.plan.presets) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "preset";
+    button.dataset.preset = item.id;
+    button.setAttribute("aria-pressed", String(item.id === group?.presetId));
+    button.innerHTML = `${item.label}<span>${item.note || ""} · v${item.version}</span>`;
+    button.addEventListener("click", () => applyPreset(item.id));
+    grid.append(button);
+  }
+  $("preset-meta").textContent = group ? `${group.label} · ${preset.label} v${preset.version}` : `${state.plan.presets.length} presets`;
+}
+
+function applyPreset(id) {
+  const group = selectedGroup() || groupFor(primaryElement() || state.plan.regions[0]);
+  const preset = state.plan.presets.find((item) => item.id === id);
+  if (!group || !preset) return;
+  mutate(() => {
+    group.presetId = preset.id;
+    group.presetVersion = preset.version;
+  }, `Preset « ${preset.label} » appliqué au groupe.`);
+}
+
+/* ---------- inspecteur ---------- */
+
+function addSection(parent, text) {
+  const title = document.createElement("p");
+  title.className = "editor-section";
+  title.textContent = text;
+  parent.append(title);
+}
+
+function addNote(parent, text, kind = "") {
+  const node = document.createElement("p");
+  node.className = "micro" + (kind ? " " + kind : "");
+  node.textContent = text;
+  parent.append(node);
+}
+
+function addButtonRow(parent, buttons) {
+  const row = document.createElement("div");
+  row.className = "editor-actions";
+  for (const spec of buttons) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn small " + (spec.className || "ghost");
+    button.textContent = spec.label;
+    button.disabled = Boolean(spec.disabled);
+    button.addEventListener("click", spec.onClick);
+    row.append(button);
+  }
+  parent.append(row);
+}
+
+function sourceText(source) {
+  return source === "element" ? "surchargé" : source === "group" ? "groupe" : source === "preset" ? "preset" : source;
+}
+
+function sourceBadge(source) {
+  const badge = document.createElement("span");
+  badge.className = "source-badge src-" + source;
+  badge.textContent = sourceText(source);
+  return badge;
+}
+
+function addSharedRange(parent, context, path, options) {
+  const probe = context.kind === "group"
+    ? { groupId: context.group.id, overrides: {} }
+    : context.element;
+  const resolved = resolveField(state.plan, probe, path);
+  const target = context.kind === "group" ? context.group.settings : context.element.overrides;
+  const wrap = document.createElement("div");
+  wrap.className = "control";
+  const head = document.createElement("div");
+  head.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = options.label;
+  const badge = sourceBadge(resolved.source);
+  const output = document.createElement("output");
+  const format = (value) => options.format ? options.format(value) : `${fmt(value, options.digits ?? 2)}${options.unit || ""}`;
+  output.textContent = format(Number(resolved.value));
+  const reset = document.createElement("button");
+  reset.type = "button";
+  reset.className = "reset-mini";
+  reset.textContent = "↺";
+  reset.title = "Retirer cette surcharge et revenir à la couche héritée";
+  reset.disabled = resolved.source !== (context.kind === "group" ? "group" : "element");
+  reset.addEventListener("click", () => {
+    mutate(() => { deletePath(target, path); }, "Valeur héritée rétablie.");
+  });
+  head.append(label, badge, output, reset);
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = String(options.min);
+  input.max = String(options.max);
+  input.step = String(options.step);
+  input.value = String(resolved.value);
+  input.setAttribute("aria-label", options.label);
+  input.addEventListener("pointerdown", beginEdit);
+  input.addEventListener("focus", beginEdit);
+  input.addEventListener("input", () => {
+    const value = Number(input.value);
+    setPath(target, path, value);
+    editDirty = true;
+    output.textContent = format(value);
+    badge.className = "source-badge src-" + (context.kind === "group" ? "group" : "element");
+    badge.textContent = context.kind === "group" ? "groupe" : "surchargé";
+    reset.disabled = false;
+    draw();
+  });
+  input.addEventListener("change", () => {
+    if (commitEdit()) afterPlanChange();
+  });
+  wrap.append(head, input);
+  parent.append(wrap);
+}
+
+function addSharedSelect(parent, context, path, labelText, choices) {
+  const probe = context.kind === "group"
+    ? { groupId: context.group.id, overrides: {} }
+    : context.element;
+  const resolved = resolveField(state.plan, probe, path);
+  const target = context.kind === "group" ? context.group.settings : context.element.overrides;
+  const wrap = document.createElement("div");
+  wrap.className = "control";
+  const head = document.createElement("div");
+  head.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = labelText;
+  const badge = sourceBadge(resolved.source);
+  const reset = document.createElement("button");
+  reset.type = "button";
+  reset.className = "reset-mini";
+  reset.textContent = "↺";
+  reset.disabled = resolved.source !== (context.kind === "group" ? "group" : "element");
+  reset.addEventListener("click", () => mutate(() => { deletePath(target, path); }, "Valeur héritée rétablie."));
+  head.append(label, badge, reset);
+  const select = document.createElement("select");
+  for (const choice of choices) {
+    const option = document.createElement("option");
+    option.value = choice.value;
+    option.textContent = choice.label;
+    select.append(option);
+  }
+  select.value = String(resolved.value);
+  select.addEventListener("change", () => {
+    setPath(target, path, select.value);
+    mutate(() => {}, "Variation mise à jour.");
+  });
+  wrap.append(head, select);
+  parent.append(wrap);
+}
+
+function addIntrinsicRange(parent, labelText, getValue, setValue, options = {}) {
+  const wrap = document.createElement("div");
+  wrap.className = "control";
+  const head = document.createElement("div");
+  head.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = labelText;
+  const badge = sourceBadge("intrinsic");
+  const output = document.createElement("output");
+  const format = (value) => options.format ? options.format(value) : `${fmt(value, options.digits ?? 2)}${options.unit || ""}`;
+  output.textContent = format(Number(getValue()));
+  head.append(label, badge, output);
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = String(options.min);
+  input.max = String(options.max);
+  input.step = String(options.step);
+  input.value = String(getValue());
+  input.setAttribute("aria-label", labelText);
+  input.addEventListener("pointerdown", beginEdit);
+  input.addEventListener("focus", beginEdit);
+  input.addEventListener("input", () => {
+    const value = Number(input.value);
+    setValue(value);
+    editDirty = true;
+    output.textContent = format(value);
+    draw();
+  });
+  input.addEventListener("change", () => {
+    if (commitEdit()) afterPlanChange();
+  });
+  wrap.append(head, input);
+  parent.append(wrap);
+}
+
+function addToggle(parent, labelText, checked, onChange, note) {
+  const row = document.createElement("label");
+  row.className = "toggle-row";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.checked = Boolean(checked);
+  input.addEventListener("change", () => onChange(input.checked));
+  const span = document.createElement("span");
+  span.textContent = labelText;
+  row.append(input, span);
+  if (note) {
+    const small = document.createElement("small");
+    small.textContent = note;
+    row.append(small);
+  }
+  parent.append(row);
+}
+
+function addSeed(parent) {
+  const wrap = document.createElement("div");
+  wrap.className = "control";
+  const head = document.createElement("div");
+  head.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = "Seed déterministe (projet)";
+  head.append(label, sourceBadge("project"));
+  const input = document.createElement("input");
+  input.type = "number";
+  input.min = "0";
+  input.max = "999999";
+  input.step = "1";
+  input.value = String(state.plan.seed);
+  input.addEventListener("change", () => {
+    const value = Math.max(0, Math.round(Number(input.value) || 0));
+    if (value === state.plan.seed) return;
+    mutate(() => { state.plan.seed = value; }, `Seed ${value} appliqué à tout le projet.`);
+  });
+  wrap.append(head, input);
+  parent.append(wrap);
+}
+
+function addGroupPresetSelect(parent, group) {
+  const row = document.createElement("div");
+  row.className = "control";
+  const head = document.createElement("div");
+  head.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = "Preset du groupe";
+  head.append(label, sourceBadge("preset"));
+  const select = document.createElement("select");
+  for (const preset of state.plan.presets.filter((item) => item.category === group.category)) {
+    const option = document.createElement("option");
+    option.value = preset.id;
+    option.textContent = `${preset.label} · v${preset.version}`;
+    select.append(option);
+  }
+  select.value = group.presetId;
+  select.addEventListener("change", () => applyPreset(select.value));
+  row.append(head, select);
+  parent.append(row);
+}
+
+function buildEditor() {
+  const editor = $("editor");
+  editor.replaceChildren();
+  const group = selectedGroup();
+  if (group) {
+    buildGroupEditor(editor, group);
+    return;
+  }
+  const elements = selectedElements();
+  if (elements.length > 1) {
+    buildMultiEditor(editor, elements);
+    return;
+  }
+  if (elements.length === 1) {
+    buildElementEditor(editor, elements[0]);
+    return;
+  }
+  const empty = document.createElement("p");
+  empty.className = "micro";
+  empty.textContent = "Sélectionnez un groupe, une flamme ou une lumière dans la scène, ou cliquez directement dans l’image.";
+  editor.append(empty);
+}
+
+function buildGroupEditor(editor, group) {
+  const preset = presetFor(group);
+  const head = document.createElement("div");
+  head.className = "editor-head";
+  head.innerHTML = `<strong>${group.label}</strong><span>${group.elementIds.length} éléments · preset ${preset.label} v${preset.version}</span>`;
+  editor.append(head);
+  addNote(editor, "Groupe sélectionné. Les réglages ci-dessous deviennent la couche groupe ; chaque élément peut les surcharger. Précédence : élément > groupe > preset.");
+  addGroupPresetSelect(editor, group);
+  addToggle(editor, "Animer le groupe", group.animationEnabled !== false, (checked) => {
+    mutate(() => { group.animationEnabled = checked; }, checked ? "Groupe animé." : "Groupe statique ; tous les éléments restent visibles.");
+  }, "Désactiver ne masque aucune flamme ni lumière.");
+  addSection(editor, "Mouvement partagé");
+  addSharedRange(editor, { kind: "group", group }, "flame.amplitude", { label: "Amplitude", min: 0, max: 0.4, step: 0.005, digits: 2 });
+  addSharedRange(editor, { kind: "group", group }, "flame.harmonic", { label: "Vitesse (harmonique)", min: 1, max: 4, step: 1, digits: 0, format: (value) => `${value}×` });
+  addSharedRange(editor, { kind: "group", group }, "flame.lean", { label: "Inclinaison", min: 0, max: 0.5, step: 0.005, digits: 2 });
+  addSharedRange(editor, { kind: "group", group }, "intensity", { label: "Intensité liée", min: 0.2, max: 1.8, step: 0.01, digits: 2 });
+  addSharedSelect(editor, { kind: "group", group }, "variation", "Variation", [
+    { value: "synchronized", label: "Synchronisée (vent commun)" },
+    { value: "correlated", label: "Corrélée (recommandé)" },
+    { value: "independent", label: "Indépendante (micro-mouvements)" }
+  ]);
+  addSection(editor, "Vent partagé");
+  addSharedRange(editor, { kind: "group", group }, "wind.direction", { label: "Direction du vent", min: 0, max: 360, step: 1, digits: 0, unit: "°" });
+  addSharedRange(editor, { kind: "group", group }, "wind.strength", { label: "Force du vent", min: 0, max: 0.6, step: 0.005, digits: 2 });
+  addSharedRange(editor, { kind: "group", group }, "flame.windResponse", { label: "Réponse au vent (défaut)", min: 0, max: 1.8, step: 0.01, digits: 2 });
+  addSeed(editor);
+  addSection(editor, "Lumière locale");
+  addSharedRange(editor, { kind: "group", group }, "lightScale", { label: "Échelle de lumière", min: 0.1, max: 2.5, step: 0.01, digits: 2 });
+  addSharedRange(editor, { kind: "group", group }, "lightModulation", { label: "Modulation de lumière", min: 0, max: 0.8, step: 0.005, digits: 2 });
+  addSection(editor, "Opérations du groupe");
+  addButtonRow(editor, [
+    { label: "Tout animer", onClick: () => mutate(() => { for (const id of group.elementIds) { const element = elementById(id); if (element) element.operation = "animate"; } }, "Tous les éléments sont animés.") },
+    { label: "Tout protéger", onClick: () => mutate(() => { for (const id of group.elementIds) { const element = elementById(id); if (element) element.operation = "protect"; } }, "Tous les éléments sont protégés ; aucun n’est dessiné.") },
+    { label: "Effacer les overrides", onClick: () => mutate(() => { for (const id of group.elementIds) { const element = elementById(id); if (element) element.overrides = {}; } }, "Overrides du groupe effacés.") },
+    { label: "Réinitialiser au preset", onClick: () => mutate(() => { group.settings = {}; }, "Réglages du groupe réinitialisés au preset.") }
+  ]);
+  const overrides = group.elementIds.reduce((sum, id) => sum + countLeaves(elementById(id)?.overrides), 0);
+  addNote(editor, `Preset ${preset.label} v${preset.version} · ${overrides} surcharge(s) d’élément. Les valeurs « preset » sont les défauts ; « groupe » est la couche partagée.`);
+}
+
+function buildMultiEditor(editor, elements) {
+  const flames = elements.filter((element) => element.role === "animated").length;
+  const lights = elements.length - flames;
+  const head = document.createElement("div");
+  head.className = "editor-head";
+  head.innerHTML = `<strong>${elements.length} éléments sélectionnés</strong><span>${flames} flammes · ${lights} lumières</span>`;
+  editor.append(head);
+  addNote(editor, "Sélection multiple. Les réglages partagés se modifient dans l’inspecteur du groupe ou sur un seul élément ; les actions ci-dessous s’appliquent à toute la sélection.");
+  addButtonRow(editor, [
+    { label: "Animer", onClick: () => mutate(() => { for (const element of elements) element.operation = "animate"; }, "Sélection animée.") },
+    { label: "Protéger", onClick: () => mutate(() => { for (const element of elements) element.operation = "protect"; }, "Sélection protégée ; aucun rendu.") },
+    { label: "Désactiver", onClick: () => mutate(() => { for (const element of elements) element.animationEnabled = false; }, "Animation désactivée ; éléments statiques conservés.") },
+    { label: "Activer", onClick: () => mutate(() => { const group = groupFor(elements[0]); for (const element of elements) { if (group?.animationEnabled !== false) delete element.animationEnabled; else element.animationEnabled = true; } }, "Animation activée.") },
+    { label: "Effacer les overrides", onClick: () => mutate(() => { for (const element of elements) element.overrides = {}; }, "Overrides de la sélection effacés.") }
+  ]);
+  const list = document.createElement("div");
+  list.className = "multi-list";
+  for (const element of elements) {
+    const row = document.createElement("p");
+    row.innerHTML = `<span class="swatch ${element.role === "animated" ? "flame" : "light"}"></span>${element.label} <span class="mono">${element.id}</span>`;
+    list.append(row);
+  }
+  editor.append(list);
+  addButtonRow(editor, [{ label: "Voir le groupe", onClick: () => selectGroup(groupFor(elements[0])?.id) }]);
+}
+
+function addOperationControl(parent, element) {
+  const row = document.createElement("div");
+  row.className = "control";
+  const head = document.createElement("div");
+  head.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = "Opération";
+  const badge = sourceBadge("intrinsic");
+  head.append(label, badge);
+  const select = document.createElement("select");
+  for (const [value, text] of [["animate", "Animer"], ["protect", "Protéger"], ["transform", "Transformer (proposé, non exécutable)"]]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = text;
+    select.append(option);
+  }
+  select.value = element.operation || "animate";
+  select.addEventListener("change", () => {
+    mutate(() => {
+      element.operation = select.value;
+      if (select.value === "transform" && !element.transformPlan) {
+        element.transformPlan = { status: "proposed", description: "" };
+      }
+    }, select.value === "protect" ? "Élément protégé : aucune écriture de rendu." : select.value === "transform" ? "Transformation proposée : aucune exécution." : "Élément animé.");
+  });
+  row.append(head, select);
+  parent.append(row);
+}
+
+function addTransformPlan(parent, element) {
+  if (!element.transformPlan) element.transformPlan = { status: "proposed", description: "" };
+  addNote(parent, "Transformation proposée : décrire le plan (ciel, sources, ombres, reflets) ne l’exécute pas. Aucun moteur de transformation n’est branché.", "warn");
+  const area = document.createElement("textarea");
+  area.rows = 4;
+  area.placeholder = "Ex. ciel nocturne : ciel, lune, ombres et reflets à recalculer ensemble.";
+  area.value = element.transformPlan.description || "";
+  area.addEventListener("focus", beginEdit);
+  area.addEventListener("input", () => {
+    element.transformPlan.description = area.value;
+    element.transformPlan.status = "proposed";
+    editDirty = true;
+  });
+  area.addEventListener("change", () => {
+    if (commitEdit()) setProjectStatus("ok", "Plan de transformation enregistré comme proposition non exécutable.");
+  });
+  parent.append(area);
+}
+
+function addLinkList(parent, element) {
+  addSection(parent, element.role === "animated" ? "Lumière locale liée" : "Sources liées");
+  const candidates = element.role === "animated"
+    ? state.plan.regions.filter((candidate) => candidate.role === "light-influence")
+    : state.plan.regions.filter((candidate) => candidate.role === "animated");
+  if (!candidates.length) {
+    addNote(parent, "Aucune cible disponible.", "warn");
+    return;
+  }
+  const wrap = document.createElement("div");
+  wrap.className = "link-list";
+  for (const candidate of candidates) {
+    const row = document.createElement("label");
+    row.className = "link-row";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    const linked = element.role === "animated"
+      ? (candidate.sources || []).includes(element.id)
+      : (element.sources || []).includes(candidate.id);
+    input.checked = linked;
+    input.addEventListener("change", () => {
+      mutate(() => {
+        if (element.role === "animated") {
+          const set = new Set(candidate.sources || []);
+          if (input.checked) set.add(element.id);
+          else set.delete(element.id);
+          candidate.sources = [...set];
+        } else {
+          const set = new Set(element.sources || []);
+          if (input.checked) set.add(candidate.id);
+          else set.delete(candidate.id);
+          element.sources = [...set];
+        }
+      }, "Liaison lumière mise à jour.");
+    });
+    const span = document.createElement("span");
+    span.textContent = candidate.label;
+    row.append(input, span);
+    wrap.append(row);
+  }
+  parent.append(wrap);
+  if (element.role === "animated") {
+    const linked = state.plan.regions.filter((candidate) => candidate.role === "light-influence" && (candidate.sources || []).includes(element.id)).length;
+    addNote(parent, linked ? `${linked} lumière(s) suivent cette flamme.` : "Aucune lumière liée : la flamme bouge sans éclairage local cohérent.", linked ? "" : "warn");
+  }
+}
+
+function addSupportTools(parent, element) {
+  addSection(parent, "Support et corrections manuelles");
+  const bounds = regionPixelBounds(element, W, H);
+  addNote(parent, `${element.support.points.length} sommets · ${(element.support.extraRects || []).length} rectangle(s) · ${(element.support.extraCircles || []).length} touche(s) de brosse · boîte ${bounds.x1 - bounds.x0 + 1}×${bounds.y1 - bounds.y0 + 1} px.`);
+  addButtonRow(parent, [
+    { label: "Polygone", className: state.maskTool === "polygon" ? "primary" : "ghost", onClick: () => setMaskTool("polygon") },
+    { label: "Rectangle", className: state.maskTool === "rect" ? "primary" : "ghost", onClick: () => setMaskTool("rect") },
+    { label: "Brosse", className: state.maskTool === "brush" ? "primary" : "ghost", onClick: () => setMaskTool("brush") },
+    { label: state.edit ? "Terminer" : "Éditer", onClick: () => { state.edit = !state.edit; state.maskTool = state.edit ? (state.maskTool || "polygon") : null; overlay.classList.toggle("editing", state.edit); buildEditor(); drawOverlay(); } }
+  ]);
+  if (state.maskTool === "polygon") {
+    addButtonRow(parent, [
+      { label: "Ajouter un sommet", onClick: addVertex },
+      { label: "Retirer un sommet", onClick: removeVertex, disabled: element.support.points.length <= 3 }
+    ]);
+    addNote(parent, "Faites glisser les poignées du polygone. Le sommet et l’ancre de mèche sont distincts ; l’ancre se déplace avec sa propre poignée.");
+  } else if (state.maskTool === "rect") {
+    addNote(parent, "Dessinez un rectangle sur l’image : il étend le support autorisé de cet élément. Il ne crée pas de patch de suppression rectangulaire.");
+  } else if (state.maskTool === "brush") {
+    const wrap = document.createElement("div");
+    wrap.className = "control";
+    const head = document.createElement("div");
+    head.className = "control-head";
+    head.innerHTML = `<span>Taille de brosse</span><output>${state.brushSize} px</output>`;
+    const input = document.createElement("input");
+    input.type = "range";
+    input.min = "2";
+    input.max = "40";
+    input.step = "1";
+    input.value = String(state.brushSize);
+    input.addEventListener("input", () => { state.brushSize = Number(input.value); head.querySelector("output").textContent = `${state.brushSize} px`; });
+    wrap.append(head, input);
+    parent.append(wrap);
+    addNote(parent, "Peignez sur l’image pour étendre le masque. La brosse ajoute des cercles au support, sans déplacer l’ancre.");
+  } else {
+    addNote(parent, "Choisissez Polygone, Rectangle ou Brosse pour corriger le support. Un support plus large autorise aussi le halo local.");
+  }
+  const extras = (element.support.extraRects || []).length + (element.support.extraCircles || []).length;
+  if (extras) {
+    addButtonRow(parent, [
+      { label: "Retirer le dernier rectangle", onClick: () => mutate(() => { element.support.extraRects.pop(); }, "Dernier rectangle retiré."), disabled: !(element.support.extraRects || []).length },
+      { label: "Effacer la brosse", onClick: () => mutate(() => { element.support.extraCircles = []; }, "Brosse effacée."), disabled: !(element.support.extraCircles || []).length }
+    ]);
+  }
+  addButtonRow(parent, [
+    { label: "Restaurer le support", onClick: () => {
+      const original = state.basePlan.regions.find((candidate) => candidate.id === element.id);
+      if (!original) return;
+      mutate(() => { element.support = clone(original.support); }, "Support restauré depuis le projet de base.");
+    } }
+  ]);
+}
+
+function buildElementEditor(editor, element) {
+  const group = groupFor(element);
+  const preset = presetFor(group);
+  const head = document.createElement("div");
+  head.className = "editor-head";
+  head.innerHTML = `<strong>${element.label}</strong><span>${element.id}</span>`;
+  editor.append(head);
+  addNote(editor, `Groupe ${group.label} · preset ${preset.label} v${preset.version} · ${element.role === "animated" ? "flamme" : "lumière"}.`);
+  const groupLink = document.createElement("button");
+  groupLink.type = "button";
+  groupLink.className = "btn small ghost";
+  groupLink.textContent = "Voir le groupe";
+  groupLink.addEventListener("click", () => selectGroup(group.id));
+  editor.append(groupLink);
+  addToggle(editor, "Animation activée", isAnimated(element), (checked) => {
+    const groupEnabled = group.animationEnabled !== false;
+    mutate(() => {
+      if (checked === groupEnabled) delete element.animationEnabled;
+      else element.animationEnabled = checked;
+    }, checked ? "Animation activée ; l’élément reste dans la scène." : "Animation désactivée ; l’élément statique reste visible.");
+  }, element.operation !== "animate" ? "L’opération Protéger/Transformer empêche aussi le rendu animé." : "");
+  addOperationControl(editor, element);
+  if (element.operation === "protect") {
+    addNote(editor, "Protéger : aucune écriture procédurale. Le pixel d’origine et le support restent inchangés.", "ok");
+  } else if (element.operation === "transform") {
+    addTransformPlan(editor, element);
+  } else if (!isAnimated(element)) {
+    addNote(editor, "Animation désactivée : l’élément d’origine reste visible, sans flamme procédurale ni lumière ajoutée.", "warn");
+  }
+  addSection(editor, "Réglages partagés");
+  if (element.role === "animated") {
+    addSharedRange(editor, { kind: "element", element }, "flame.amplitude", { label: "Amplitude", min: 0, max: 0.4, step: 0.005, digits: 2 });
+    addSharedRange(editor, { kind: "element", element }, "flame.harmonic", { label: "Vitesse (harmonique)", min: 1, max: 4, step: 1, digits: 0, format: (value) => `${value}×` });
+    addSharedRange(editor, { kind: "element", element }, "flame.lean", { label: "Inclinaison", min: 0, max: 0.5, step: 0.005, digits: 2 });
+    addSharedRange(editor, { kind: "element", element }, "intensity", { label: "Multiplicateur d’intensité", min: 0.2, max: 1.8, step: 0.01, digits: 2 });
+    addSharedRange(editor, { kind: "element", element }, "flame.windResponse", { label: "Réponse au vent", min: 0, max: 1.8, step: 0.01, digits: 2 });
+    addSharedSelect(editor, { kind: "element", element }, "variation", "Variation (override)", [
+      { value: "synchronized", label: "Synchronisée" },
+      { value: "correlated", label: "Corrélée" },
+      { value: "independent", label: "Indépendante" }
+    ]);
+  } else {
+    addSharedRange(editor, { kind: "element", element }, "lightScale", { label: "Échelle de lumière", min: 0.1, max: 2.5, step: 0.01, digits: 2 });
+    addSharedRange(editor, { kind: "element", element }, "lightModulation", { label: "Modulation", min: 0, max: 0.8, step: 0.005, digits: 2 });
+    addNote(editor, "L’intensité de cette lumière suit la moyenne des flammes liées ; le multiplicateur se règle sur la flamme.");
+  }
+  addSection(editor, element.role === "animated" ? "Forme et ancre" : "Lumière locale");
+  addIntrinsicRange(editor, "Phase", () => element.motion.phase, (value) => { element.motion.phase = value; }, { min: 0, max: 0.99, step: 0.01, digits: 2 });
+  if (element.role === "animated") {
+    addIntrinsicRange(editor, "Taille", () => element.size || 1, (value) => { element.size = value; }, { min: 0.25, max: 2, step: 0.01, digits: 2 });
+    addIntrinsicRange(editor, "Ancre X", () => element.anchor[0], (value) => { element.anchor[0] = value; }, { min: 0, max: 1, step: 0.001, digits: 3 });
+    addIntrinsicRange(editor, "Ancre Y", () => element.anchor[1], (value) => { element.anchor[1] = value; }, { min: 0, max: 1, step: 0.001, digits: 3 });
+  } else {
+    addIntrinsicRange(editor, "Centre X", () => element.center[0], (value) => { element.center[0] = value; }, { min: 0, max: 1, step: 0.001, digits: 3 });
+    addIntrinsicRange(editor, "Centre Y", () => element.center[1], (value) => { element.center[1] = value; }, { min: 0, max: 1, step: 0.001, digits: 3 });
+    addIntrinsicRange(editor, "Rayon X", () => element.radii[0], (value) => { element.radii[0] = value; }, { min: 0.005, max: 0.3, step: 0.001, digits: 3 });
+    addIntrinsicRange(editor, "Rayon Y", () => element.radii[1], (value) => { element.radii[1] = value; }, { min: 0.005, max: 0.3, step: 0.001, digits: 3 });
+    addIntrinsicRange(editor, "Gain de base", () => element.render.gain * 1000, (value) => { element.render.gain = value / 1000; }, { min: 1, max: 30, step: 0.5, digits: 1, format: (value) => `${fmt(value, 1)} ×10⁻³` });
+  }
+  addLinkList(editor, element);
+  addSupportTools(editor, element);
+  addSection(editor, "Surcharges");
+  addButtonRow(editor, [
+    { label: "Hériter de tout le groupe", onClick: () => mutate(() => { element.overrides = {}; }, "Toutes les surcharges de l’élément sont retirées.") },
+    { label: "Restaurer l’élément", onClick: () => {
+      const original = state.basePlan.regions.find((candidate) => candidate.id === element.id);
+      if (!original) return;
+      mutate(() => { Object.assign(element, clone(original)); }, "Élément restauré depuis le projet de base.");
+    } }
+  ]);
+  addNote(editor, `${countLeaves(element.overrides)} surcharge(s) locale(s). Une surcharge d’élément prime sur le groupe et sur le preset.`);
+}
+
+function setMaskTool(tool) {
+  state.maskTool = state.maskTool === tool ? null : tool;
+  state.edit = Boolean(state.maskTool);
+  state.vertexIndex = null;
+  overlay.classList.toggle("editing", state.edit);
+  buildEditor();
+  drawOverlay();
+}
+
+function addVertex() {
+  const element = primaryElement();
+  if (!element || !state.edit) return;
+  const points = element.support.points;
+  let best = 0;
+  let bestDistance = -1;
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    const distance = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (distance > bestDistance) { bestDistance = distance; best = i; }
+  }
+  const a = points[best];
+  const b = points[(best + 1) % points.length];
+  mutate(() => { points.splice(best + 1, 0, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]); }, "Sommet ajouté au polygone.");
+}
+
+function removeVertex() {
+  const element = primaryElement();
+  if (!element || !state.edit || element.support.points.length <= 3) return;
+  mutate(() => { element.support.points.pop(); }, "Dernier sommet retiré.");
+}
+
+/* ---------- propositions ---------- */
+
+function buildProposals() {
+  const box = $("proposal-box");
+  box.replaceChildren();
+  const proposals = state.plan.proposals || [];
+  if (!proposals.length) {
+    addNote(box, "Aucune proposition. La détection automatique n’est pas active dans cet incrément ; les corrections manuelles restent disponibles.");
+    return;
+  }
+  for (const proposal of proposals) {
+    const row = document.createElement("div");
+    row.className = "proposal";
+    const info = document.createElement("div");
+    info.innerHTML = `<strong>${proposal.label}</strong><span class="source-badge src-preset">${proposal.category}</span>
+      <p class="micro">Confiance ${fmt(proposal.confidence * 100, 0)} % · statut ${proposal.status}${proposal.uncertainty ? " · " + proposal.uncertainty : ""}</p>`;
+    const actions = document.createElement("div");
+    actions.className = "editor-actions";
+    if (proposal.status === "proposed") {
+      const confirm = document.createElement("button");
+      confirm.type = "button";
+      confirm.className = "btn small ghost";
+      confirm.textContent = "Confirmer";
+      confirm.disabled = proposal.category === "other";
+      confirm.addEventListener("click", () => {
+        const before = clone(state.plan);
+        try {
+          const result = confirmProposal(state.plan, proposal.id);
+          history.push(before);
+          state.selectedGroupId = null;
+          state.selectedIds = new Set([result.region.id]);
+          state.primaryId = result.region.id;
+          state.edit = false;
+          afterPlanChange("Proposition confirmée en opération Protéger ; activez Animer après contrôle.");
+        } catch (error) {
+          toast(error.message);
+        }
+      });
+      const reject = document.createElement("button");
+      reject.type = "button";
+      reject.className = "btn small ghost";
+      reject.textContent = "Rejeter";
+      reject.addEventListener("click", () => mutate(() => { proposal.status = "rejected"; }, "Proposition rejetée."));
+      actions.append(confirm, reject);
+    } else {
+      const note = document.createElement("span");
+      note.className = "micro";
+      note.textContent = proposal.confirmedElementId ? `→ ${proposal.confirmedElementId}` : "traitée";
+      actions.append(note);
+    }
+    row.append(info, actions);
+    box.append(row);
+  }
+}
+
+/* ---------- superposition et sélection ---------- */
+
+function drawSupportPath(region) {
+  const points = region.support.points.map(([x, y]) => [x * W, y * H]);
+  overlayCtx.beginPath();
+  points.forEach(([x, y], index) => index ? overlayCtx.lineTo(x, y) : overlayCtx.moveTo(x, y));
+  overlayCtx.closePath();
+}
+
+function drawExtras(region) {
+  for (const rect of region.support.extraRects || []) {
+    overlayCtx.beginPath();
+    overlayCtx.rect(Math.min(rect.x0, rect.x1) * W, Math.min(rect.y0, rect.y1) * H,
+      Math.abs(rect.x1 - rect.x0) * W, Math.abs(rect.y1 - rect.y0) * H);
+    overlayCtx.stroke();
+  }
+  for (const circle of region.support.extraCircles || []) {
+    overlayCtx.beginPath();
+    overlayCtx.ellipse(circle.x * W, circle.y * H, circle.rx * W, circle.ry * H, 0, 0, Math.PI * 2);
+    overlayCtx.stroke();
+  }
+}
+
+function drawOverlay() {
+  overlayCtx.clearRect(0, 0, W, H);
+  if (!state.showRegions) return;
+  for (const region of state.plan.regions) {
+    const selected = state.selectedIds.has(region.id);
+    const inGroup = state.selectedGroupId === region.groupId;
+    const flame = region.role === "animated";
+    const operation = region.operation || "animate";
+    const animated = isAnimated(region);
+    const color = operation === "protect" ? "#93a8ff" : operation === "transform" ? "#d89bff" : flame ? "#f0b35b" : "#5ad1c8";
+    drawSupportPath(region);
+    overlayCtx.fillStyle = selected || inGroup
+      ? (operation === "protect" ? "rgba(147,168,255,.13)" : operation === "transform" ? "rgba(216,155,255,.11)" : flame ? "rgba(240,179,91,.13)" : "rgba(90,209,200,.10)")
+      : (flame ? "rgba(240,179,91,.025)" : "rgba(90,209,200,.018)");
+    overlayCtx.fill();
+    overlayCtx.lineWidth = selected ? 3 : 1.6;
+    overlayCtx.strokeStyle = selected ? color : (flame ? "rgba(240,179,91,.58)" : "rgba(90,209,200,.48)");
+    overlayCtx.setLineDash(animated ? (flame ? [] : [7, 6]) : [3, 5]);
+    overlayCtx.stroke();
+    overlayCtx.setLineDash([4, 5]);
+    overlayCtx.strokeStyle = operation === "protect" ? "rgba(147,168,255,.65)" : operation === "transform" ? "rgba(216,155,255,.7)" : "rgba(240,179,91,.55)";
+    drawExtras(region);
+    overlayCtx.setLineDash([]);
+    if (flame) {
+      const ax = region.anchor[0] * W;
+      const ay = region.anchor[1] * H;
+      overlayCtx.beginPath();
+      overlayCtx.arc(ax, ay, selected ? 5 : 3, 0, Math.PI * 2);
+      overlayCtx.fillStyle = selected ? "#ffd08a" : "rgba(255,208,138,.7)";
+      overlayCtx.fill();
+    }
+    if (selected && state.edit && state.maskTool === "polygon") {
+      for (const [x, y] of region.support.points) {
+        overlayCtx.beginPath();
+        overlayCtx.arc(x * W, y * H, 8, 0, Math.PI * 2);
+        overlayCtx.fillStyle = "#5ad1c8";
+        overlayCtx.fill();
+        overlayCtx.lineWidth = 2;
+        overlayCtx.strokeStyle = "#04070a";
+        overlayCtx.stroke();
+      }
+      if (flame) {
+        overlayCtx.beginPath();
+        overlayCtx.arc(region.anchor[0] * W, region.anchor[1] * H, 8, 0, Math.PI * 2);
+        overlayCtx.fillStyle = "#ffd08a";
+        overlayCtx.fill();
+        overlayCtx.strokeStyle = "#04070a";
+        overlayCtx.stroke();
+      }
+    }
+  }
+  if (drag && drag.kind === "rect") {
+    const x0 = Math.min(drag.start.nx, drag.current.nx) * W;
+    const y0 = Math.min(drag.start.ny, drag.current.ny) * H;
+    const x1 = Math.max(drag.start.nx, drag.current.nx) * W;
+    const y1 = Math.max(drag.start.ny, drag.current.ny) * H;
+    overlayCtx.beginPath();
+    overlayCtx.rect(x0, y0, x1 - x0, y1 - y0);
+    overlayCtx.fillStyle = "rgba(90,209,200,.12)";
+    overlayCtx.fill();
+    overlayCtx.strokeStyle = "#5ad1c8";
+    overlayCtx.lineWidth = 2;
+    overlayCtx.setLineDash([5, 4]);
+    overlayCtx.stroke();
+    overlayCtx.setLineDash([]);
+  }
+  for (const proposal of state.plan.proposals || []) {
+    if (proposal.status !== "proposed") continue;
+    drawSupportPath({ support: proposal.support });
+    overlayCtx.setLineDash([3, 4]);
+    overlayCtx.lineWidth = 2;
+    overlayCtx.strokeStyle = "rgba(216,155,255,.8)";
+    overlayCtx.stroke();
+    overlayCtx.setLineDash([]);
+  }
+}
+
+function canvasPoint(event) {
+  const rect = overlay.getBoundingClientRect();
+  const nx = Math.min(0.9999, Math.max(0, (event.clientX - rect.left) / rect.width));
+  const ny = Math.min(0.9999, Math.max(0, (event.clientY - rect.top) / rect.height));
+  return { x: nx * W, y: ny * H, nx, ny };
+}
+
+function nearestVertex(element, point) {
+  let best = -1;
+  let bestDistance = 18;
+  element.support.points.forEach(([x, y], index) => {
+    const distance = Math.hypot(x * W - point.x, y * H - point.y);
+    if (distance < bestDistance) { bestDistance = distance; best = index; }
+  });
+  return best;
+}
+
+function addBrushPoint(element, point) {
+  const rx = state.brushSize / W;
+  const ry = state.brushSize / H;
+  const last = element.support.extraCircles[element.support.extraCircles.length - 1];
+  if (last && Math.hypot((point.nx - last.x) * W, (point.ny - last.y) * H) < state.brushSize * 0.35) return false;
+  element.support.extraCircles.push({ x: point.nx, y: point.ny, rx, ry });
+  return true;
+}
+
+overlay.addEventListener("pointerdown", (event) => {
+  if (!state.ready) return;
+  const point = canvasPoint(event);
+  const element = primaryElement();
+  if (state.edit && element && state.maskTool) {
+    if (state.maskTool === "polygon") {
+      if (element.role === "animated" && Math.hypot(element.anchor[0] * W - point.x, element.anchor[1] * H - point.y) < 14) {
+        beginEdit();
+        drag = { kind: "anchor", element };
+        overlay.setPointerCapture(event.pointerId);
+        return;
+      }
+      const vertex = nearestVertex(element, point);
+      if (vertex >= 0) {
+        beginEdit();
+        state.vertexIndex = vertex;
+        drag = { kind: "vertex", element, index: vertex };
+        overlay.setPointerCapture(event.pointerId);
+        return;
+      }
+    }
+    if (state.maskTool === "rect") {
+      beginEdit();
+      drag = { kind: "rect", element, start: point, current: point };
+      overlay.setPointerCapture(event.pointerId);
+      return;
+    }
+    if (state.maskTool === "brush") {
+      beginEdit();
+      drag = { kind: "brush", element };
+      if (addBrushPoint(element, point)) editDirty = true;
+      overlay.setPointerCapture(event.pointerId);
+      drawOverlay();
+      return;
+    }
+  }
+  const hits = state.plan.regions.filter((region) => pointInSupport(region, point.nx, point.ny));
+  hits.sort((a, b) => (a.role === "animated" ? 0 : 1) - (b.role === "animated" ? 0 : 1));
+  if (hits.length) {
+    selectElement(hits[0].id, event.shiftKey || event.metaKey || event.ctrlKey);
+  } else if (!event.shiftKey) {
+    state.selectedGroupId = null;
+    state.selectedIds = new Set();
+    state.primaryId = null;
+    buildSceneList();
+    buildEditor();
+    drawOverlay();
+  }
+});
+
+overlay.addEventListener("pointermove", (event) => {
+  if (!drag) return;
+  const point = canvasPoint(event);
+  if (drag.kind === "vertex") {
+    drag.element.support.points[drag.index] = [Number(point.nx.toFixed(4)), Number(point.ny.toFixed(4))];
+    editDirty = true;
+    draw();
+  } else if (drag.kind === "anchor") {
+    drag.element.anchor = [Number(point.nx.toFixed(4)), Number(point.ny.toFixed(4))];
+    editDirty = true;
+    draw();
+  } else if (drag.kind === "rect") {
+    drag.current = point;
+    drawOverlay();
+  } else if (drag.kind === "brush") {
+    if (addBrushPoint(drag.element, point)) {
+      editDirty = true;
+      draw();
+    }
+  }
+});
+
+function endDrag() {
+  if (!drag) return;
+  const current = drag;
+  drag = null;
+  if (current.kind === "rect") {
+    const x0 = Math.min(current.start.nx, current.current.nx);
+    const x1 = Math.max(current.start.nx, current.current.nx);
+    const y0 = Math.min(current.start.ny, current.current.ny);
+    const y1 = Math.max(current.start.ny, current.current.ny);
+    if (x1 - x0 > 0.002 && y1 - y0 > 0.002) {
+      current.element.support.extraRects.push({
+        x0: Number(x0.toFixed(4)), y0: Number(y0.toFixed(4)), x1: Number(x1.toFixed(4)), y1: Number(y1.toFixed(4))
+      });
+      editDirty = true;
+    }
+  }
+  if (editDirty) {
+    commitEdit();
+    afterPlanChange();
+    toast("Masque mis à jour ; le support protège toujours l’extérieur.");
+  } else {
+    cancelEdit();
+    buildEditor();
+    drawOverlay();
+  }
+}
+
+overlay.addEventListener("pointerup", endDrag);
+overlay.addEventListener("pointercancel", endDrag);
+
+/* ---------- transport et comparaison ---------- */
 
 function renderAt(time) {
   if (!state.ready) return;
   renderFrame(baseRGBA, state.plan, time, { width: W, height: H, out: outImage.data });
   viewCtx.putImageData(outImage, 0, 0);
+  if (state.compare) {
+    const split = Math.max(0.05, Math.min(0.95, state.compareSplit));
+    const x = Math.round(W * split);
+    viewCtx.save();
+    viewCtx.beginPath();
+    viewCtx.rect(0, 0, x, H);
+    viewCtx.clip();
+    viewCtx.drawImage(baseCanvas, 0, 0);
+    viewCtx.restore();
+    viewCtx.beginPath();
+    viewCtx.moveTo(x, 0);
+    viewCtx.lineTo(x, H);
+    viewCtx.lineWidth = 3;
+    viewCtx.strokeStyle = "rgba(232,238,245,.9)";
+    viewCtx.stroke();
+    viewCtx.beginPath();
+    viewCtx.moveTo(x + 4, 0);
+    viewCtx.lineTo(x + 4, H);
+    viewCtx.lineWidth = 1;
+    viewCtx.strokeStyle = "rgba(4,7,10,.8)";
+    viewCtx.stroke();
+  }
   drawOverlay();
-  const index = Math.floor(((time % T) + T) % T * FPS + 1e-9) % N;
+  const index = Math.floor((((time % T) + T) % T) * FPS + 1e-9) % N;
   $("readout").textContent = `${fmt(time, 3)} s · frame ${index}`;
   $("frame-tag").textContent = `frame ${index}`;
 }
@@ -1650,300 +3372,47 @@ function tick(now) {
   state.raf = requestAnimationFrame(tick);
 }
 
-/* ---------- presets ---------- */
-
-function buildPresets() {
-  const grid = $("preset-grid");
-  grid.replaceChildren();
-  for (const preset of state.plan.presets) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "preset";
-    button.dataset.preset = preset.id;
-    button.setAttribute("aria-pressed", String(preset.id === state.preset));
-    button.innerHTML = `${preset.label}<span>${preset.note || ""}</span>`;
-    button.addEventListener("click", () => applyPreset(preset.id));
-    grid.append(button);
-  }
+function updateCompareUI() {
+  $("compare").setAttribute("aria-pressed", String(state.compare));
+  $("compare").textContent = state.compare ? "Comparaison active" : "Comparer";
+  $("compare-split-wrap").hidden = !state.compare;
+  $("compare-before").hidden = !state.compare;
+  $("compare-after").hidden = !state.compare;
+  $("compare-split").value = String(state.compareSplit);
 }
 
-function applyPreset(id) {
-  const preset = PRISTINE.presets.find((p) => p.id === id);
-  if (!preset) return;
-  state.preset = id;
-  const next = clone(PRISTINE);
-  for (const region of next.regions) {
-    if (region.role === "animated") {
-      region.motion.amplitude = preset.flame.amplitude;
-      region.motion.harmonic = preset.flame.harmonic;
-      region.motion.lean = preset.flame.lean;
-    } else {
-      const base = PRISTINE.regions.find((r) => r.id === region.id);
-      region.render.gain = base.render.gain * preset.lightScale;
-      region.motion.amplitude = preset.lightModulation;
-    }
-  }
-  state.plan = next;
-  for (const button of document.querySelectorAll(".preset")) {
-    button.setAttribute("aria-pressed", String(button.dataset.preset === id));
-  }
-  buildRegionList();
-  selectRegion(state.selected, false);
-  draw();
-  toast(`Preset « ${preset.label} » appliqué.`);
-}
-
-/* ---------- liste et éditeur de régions ---------- */
-
-function regions() {
-  return state.plan.regions;
-}
-
-function selectedRegion() {
-  return regions().find((r) => r.id === state.selected) || regions()[0];
-}
-
-function buildRegionList() {
-  const list = $("region-list");
-  list.replaceChildren();
-  for (const region of regions()) {
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = "region-row";
-    row.dataset.id = region.id;
-    row.setAttribute("aria-pressed", String(region.id === state.selected));
-    row.innerHTML = `<span class="swatch ${region.role === "animated" ? "flame" : "light"}"></span>
-      <span>${region.label}</span><span class="rid">${region.id}</span>`;
-    row.addEventListener("click", () => selectRegion(region.id, true));
-    list.append(row);
-  }
-  $("region-count").textContent = `${regions().length} supports`;
-}
-
-function selectRegion(id, redraw) {
-  state.selected = id;
-  state.edit = false;
-  for (const row of document.querySelectorAll(".region-row")) {
-    row.setAttribute("aria-pressed", String(row.dataset.id === id));
-  }
-  buildEditor();
-  if (redraw) drawOverlay();
-}
-
-function field(label, value, min, max, step, format, onInput) {
-  const wrap = document.createElement("label");
-  wrap.className = "control";
-  wrap.innerHTML = `<span>${label}</span><output>${format(value)}</output>
-    <input type="range" min="${min}" max="${max}" step="${step}" value="${value}">`;
-  const input = wrap.querySelector("input");
-  const output = wrap.querySelector("output");
-  input.addEventListener("input", () => {
-    const next = Number(input.value);
-    output.textContent = format(next);
-    onInput(next);
-    draw();
-  });
-  return wrap;
-}
-
-function buildEditor() {
-  const region = selectedRegion();
-  const ed = $("editor");
-  ed.replaceChildren();
-  const isFlame = region.role === "animated";
-  const head = document.createElement("div");
-  head.className = "editor-head";
-  head.innerHTML = `<strong>${region.label}</strong><span>${region.id}</span>`;
-  ed.append(head);
-
-  if (isFlame) {
-    ed.append(field("Amplitude", region.motion.amplitude, 0, 0.35, 0.01,
-      (v) => fmt(v, 2), (v) => { region.motion.amplitude = v; }));
-    ed.append(field("Inclinaison", region.motion.lean, 0, 0.45, 0.01,
-      (v) => fmt(v, 2), (v) => { region.motion.lean = v; }));
-  } else {
-    ed.append(field("Gain linéaire", region.render.gain * 1000, 0.5, 25, 0.5,
-      (v) => `${fmt(v, 1)} ×10⁻³`, (v) => { region.render.gain = v / 1000; }));
-    ed.append(field("Modulation", region.motion.amplitude, 0, 0.8, 0.01,
-      (v) => fmt(v, 2), (v) => { region.motion.amplitude = v; }));
-  }
-  ed.append(field("Vitesse (harmonique)", region.motion.harmonic, 1, 3, 1,
-    (v) => `${v}×`, (v) => { region.motion.harmonic = Math.round(v); }));
-  ed.append(field("Phase", region.motion.phase, 0, 0.99, 0.01,
-    (v) => fmt(v, 2), (v) => { region.motion.phase = v; }));
-
-  const bounds = regionPixelBounds(region, W, H);
-  const info = document.createElement("p");
-  info.className = "micro";
-  info.textContent = `Support ${bounds.x1 - bounds.x0 + 1}×${bounds.y1 - bounds.y0 + 1} px · ${region.support.points.length} sommets · rôle ${region.role} · ${region.supportStatus}`;
-  ed.append(info);
-
-  const actions = document.createElement("div");
-  actions.className = "editor-actions";
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.className = "btn small ghost";
-  editButton.textContent = state.edit ? "Terminer l’édition" : "Éditer le support";
-  editButton.setAttribute("aria-pressed", String(state.edit));
-  editButton.addEventListener("click", () => {
-    state.edit = !state.edit;
-    overlay.classList.toggle("editing", state.edit);
-    buildEditor();
-    drawOverlay();
-  });
-  const resetButton = document.createElement("button");
-  resetButton.type = "button";
-  resetButton.className = "btn small ghost";
-  resetButton.textContent = "Restaurer la région";
-  resetButton.addEventListener("click", () => {
-    const original = PRISTINE.regions.find((r) => r.id === region.id);
-    const target = state.plan.regions.find((r) => r.id === region.id);
-    Object.assign(target, clone(original));
-    state.edit = false;
-    overlay.classList.remove("editing");
-    buildEditor();
-    draw();
-    toast("Région restaurée depuis le plan d’origine.");
-  });
-  actions.append(editButton, resetButton);
-  ed.append(actions);
-
-  if (isFlame) {
-    const note = document.createElement("p");
-    note.className = "micro";
-    note.textContent = "Le support délimite les pixels protégés et le nettoyage local. La flamme reste ancrée à la mèche ; déplacer les sommets ne déplace pas la mèche.";
-    ed.append(note);
-  }
-}
-
-/* ---------- superposition ---------- */
-
-function drawOverlay() {
-  overlayCtx.clearRect(0, 0, W, H);
-  if (!state.showRegions) return;
-  for (const region of regions()) {
-    const poly = region.support.points.map(([x, y]) => [x * W, y * H]);
-    const selected = region.id === state.selected;
-    const flame = region.role === "animated";
-    overlayCtx.beginPath();
-    poly.forEach(([x, y], index) => {
-      if (index === 0) overlayCtx.moveTo(x, y);
-      else overlayCtx.lineTo(x, y);
-    });
-    overlayCtx.closePath();
-    overlayCtx.fillStyle = flame
-      ? (selected ? "rgba(240,179,91,.16)" : "rgba(240,179,91,.06)")
-      : (selected ? "rgba(90,209,200,.12)" : "rgba(90,209,200,.045)");
-    overlayCtx.fill();
-    overlayCtx.lineWidth = selected ? 3 : 1.8;
-    overlayCtx.strokeStyle = flame
-      ? (selected ? "#ffd08a" : "rgba(240,179,91,.62)")
-      : (selected ? "#8ff0e8" : "rgba(90,209,200,.55)");
-    overlayCtx.setLineDash(flame ? [] : [7, 6]);
-    overlayCtx.stroke();
-    if (flame) {
-      const ax = region.anchor[0] * W;
-      const ay = region.anchor[1] * H;
-      overlayCtx.setLineDash([]);
-      overlayCtx.beginPath();
-      overlayCtx.arc(ax, ay, selected ? 5 : 3, 0, Math.PI * 2);
-      overlayCtx.fillStyle = "#ffd08a";
-      overlayCtx.fill();
-    }
-    if (selected) {
-      overlayCtx.setLineDash([]);
-      for (const [x, y] of poly) {
-        overlayCtx.beginPath();
-        overlayCtx.arc(x, y, state.edit ? 9 : 5, 0, Math.PI * 2);
-        overlayCtx.fillStyle = state.edit ? "#5ad1c8" : "rgba(232,238,245,.9)";
-        overlayCtx.fill();
-        overlayCtx.lineWidth = 2;
-        overlayCtx.strokeStyle = "#04070a";
-        overlayCtx.stroke();
-      }
-    }
-  }
-  overlayCtx.setLineDash([]);
-}
-
-/* ---------- édition des sommets ---------- */
-
-let drag = null;
-
-function canvasPoint(event) {
-  const rect = overlay.getBoundingClientRect();
-  return {
-    x: ((event.clientX - rect.left) / rect.width) * W,
-    y: ((event.clientY - rect.top) / rect.height) * H,
-  };
-}
-
-overlay.addEventListener("pointerdown", (event) => {
-  if (!state.ready) return;
-  const point = canvasPoint(event);
-  if (state.edit) {
-    const region = selectedRegion();
-    const poly = region.support.points.map(([x, y]) => [x * W, y * H]);
-    let best = -1;
-    let bestDistance = 16;
-    poly.forEach(([x, y], index) => {
-      const distance = Math.hypot(x - point.x, y - point.y);
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        best = index;
-      }
-    });
-    if (best >= 0) {
-      drag = { region, index: best };
-      overlay.setPointerCapture(event.pointerId);
-      return;
-    }
-  }
-  for (const region of regions()) {
-    const poly = region.support.points.map(([x, y]) => [x * W, y * H]);
-    if (pointInPolygon(point.x, point.y, poly)) {
-      selectRegion(region.id, true);
-      return;
-    }
-  }
-});
-
-overlay.addEventListener("pointermove", (event) => {
-  if (!drag) return;
-  const point = canvasPoint(event);
-  const x = Math.min(0.999, Math.max(0.001, point.x / W));
-  const y = Math.min(0.999, Math.max(0.001, point.y / H));
-  drag.region.support.points[drag.index] = [Number(x.toFixed(4)), Number(y.toFixed(4))];
-  draw();
-});
-
-const endDrag = () => { drag = null; };
-overlay.addEventListener("pointerup", endDrag);
-overlay.addEventListener("pointercancel", endDrag);
-
-/* ---------- transport ---------- */
-
-$("play").addEventListener("click", () => {
-  if (state.playing) stopPlayback();
-  else startPlayback();
-});
+$("play").addEventListener("click", () => state.playing ? stopPlayback() : startPlayback());
 $("reset").addEventListener("click", () => {
   stopPlayback();
-  state.plan = clone(PRISTINE);
-  state.preset = (PRISTINE.presets.find((p) => p.default) || PRISTINE.presets[0]).id;
+  state.plan = clone(state.basePlan);
+  const group = state.plan.groups[0];
+  state.selectedGroupId = group?.id || null;
+  state.selectedIds = new Set(group?.elementIds || []);
+  state.primaryId = group?.elementIds?.[0] || state.plan.regions[0]?.id || null;
   state.time = 0;
   state.playback = 0;
-  state.selected = "flame.tl-blue";
   state.edit = false;
-  overlay.classList.remove("editing");
+  state.maskTool = null;
+  state.compare = state.plan.previewSettings.compare === true;
+  state.compareSplit = state.plan.previewSettings.compareSplit || 0.5;
+  state.showRegions = state.plan.previewSettings.showRegions !== false;
+  history.clear();
+  editBefore = null;
   $("scrub").value = "0";
-  for (const button of document.querySelectorAll(".preset")) {
-    button.setAttribute("aria-pressed", String(button.dataset.preset === state.preset));
-  }
-  buildRegionList();
-  selectRegion(state.selected, false);
+  $("toggle-regions").setAttribute("aria-pressed", String(state.showRegions));
+  overlay.classList.remove("editing");
+  T = state.plan.loop.durationSeconds;
+  FPS = state.plan.loop.fps;
+  N = state.plan.loop.samples;
+  $("scrub").max = String(T);
+  buildPresets();
+  buildSceneList();
+  buildEditor();
+  buildProposals();
+  updateHistoryButtons();
+  updateCompareUI();
   draw();
-  toast("Plan, presets et temps remis à zéro.");
+  toast("Projet de base restauré ; temps remis à zéro.");
 });
 $("scrub").addEventListener("input", (event) => {
   stopPlayback();
@@ -1956,12 +3425,163 @@ $("toggle-regions").addEventListener("click", (event) => {
   event.currentTarget.setAttribute("aria-pressed", String(state.showRegions));
   drawOverlay();
 });
-window.addEventListener("keydown", (event) => {
-  if (event.code !== "Space" || event.target.matches("input, button")) return;
-  event.preventDefault();
-  if (state.playing) stopPlayback();
-  else startPlayback();
+$("compare").addEventListener("click", () => {
+  state.compare = !state.compare;
+  updateCompareUI();
+  draw();
 });
+$("compare-split").addEventListener("input", (event) => {
+  state.compareSplit = Number(event.target.value);
+  draw();
+});
+$("undo").addEventListener("click", undo);
+$("redo").addEventListener("click", redo);
+
+/* ---------- projet JSON ---------- */
+
+function projectFileName() {
+  return "candle-motion-project-v2.json";
+}
+
+function downloadProject() {
+  const project = clone(state.plan);
+  const group = selectedGroup() || groups()[0];
+  project.previewSettings = {
+    ...project.previewSettings,
+    preset: group?.presetId || project.previewSettings.preset,
+    showRegions: state.showRegions,
+    compare: state.compare,
+    compareSplit: state.compareSplit
+  };
+  const text = serializeProject(project);
+  const blob = new Blob([text], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = projectFileName();
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setProjectStatus("ok", "Projet exporté en JSON versionné ; aucune image dupliquée.");
+  toast("Projet JSON exporté.");
+}
+
+async function verifySourceAsset(project) {
+  const path = String(project.source.path || "");
+  if (!path || /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(path) || path.startsWith("data:")) {
+    throw new Error("Chemin source non local refusé ; le projet doit référencer l’asset du prototype.");
+  }
+  if (!state.ready) throw new Error("Le fond n’est pas encore décodé.");
+  const target = new URL("../../../" + path.replace(/^\.\//, ""), location.href);
+  if (target.origin !== location.origin) throw new Error("La source doit rester sur l’origine locale du prototype.");
+  const response = await fetch(target.href, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Asset source introuvable (${response.status}).`);
+  const bytes = await response.arrayBuffer();
+  if (!globalThis.crypto?.subtle) throw new Error("SHA-256 indisponible dans ce navigateur ; import bloqué.");
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const sha256 = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  const compatibility = checkSourceCompatibility(project, { sha256, width: W, height: H });
+  if (!compatibility.ok) throw new Error(compatibility.message);
+  return compatibility;
+}
+
+async function loadProjectFile(file) {
+  setProjectStatus("pending", "Lecture du projet et vérification de l’asset…");
+  try {
+    const text = await file.text();
+    const project = parseProject(text);
+    await verifySourceAsset(project);
+    state.plan = clone(project);
+    state.basePlan = clone(project);
+    const group = state.plan.groups[0];
+    state.selectedGroupId = group?.id || null;
+    state.selectedIds = new Set((group?.elementIds || []).filter((id) => elementById(id)));
+    state.primaryId = [...state.selectedIds][0] || state.plan.regions[0]?.id || null;
+    state.time = 0;
+    state.playback = 0;
+    state.edit = false;
+    state.maskTool = null;
+    state.compare = project.previewSettings.compare === true;
+    state.compareSplit = project.previewSettings.compareSplit || 0.5;
+    state.showRegions = project.previewSettings.showRegions !== false;
+    T = project.loop.durationSeconds;
+    FPS = project.loop.fps;
+    N = project.loop.samples;
+    history.clear();
+    editBefore = null;
+    $("scrub").max = String(T);
+    $("scrub").value = "0";
+    $("toggle-regions").setAttribute("aria-pressed", String(state.showRegions));
+    overlay.classList.remove("editing");
+    buildPresets();
+    buildSceneList();
+    buildEditor();
+    buildProposals();
+    updateHistoryButtons();
+    updateCompareUI();
+    draw();
+    setProjectStatus("ok", "Projet chargé : asset compatible (dimensions et SHA-256).");
+    toast("Projet chargé.");
+  } catch (error) {
+    setProjectStatus("bad", error.message);
+    toast(error.message);
+  } finally {
+    $("project-file").value = "";
+  }
+}
+
+$("save-project").addEventListener("click", downloadProject);
+$("open-project").addEventListener("click", () => $("project-file").click());
+$("project-file").addEventListener("change", () => {
+  const file = $("project-file").files?.[0];
+  if (file) loadProjectFile(file);
+});
+
+/* ---------- chargement du fond ---------- */
+
+const img = new Image();
+img.decoding = "async";
+img.onload = () => {
+  baseCtx.drawImage(img, 0, 0, W, H);
+  try {
+    baseRGBA = baseCtx.getImageData(0, 0, W, H).data;
+  } catch (error) {
+    showLoadError(
+      "Lecture pixel impossible",
+      "Le navigateur bloque la lecture d’une image locale en file://. Servez le dossier avec un serveur statique local, puis ouvrez cette page par le serveur.",
+    );
+    setReady("bad", "pixels indisponibles");
+    return;
+  }
+  outImage = viewCtx.createImageData(W, H);
+  $("load-state").hidden = true;
+  state.ready = true;
+  setReady("ok", "prêt · rendu déterministe");
+  setProjectStatus("ok", "Projet v2 chargé · asset de diagnostic non approuvé.");
+  buildPresets();
+  buildSceneList();
+  buildEditor();
+  buildProposals();
+  updateHistoryButtons();
+  updateCompareUI();
+  draw();
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) startPlayback();
+};
+img.onerror = () => {
+  showLoadError(
+    "Fond introuvable",
+    "Le fichier reconstruction-seed-4243.png n’est pas accessible depuis cette page. Vérifiez le chemin relatif du plan.",
+  );
+  setReady("bad", "fond introuvable");
+};
+img.src = new URL("../../../" + PLAN_JSON.source.path, location.href).href;
+
+function showLoadError(title, detail) {
+  $("load-title").textContent = title;
+  $("load-detail").textContent = detail;
+  $("load-state").hidden = false;
+}
 
 /* ---------- contrôles déterministes ---------- */
 
@@ -1971,7 +3591,6 @@ const smallCanvas = document.createElement("canvas");
 smallCanvas.width = CW;
 smallCanvas.height = CH;
 const smallCtx = smallCanvas.getContext("2d", { willReadFrequently: true });
-let smallImage = null;
 
 function smallBase() {
   smallCtx.clearRect(0, 0, CW, CH);
@@ -1991,11 +3610,7 @@ function outsideDiff(out, base, mask) {
     const i = p * 4;
     for (let c = 0; c < 3; c++) {
       const d = Math.abs(out[i + c] - base[i + c]);
-      if (d > 0) {
-        count++;
-        if (d > max) max = d;
-        break;
-      }
+      if (d > 0) { count++; if (d > max) max = d; break; }
     }
   }
   return { count, max };
@@ -2010,6 +3625,7 @@ function addCheck(kind, html) {
   li.className = kind;
   li.innerHTML = html;
   $("check-list").append(li);
+  return li;
 }
 
 async function runChecks() {
@@ -2023,10 +3639,23 @@ async function runChecks() {
   const b = new Uint8ClampedArray(base.length);
   const query = clone(state.plan);
 
-  addCheck("", `Plan : <strong>${query.regions.filter((r) => r.role === "animated").length} flammes</strong>, ${query.regions.filter((r) => r.role === "light-influence").length} régions de lumière, T = ${fmt(T, 3)} s, N = ${N}.`);
-  addCheck("", "Vérifications calculées à 320×256 ; la protection est indépendante de la résolution.");
-
+  addCheck("", `Projet : <strong>${query.regions.filter((r) => r.role === "animated").length} flammes</strong>, ${query.regions.filter((r) => r.role === "light-influence").length} lumières, ${query.groups.length} groupe, ${query.presets.length} presets, T = ${fmt(T, 3)} s, N = ${N}.`);
+  addCheck("", "Vérifications calculées à 320×256 pour la boucle et le mouvement, puis à 1280×1024 natif pour la protection.");
   await new Promise((r) => setTimeout(r, 0));
+
+  const precedence = clone(query);
+  const pgroup = precedence.groups[0];
+  const pelement = precedence.regions[0];
+  pgroup.settings.flame = { amplitude: 0.21 };
+  pelement.overrides.flame = { amplitude: 0.33 };
+  const layerElement = resolveField(precedence, pelement, "flame.amplitude");
+  delete pelement.overrides.flame.amplitude;
+  const layerGroup = resolveField(precedence, pelement, "flame.amplitude");
+  delete pgroup.settings.flame.amplitude;
+  const layerPreset = resolveField(precedence, pelement, "flame.amplitude");
+  addCheck(layerElement.source === "element" && layerGroup.source === "group" && layerPreset.source === "preset"
+    ? "ok" : "bad",
+    `<strong>Précédence</strong> — élément ${layerElement.value} &gt; groupe ${layerGroup.value} &gt; preset ${layerPreset.value} ; sources ${layerElement.source}/${layerGroup.source}/${layerPreset.source}.`);
 
   renderSmall(base, query, 2.37, a);
   renderSmall(base, query, 2.37, b);
@@ -2041,9 +3670,8 @@ async function runChecks() {
   const loopHash = frameHash(b);
   let loopMax = 0;
   for (let i = 0; i < a.length; i++) loopMax = Math.max(loopMax, Math.abs(a[i] - b[i]));
-  const TOLERANCE = 0;
   addCheck(loopHash === zeroHash ? "ok" : "bad",
-    `<strong>Boucle</strong> — render(0) vs render(T) : ${loopHash === zeroHash ? "bit-identique" : "différent"} ; écart max ${loopMax}/255 (tolérance ${TOLERANCE}).`);
+    `<strong>Boucle</strong> — render(0) vs render(T) : ${loopHash === zeroHash ? "bit-identique" : "différent"} ; écart max ${loopMax}/255 (tolérance 0).`);
 
   const eps = 1 / 240;
   const before = new Uint8ClampedArray(base.length);
@@ -2067,7 +3695,7 @@ async function runChecks() {
   }
   const velMean = velSum / Math.max(1, velCount);
   addCheck(velMean < 1.5 ? "ok" : "warn",
-    `<strong>Continuité au bord</strong> — pas avant / après : écart moyen ${fmt(velMean, 3)} niveau(x), max ${fmt(velMax, 0)}. Aucun seuil artistique : c’est une mesure de continuité.`);
+    `<strong>Continuité au bord</strong> — pas avant / après : écart moyen ${fmt(velMean, 3)} niveau(x), max ${fmt(velMax, 0)}. Mesure de continuité, pas un seuil artistique.`);
 
   const mask = supportMask(query, CW, CH);
   const probeTimes = [0, 0.75, 1.5, 2.37, 4.5, 5.999];
@@ -2080,7 +3708,7 @@ async function runChecks() {
     violationMax = Math.max(violationMax, diff.max);
   }
   addCheck(violations === 0 ? "ok" : "bad",
-    `<strong>Protection pixel</strong> — ${probeTimes.length} instants, hors supports : ${violations} octet(s) modifié(s), écart max ${violationMax}. Comparaison au fond décodé dans le même pipeline.`);
+    `<strong>Protection pixel</strong> — ${probeTimes.length} instants, hors supports : ${violations} octet(s) modifié(s), écart max ${violationMax}.`);
 
   let changedInside = 0;
   renderSmall(base, query, 1.5, a);
@@ -2091,6 +3719,15 @@ async function runChecks() {
   }
   addCheck(changedInside > 0 ? "ok" : "warn",
     `<strong>Mouvement réel</strong> — ${changedInside} pixels modifiés à l’intérieur des supports à t = 1,500 s.`);
+
+  const disabled = clone(query);
+  disabled.groups.forEach((group) => { group.animationEnabled = false; });
+  disabled.regions.forEach((region) => { delete region.animationEnabled; });
+  renderSmall(base, disabled, 1.5, a);
+  const disabledHash = frameHash(a);
+  const baseHash = frameHash(base);
+  addCheck(disabledHash === baseHash ? "ok" : "bad",
+    `<strong>Désactivation</strong> — groupe statique : frame identique au fond (${baseHash}); élément conservé, aucune suppression.`);
 
   const times = sampleTimes(query);
   const last = times[times.length - 1];
@@ -2104,8 +3741,7 @@ async function runChecks() {
   let maxLum = -Infinity;
   let sumLum = 0;
   for (let k = 0; k < sampleCount; k++) {
-    const time = (k * T) / sampleCount;
-    renderSmall(base, query, time, a);
+    renderSmall(base, query, (k * T) / sampleCount, a);
     const lum = meanLuminance(a, CW, CH, 2);
     minLum = Math.min(minLum, lum);
     maxLum = Math.max(maxLum, lum);
@@ -2114,25 +3750,71 @@ async function runChecks() {
   const meanLum = sumLum / sampleCount;
   const lumRange = maxLum > 0 ? (maxLum - minLum) / meanLum : 0;
 
+  const nativeItem = addCheck("", "<strong>Contrôle natif 1280×1024</strong> — calcul en cours…");
+  await new Promise((r) => setTimeout(r, 16));
+  const nativeA = new Uint8ClampedArray(baseRGBA.length);
+  const nativeB = new Uint8ClampedArray(baseRGBA.length);
+  renderFrame(baseRGBA, query, 0, { width: W, height: H, out: nativeA });
+  renderFrame(baseRGBA, query, T, { width: W, height: H, out: nativeB });
+  let nativeLoopMax = 0;
+  for (let i = 0; i < nativeA.length; i++) nativeLoopMax = Math.max(nativeLoopMax, Math.abs(nativeA[i] - nativeB[i]));
+  renderFrame(baseRGBA, query, 1.5, { width: W, height: H, out: nativeB });
+  const nativeMask = supportMask(query, W, H, ["animated", "light-influence"], { activeOnly: true });
+  const nativeDiff = outsideDiff(nativeB, baseRGBA, nativeMask);
+  nativeItem.className = nativeLoopMax === 0 && nativeDiff.count === 0 ? "ok" : "bad";
+  nativeItem.innerHTML = `<strong>Protection native 1280×1024</strong> — boucle écart max ${nativeLoopMax}/255 ; hors supports ${nativeDiff.count} octet(s), écart max ${nativeDiff.max}. Contrôle sur le fond décodé réel.`;
+
   const metrics = $("metrics");
   metrics.classList.add("visible");
   const phases = query.regions.filter((r) => r.role === "animated");
   metrics.innerHTML = `<table>
-    <thead><tr><th>Flamme</th><th style="text-align:right">Phase</th><th style="text-align:right">Pic (s)</th></tr></thead>
-    <tbody>${phases.map((r) => `<tr><td>${r.id.replace("flame.", "")}</td><td class="num">${r.motion.phase.toFixed(2)}</td><td class="num">${(r.motion.phase * T).toFixed(3)}</td></tr>`).join("")}</tbody>
+    <thead><tr><th>Flamme</th><th style="text-align:right">Phase</th><th style="text-align:right">Amp.</th><th style="text-align:right">Source</th></tr></thead>
+    <tbody>${phases.map((r) => {
+      const settings = resolveSettings(query, r);
+      const amplitude = resolveField(query, r, "flame.amplitude");
+      return `<tr><td>${r.id.replace("flame.", "")}</td><td class="num">${r.motion.phase.toFixed(2)}</td><td class="num">${settings.flame.amplitude.toFixed(2)}</td><td class="num">${amplitude.source}</td></tr>`;
+    }).join("")}</tbody>
     </table>
     <p class="micro" style="margin-top:6px">Luminance linéaire moyenne : ${meanLum.toFixed(5)} ; min ${minLum.toFixed(5)} ; max ${maxLum.toFixed(5)} ; variation ${fmtPct(lumRange)} sur ${sampleCount} instants. Aucun seuil global n’est présenté comme preuve artistique.</p>`;
-  addCheck("", `<strong>Luminance</strong> — variation globale ${fmtPct(lumRange)} ; les déphasages par flamme sont listés ci-dessous.`);
+  addCheck("", `<strong>Luminance</strong> — variation globale ${fmtPct(lumRange)} ; les valeurs effectives et leur couche source sont listées ci-dessous.`);
   addCheck("warn", "<strong>Limite</strong> — ces contrôles ne prouvent ni le photoréalisme, ni l’accord avec LTX, ni un export.");
 }
 
 $("run-checks").addEventListener("click", runChecks);
 
-/* état initial : l’interface est construite même si le fond manque */
+/* ---------- raccourcis et initialisation ---------- */
+
+window.addEventListener("keydown", (event) => {
+  const editingField = event.target.matches("input, textarea, select");
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
+    if (editingField) return;
+    event.preventDefault();
+    if (event.shiftKey) redo();
+    else undo();
+    return;
+  }
+  if (event.key === "Delete" || event.key === "Backspace") {
+    if (editingField) return;
+    const element = primaryElement();
+    if (state.edit && state.maskTool === "polygon" && element && state.vertexIndex !== null && element.support.points.length > 3) {
+      event.preventDefault();
+      mutate(() => { element.support.points.splice(state.vertexIndex, 1); state.vertexIndex = null; }, "Sommet retiré.");
+    }
+    return;
+  }
+  if (event.code !== "Space" || editingField) return;
+  event.preventDefault();
+  if (state.playing) stopPlayback();
+  else startPlayback();
+});
+
 $("scrub").max = String(T);
 buildPresets();
-buildRegionList();
-selectRegion(state.selected, false);
+buildSceneList();
+buildEditor();
+buildProposals();
+updateHistoryButtons();
+updateCompareUI();
 drawOverlay();
 </script>
 </body>
