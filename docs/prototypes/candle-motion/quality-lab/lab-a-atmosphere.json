@@ -1,0 +1,1250 @@
+{
+  "schema": "candle-motion-project/v2",
+  "id": "candles-4243.lab-a-atmosphere",
+  "version": "2.1.0",
+  "status": "study",
+  "approval": {
+    "status": "not-approved",
+    "source": "étude de mouvement dérivée du diagnostic 4243",
+    "note": "Preview supervisée. Aucun master image ou vidéo n’est approuvé ; aucun export complet avant validation."
+  },
+  "label": "A corrigée + atmosphère B (étude)",
+  "artistIntent": {
+    "summary": "Étude de mouvement supervisée : comparer le renderer actuel à une révision locale, sans master ni export.",
+    "constraints": [
+      "Le vent est un flux partagé déterministe, approximé ; ce n’est pas une simulation physique.",
+      "Chaque flamme répond avec sa sensibilité, son délai et son résidu ; les ancres restent fixes.",
+      "Chaque lumière locale dépend de l’état de ses flammes sources ; aucune respiration globale.",
+      "Les supports, les protections et la boucle de 12 s restent explicites et vérifiables.",
+      "C / Poetic Breath est rejetée dans cette étude ; aucune fumée n’est active.",
+      "Aucun export complet avant validation humaine."
+    ],
+    "nonGoals": [
+      "Séparer physiquement la lumière cuite de la couleur matérielle.",
+      "Simuler fidèlement un écoulement d’air ou une combustion.",
+      "Ajouter une fumée, une ombre ou une caméra au renderer.",
+      "Publier ou promouvoir un master."
+    ]
+  },
+  "previewSettings": {
+    "preset": "vivant",
+    "showRegions": true,
+    "playbackRate": 1,
+    "compare": false,
+    "compareSplit": 0.5,
+    "note": "Réglages d’aperçu uniquement ; ils ne sont pas transmis à un moteur."
+  },
+  "engineControls": {
+    "conditioningSignals": [],
+    "note": "Aucune région, amplitude, phase ou annotation de ce plan n’est un signal de conditionnement LTX. Le plan décrit une intention d’aperçu, pas une entrée moteur."
+  },
+  "source": {
+    "id": "seed-4243",
+    "path": "validation/2026-11-09-reconstruction-v2/outputs/reconstruction-seed-4243.png",
+    "sha256": "9806594097fc01b1a4299e7226257f317e402eee3b8833875051cae3db2a2e7e",
+    "width": 1280,
+    "height": 1024,
+    "colorSpace": "sRGB (convention de travail ; le PNG n’a pas de profil ICC)",
+    "role": "diagnostic-background"
+  },
+  "workingSpace": {
+    "name": "linear-sRGB",
+    "decode": "EOTF sRGB par table de 256 entrées",
+    "encode": "OETF sRGB par table de 65536 entrées",
+    "highlight": "Épaulement doux au-dessus de 0,78 en linéaire ; maximum asymptotique 1,0, sans coupure dure par défaut.",
+    "note": "Les additions de lumière et de flamme sont calculées en linéaire. Les pixels hors support ne sont jamais décodés : ils sont recopiés octet pour octet."
+  },
+  "camera": {
+    "mode": "fixed",
+    "catalogId": "A-01",
+    "note": "Réutilise la fiche caméra fixe existante ; aucune trajectoire de caméra n’est simulée."
+  },
+  "loop": {
+    "durationSeconds": 12,
+    "fps": 24,
+    "samples": 288,
+    "endpoint": "exclusive",
+    "boundaryTolerance": 0,
+    "phaseRule": "u = ((t / T) mod 1 + 1) mod 1 ; toutes les oscillations utilisent des harmoniques entières de u.",
+    "note": "12 s à 24 fps ; temps k·T/N, aucune frame finale dupliquée. Variante non approuvée."
+  },
+  "protection": {
+    "definition": "Tout pixel hors de l’union des supports actifs est recopié octet pour octet depuis le fond décodé. Un élément désactivé, protégé ou en transformation proposée n’autorise aucune écriture.",
+    "overlapPolicy": "Les supports de flammes restent disjoints. Un support de lumière peut chevaucher une flamme : la lumière est appliquée d’abord, la flamme ensuite. Les corrections rectangle/brosse étendent le support de l’élément sans créer de patch rectangulaire de suppression.",
+    "edgePolicy": "Les dégradés s’annulent avant le bord du support ; la suppression de la flamme statique est elliptique et bornée par le support."
+  },
+  "seed": 4243,
+  "groups": [
+    {
+      "id": "group.candles",
+      "label": "Bougies",
+      "category": "candles",
+      "elementIds": [
+        "flame.tl-blue",
+        "flame.tr-brown-a",
+        "flame.tr-brown-b",
+        "flame.mr-blue",
+        "flame.left-a",
+        "flame.left-b",
+        "flame.lr-a",
+        "flame.lr-b",
+        "light.tl-niche",
+        "light.tr-niche",
+        "light.mr-niche",
+        "light.left-niche",
+        "light.lr-niche",
+        "light.left-floor",
+        "light.lr-floor"
+      ],
+      "presetId": "vivant",
+      "presetVersion": 1,
+      "animationEnabled": true,
+      "settings": {
+        "wind": {
+          "direction": 12
+        }
+      }
+    },
+    {
+      "id": "group.atmosphere",
+      "label": "Atmosphère",
+      "category": "generic",
+      "elementIds": [
+        "region.sky",
+        "region.cool-light"
+      ],
+      "animationEnabled": true,
+      "settings": {}
+    }
+  ],
+  "regions": [
+    {
+      "id": "flame.tl-blue",
+      "role": "animated",
+      "label": "Niche bleue haute gauche",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.258594,
+            0.27825
+          ],
+          [
+            0.284375,
+            0.27825
+          ],
+          [
+            0.284375,
+            0.313477
+          ],
+          [
+            0.258594,
+            0.313477
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "anchor": [
+        0.271484,
+        0.307617
+      ],
+      "height": 0.017578,
+      "width": 0.007812,
+      "motion": {
+        "action": "flame-shape",
+        "phase": 0
+      },
+      "render": {
+        "method": "procedural-flame-v1",
+        "suppression": 0.92,
+        "workingSpace": "linear"
+      },
+      "notes": "Flamme unique. Support serré autour de la flamme et de son halo immédiat ; la bougie et le rebord restent hors support.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1
+    },
+    {
+      "id": "flame.tr-brown-a",
+      "role": "animated",
+      "label": "Niche brune haute droite · gauche",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.739062,
+            0.227469
+          ],
+          [
+            0.775781,
+            0.227469
+          ],
+          [
+            0.775781,
+            0.27832
+          ],
+          [
+            0.739062,
+            0.27832
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "anchor": [
+        0.757422,
+        0.272461
+      ],
+      "height": 0.02832,
+      "width": 0.011719,
+      "motion": {
+        "action": "flame-shape",
+        "phase": 0.37
+      },
+      "render": {
+        "method": "procedural-flame-v1",
+        "suppression": 0.92,
+        "workingSpace": "linear"
+      },
+      "notes": "Flamme gauche de la niche jumelle. Support disjoint de la flamme voisine.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1
+    },
+    {
+      "id": "flame.tr-brown-b",
+      "role": "animated",
+      "label": "Niche brune haute droite · droite",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.795312,
+            0.230398
+          ],
+          [
+            0.832031,
+            0.230398
+          ],
+          [
+            0.832031,
+            0.276367
+          ],
+          [
+            0.795312,
+            0.276367
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "anchor": [
+        0.814063,
+        0.270508
+      ],
+      "height": 0.023438,
+      "width": 0.009375,
+      "motion": {
+        "action": "flame-shape",
+        "phase": 0.71
+      },
+      "render": {
+        "method": "procedural-flame-v1",
+        "suppression": 0.92,
+        "workingSpace": "linear"
+      },
+      "notes": "Flamme droite de la niche jumelle. Le rebord éclairé n’est pas compté comme flamme.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1
+    },
+    {
+      "id": "flame.mr-blue",
+      "role": "animated",
+      "label": "Niche bleue médiane droite",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.83125,
+            0.470633
+          ],
+          [
+            0.852344,
+            0.470633
+          ],
+          [
+            0.852344,
+            0.5
+          ],
+          [
+            0.83125,
+            0.5
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "anchor": [
+        0.841406,
+        0.496094
+      ],
+      "height": 0.017578,
+      "width": 0.007031,
+      "motion": {
+        "action": "flame-shape",
+        "phase": 0.12
+      },
+      "render": {
+        "method": "procedural-flame-v1",
+        "suppression": 0.92,
+        "workingSpace": "linear"
+      },
+      "notes": "Flamme unique. Le liseré chaud du rebord droit est exclu du support.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1
+    },
+    {
+      "id": "flame.left-a",
+      "role": "animated",
+      "label": "Niche brune gauche · gauche",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.1375,
+            0.586844
+          ],
+          [
+            0.158594,
+            0.586844
+          ],
+          [
+            0.158594,
+            0.615234
+          ],
+          [
+            0.1375,
+            0.615234
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "anchor": [
+        0.147656,
+        0.611328
+      ],
+      "height": 0.016602,
+      "width": 0.00625,
+      "motion": {
+        "action": "flame-shape",
+        "phase": 0.55
+      },
+      "render": {
+        "method": "procedural-flame-v1",
+        "suppression": 0.92,
+        "workingSpace": "linear"
+      },
+      "notes": "Flamme gauche de la niche gauche. Le montant central reste hors support.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1
+    },
+    {
+      "id": "flame.left-b",
+      "role": "animated",
+      "label": "Niche brune gauche · droite",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.190625,
+            0.586844
+          ],
+          [
+            0.211719,
+            0.586844
+          ],
+          [
+            0.211719,
+            0.617188
+          ],
+          [
+            0.190625,
+            0.617188
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "anchor": [
+        0.201172,
+        0.613281
+      ],
+      "height": 0.017578,
+      "width": 0.007031,
+      "motion": {
+        "action": "flame-shape",
+        "phase": 0.83
+      },
+      "render": {
+        "method": "procedural-flame-v1",
+        "suppression": 0.92,
+        "workingSpace": "linear"
+      },
+      "notes": "Flamme droite de la niche gauche. Support disjoint du montant et de la flamme voisine.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1
+    },
+    {
+      "id": "flame.lr-a",
+      "role": "animated",
+      "label": "Niche brune basse droite · gauche",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.801562,
+            0.698172
+          ],
+          [
+            0.834375,
+            0.698172
+          ],
+          [
+            0.834375,
+            0.738281
+          ],
+          [
+            0.801562,
+            0.738281
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "anchor": [
+        0.817969,
+        0.733398
+      ],
+      "height": 0.017578,
+      "width": 0.007812,
+      "motion": {
+        "action": "flame-shape",
+        "phase": 0.26
+      },
+      "render": {
+        "method": "procedural-flame-v1",
+        "suppression": 0.92,
+        "workingSpace": "linear"
+      },
+      "notes": "Flamme basse gauche. Le corps de bougie est exclu ; seule la flamme et son halo sont nettoyés.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1
+    },
+    {
+      "id": "flame.lr-b",
+      "role": "animated",
+      "label": "Niche brune basse droite · droite",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.835156,
+            0.701102
+          ],
+          [
+            0.867969,
+            0.701102
+          ],
+          [
+            0.867969,
+            0.737305
+          ],
+          [
+            0.835156,
+            0.737305
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "anchor": [
+        0.851562,
+        0.732422
+      ],
+      "height": 0.014648,
+      "width": 0.007031,
+      "motion": {
+        "action": "flame-shape",
+        "phase": 0.64
+      },
+      "render": {
+        "method": "procedural-flame-v1",
+        "suppression": 0.92,
+        "workingSpace": "linear"
+      },
+      "notes": "Flamme basse droite. Support réduit pour rester disjoint de la flamme voisine.",
+      "groupId": "group.candles",
+      "category": "flame",
+      "operation": "animate",
+      "overrides": {},
+      "size": 1
+    },
+    {
+      "id": "light.tl-niche",
+      "role": "light-influence",
+      "label": "Lumière — niche bleue haute gauche",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.222656,
+            0.205078
+          ],
+          [
+            0.314063,
+            0.205078
+          ],
+          [
+            0.314063,
+            0.347656
+          ],
+          [
+            0.222656,
+            0.347656
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "center": [
+        0.271094,
+        0.308594
+      ],
+      "radii": [
+        0.054688,
+        0.078125
+      ],
+      "sources": [
+        "flame.tl-blue"
+      ],
+      "motion": {
+        "action": "warm-pool",
+        "phase": 0
+      },
+      "render": {
+        "method": "local-warm-pool-v1",
+        "gain": 0.0085,
+        "color": [
+          1,
+          0.42,
+          0.13
+        ],
+        "falloff": 1.6,
+        "workingSpace": "linear"
+      },
+      "notes": "Léger relèvement chaud de la niche ; le bleu de la façade n’est pas touché.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
+    },
+    {
+      "id": "light.tr-niche",
+      "role": "light-influence",
+      "label": "Lumière — niche brune haute droite",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.701562,
+            0.193359
+          ],
+          [
+            0.873437,
+            0.193359
+          ],
+          [
+            0.873437,
+            0.3125
+          ],
+          [
+            0.701562,
+            0.3125
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "center": [
+        0.785156,
+        0.261719
+      ],
+      "radii": [
+        0.085938,
+        0.0625
+      ],
+      "sources": [
+        "flame.tr-brown-a",
+        "flame.tr-brown-b"
+      ],
+      "motion": {
+        "action": "warm-pool",
+        "phase": 0.18
+      },
+      "render": {
+        "method": "local-warm-pool-v1",
+        "gain": 0.0095,
+        "color": [
+          1,
+          0.42,
+          0.13
+        ],
+        "falloff": 1.6,
+        "workingSpace": "linear"
+      },
+      "notes": "Pool commun aux deux flammes ; la modulation suit leur moyenne, sans pompage global.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
+    },
+    {
+      "id": "light.mr-niche",
+      "role": "light-influence",
+      "label": "Lumière — niche bleue médiane droite",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.8125,
+            0.441406
+          ],
+          [
+            0.88125,
+            0.441406
+          ],
+          [
+            0.88125,
+            0.537109
+          ],
+          [
+            0.8125,
+            0.537109
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "center": [
+        0.841406,
+        0.496094
+      ],
+      "radii": [
+        0.035937,
+        0.048828
+      ],
+      "sources": [
+        "flame.mr-blue"
+      ],
+      "motion": {
+        "action": "warm-pool",
+        "phase": 0.42
+      },
+      "render": {
+        "method": "local-warm-pool-v1",
+        "gain": 0.009,
+        "color": [
+          1,
+          0.42,
+          0.13
+        ],
+        "falloff": 1.6,
+        "workingSpace": "linear"
+      },
+      "notes": "Pool local autour de la flamme ; le bleu de la masse reste hors du dégradé fort.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
+    },
+    {
+      "id": "light.left-niche",
+      "role": "light-influence",
+      "label": "Lumière — niche brune gauche",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.076563,
+            0.505859
+          ],
+          [
+            0.25625,
+            0.505859
+          ],
+          [
+            0.25625,
+            0.646484
+          ],
+          [
+            0.076563,
+            0.646484
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "center": [
+        0.173437,
+        0.59375
+      ],
+      "radii": [
+        0.092188,
+        0.076172
+      ],
+      "sources": [
+        "flame.left-a",
+        "flame.left-b"
+      ],
+      "motion": {
+        "action": "warm-pool",
+        "phase": 0.27
+      },
+      "render": {
+        "method": "local-warm-pool-v1",
+        "gain": 0.0105,
+        "color": [
+          1,
+          0.42,
+          0.13
+        ],
+        "falloff": 1.6,
+        "workingSpace": "linear"
+      },
+      "notes": "Pool commun aux deux flammes, centré entre elles. La tablette reste inchangée hors support.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
+    },
+    {
+      "id": "light.lr-niche",
+      "role": "light-influence",
+      "label": "Lumière — niche brune basse droite",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.782813,
+            0.681641
+          ],
+          [
+            0.873437,
+            0.681641
+          ],
+          [
+            0.873437,
+            0.779297
+          ],
+          [
+            0.782813,
+            0.779297
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "center": [
+        0.832031,
+        0.734375
+      ],
+      "radii": [
+        0.046875,
+        0.048828
+      ],
+      "sources": [
+        "flame.lr-a",
+        "flame.lr-b"
+      ],
+      "motion": {
+        "action": "warm-pool",
+        "phase": 0.61
+      },
+      "render": {
+        "method": "local-warm-pool-v1",
+        "gain": 0.0095,
+        "color": [
+          1,
+          0.42,
+          0.13
+        ],
+        "falloff": 1.6,
+        "workingSpace": "linear"
+      },
+      "notes": "Pool local de la niche basse droite.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
+    },
+    {
+      "id": "light.left-floor",
+      "role": "light-influence",
+      "label": "Lumière — sol sous la niche gauche",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.085938,
+            0.818359
+          ],
+          [
+            0.265625,
+            0.818359
+          ],
+          [
+            0.265625,
+            0.966797
+          ],
+          [
+            0.085938,
+            0.966797
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "center": [
+        0.175781,
+        0.896484
+      ],
+      "radii": [
+        0.085938,
+        0.070312
+      ],
+      "sources": [
+        "flame.left-a",
+        "flame.left-b"
+      ],
+      "motion": {
+        "action": "warm-pool",
+        "phase": 0.35
+      },
+      "render": {
+        "method": "local-warm-pool-v1",
+        "gain": 0.0045,
+        "color": [
+          1,
+          0.42,
+          0.13
+        ],
+        "falloff": 1.6,
+        "workingSpace": "linear"
+      },
+      "notes": "Reflet de sol très faible, borné. Il ne déplace aucune architecture.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
+    },
+    {
+      "id": "light.lr-floor",
+      "role": "light-influence",
+      "label": "Lumière — sol sous la niche basse droite",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.773438,
+            0.792969
+          ],
+          [
+            0.88125,
+            0.792969
+          ],
+          [
+            0.88125,
+            0.919922
+          ],
+          [
+            0.773438,
+            0.919922
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "center": [
+        0.828125,
+        0.857422
+      ],
+      "radii": [
+        0.053125,
+        0.060547
+      ],
+      "sources": [
+        "flame.lr-a",
+        "flame.lr-b"
+      ],
+      "motion": {
+        "action": "warm-pool",
+        "phase": 0.72
+      },
+      "render": {
+        "method": "local-warm-pool-v1",
+        "gain": 0.0045,
+        "color": [
+          1,
+          0.42,
+          0.13
+        ],
+        "falloff": 1.6,
+        "workingSpace": "linear"
+      },
+      "notes": "Reflet de sol très faible, borné, aligné sur la niche.",
+      "groupId": "group.candles",
+      "category": "light",
+      "operation": "animate",
+      "overrides": {}
+    },
+    {
+      "id": "region.sky",
+      "role": "protected",
+      "category": "other",
+      "groupId": "group.atmosphere",
+      "label": "Ciel nocturne — région manuelle",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0.06
+          ],
+          [
+            0.985,
+            0.06
+          ],
+          [
+            0.985,
+            0.075
+          ],
+          [
+            0.61,
+            0.075
+          ],
+          [
+            0.61,
+            0.055
+          ],
+          [
+            0.59,
+            0.055
+          ],
+          [
+            0.59,
+            0.082
+          ],
+          [
+            0.47,
+            0.082
+          ],
+          [
+            0.47,
+            0.07
+          ],
+          [
+            0.45,
+            0.07
+          ],
+          [
+            0.45,
+            0.09
+          ],
+          [
+            0.06,
+            0.09
+          ],
+          [
+            0.06,
+            0.078
+          ],
+          [
+            0,
+            0.078
+          ]
+        ],
+        "extraRects": [],
+        "extraCircles": []
+      },
+      "operation": "protect",
+      "recipe": "protect",
+      "overrides": {},
+      "motion": {
+        "action": "none",
+        "phase": 0
+      },
+      "render": {
+        "method": "none",
+        "workingSpace": "linear"
+      },
+      "notes": "Région de ciel dessinée manuellement. L’atmosphère ne peut écrire qu’à l’intérieur ; les arêtes chaudes sont atténuées, sans masque sémantique automatique."
+    },
+    {
+      "id": "region.cool-light",
+      "role": "protected",
+      "category": "other",
+      "groupId": "group.atmosphere",
+      "label": "Hauts de murs — lumière froide optionnelle",
+      "supportStatus": "declared",
+      "support": {
+        "type": "polygon",
+        "points": [
+          [
+            0.04,
+            0.072
+          ],
+          [
+            0.45,
+            0.072
+          ],
+          [
+            0.45,
+            0.105
+          ],
+          [
+            0.04,
+            0.105
+          ]
+        ],
+        "extraRects": [
+          {
+            "x0": 0.59,
+            "y0": 0.055,
+            "x1": 0.98,
+            "y1": 0.09
+          },
+          {
+            "x0": 0.68,
+            "y0": 0.3,
+            "x1": 0.98,
+            "y1": 0.33
+          }
+        ],
+        "extraCircles": []
+      },
+      "operation": "protect",
+      "recipe": "protect",
+      "overrides": {},
+      "motion": {
+        "action": "none",
+        "phase": 0
+      },
+      "render": {
+        "method": "none",
+        "workingSpace": "linear"
+      },
+      "notes": "Couche opt-in, distincte du ciel. Elle approxime une lumière froide indirecte sur quelques hauts de murs ; ce n’est pas une source lumineuse récupérée."
+    }
+  ],
+  "presets": [
+    {
+      "id": "calme",
+      "label": "Calme",
+      "note": "cordes lentes",
+      "version": 1,
+      "category": "candles",
+      "flame": {
+        "amplitude": 0.07,
+        "harmonic": 1,
+        "lean": 0.1,
+        "windResponse": 0.8
+      },
+      "lightScale": 0.6,
+      "lightModulation": 0.25,
+      "intensity": 0.9,
+      "wind": {
+        "direction": 0,
+        "strength": 0.04
+      },
+      "variation": "correlated"
+    },
+    {
+      "id": "vivant",
+      "label": "Bougies vivantes",
+      "note": "référence",
+      "default": true,
+      "version": 1,
+      "category": "candles",
+      "flame": {
+        "amplitude": 0.16,
+        "harmonic": 1,
+        "lean": 0.2,
+        "windResponse": 1
+      },
+      "lightScale": 1,
+      "lightModulation": 0.35,
+      "intensity": 1,
+      "wind": {
+        "direction": 0,
+        "strength": 0.12
+      },
+      "variation": "correlated"
+    },
+    {
+      "id": "courant",
+      "label": "Courant d’air",
+      "note": "plus ample",
+      "version": 1,
+      "category": "candles",
+      "flame": {
+        "amplitude": 0.27,
+        "harmonic": 2,
+        "lean": 0.34,
+        "windResponse": 1.3
+      },
+      "lightScale": 1.15,
+      "lightModulation": 0.42,
+      "intensity": 1.05,
+      "wind": {
+        "direction": 25,
+        "strength": 0.38
+      },
+      "variation": "synchronized"
+    },
+    {
+      "id": "veilleuse",
+      "label": "Veilleuse",
+      "note": "lumière haute",
+      "version": 1,
+      "category": "candles",
+      "flame": {
+        "amplitude": 0.09,
+        "harmonic": 1,
+        "lean": 0.12,
+        "windResponse": 0.7
+      },
+      "lightScale": 1.5,
+      "lightModulation": 0.3,
+      "intensity": 1.1,
+      "wind": {
+        "direction": 0,
+        "strength": 0.03
+      },
+      "variation": "independent"
+    },
+    {
+      "id": "sobre",
+      "label": "Sobre",
+      "note": "mouvement retenu",
+      "version": 1,
+      "category": "candles",
+      "flame": {
+        "amplitude": 0.055,
+        "harmonic": 1,
+        "lean": 0.08,
+        "windResponse": 0.75
+      },
+      "lightScale": 0.75,
+      "lightModulation": 0.2,
+      "intensity": 0.85,
+      "wind": {
+        "direction": 0,
+        "strength": 0.07
+      },
+      "variation": "correlated"
+    }
+  ],
+  "proposals": [],
+  "atmosphere": {
+    "enabled": true,
+    "regionId": "region.sky",
+    "intensity": 0.72,
+    "cycles": 2,
+    "stars": false,
+    "coolLight": false,
+    "coolLightRegionId": "region.cool-light",
+    "note": "Voile de ciel borné, révisé dans l’étude. Étoiles et lumière froide restent optionnelles et désactivées ; ce plan montre l’effet additionnel sur A."
+  },
+  "lab": {
+    "revision": "shared-air-v2",
+    "status": "study-not-approved",
+    "note": "Révision locale et réversible. Aucune reconstruction physique de la lumière ni de l’air ; les pools peints restent des approximations additives bornées.",
+    "flame": {
+      "heightGain": 0.19,
+      "lean": 0.46,
+      "widthGain": 0.11,
+      "halo": 0.075,
+      "bloom": false
+    },
+    "light": {
+      "modulation": 1.2,
+      "gainScale": 5.2,
+      "floorGainScale": 0.4,
+      "glint": 0.055,
+      "dip": 0.055,
+      "drift": 0.0035
+    },
+    "atmosphere": {
+      "intensityScale": 1.55,
+      "band": 0.38
+    },
+    "wind": {
+      "driver": "shared-air-v1",
+      "profile": "calm",
+      "seed": 4243,
+      "strength": 0.52,
+      "gustFrequency": 2,
+      "directionBalance": 0.18,
+      "individualVariation": 0.65,
+      "responseDelayMin": 0.1,
+      "responseDelayMax": 0.46,
+      "note": "Un seul flux déterministe, signé et borné ; chaque flamme a sa sensibilité, son délai et son résidu. Ce n’est pas une simulation physique."
+    }
+  },
+  "notes": "Même A corrigée que l’onglet précédent, avec le ciel B comme seul ajout. Aucun pompage d’exposition globale ; le voile reste dans le masque de ciel."
+}

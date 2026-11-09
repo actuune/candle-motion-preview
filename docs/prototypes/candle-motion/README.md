@@ -8,8 +8,8 @@ passe ne produit aucune vidéo, n’appelle aucun moteur et ne modifie aucun mé
 `candle-motion-project/v2`, identifiant historique conservé pour charger les
 projets bougies. **Branche de cette passe :** `feature/scene-ux-refinement`,
 crée depuis `937d428` (fondation image-agnostique). La preview publique
-connue reste `actuune/candle-motion-preview` `b9bf116` ; cette branche ne la met
-pas à jour et ne pousse rien.
+connue est `actuune/candle-motion-preview` ; le bundle public est mis à jour
+séparément et ne contient aucun master.
 
 Libellé affiché, exact :
 

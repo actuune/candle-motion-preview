@@ -1,0 +1,52 @@
+{
+  "schema": "motion-quality-lab/v2",
+  "label": "Previews supervisées — aucun master approuvé",
+  "source": {
+    "path": "../../../validation/2026-11-09-reconstruction-v2/outputs/reconstruction-seed-4243.png",
+    "sha256": "9806594097fc01b1a4299e7226257f317e402eee3b8833875051cae3db2a2e7e",
+    "width": 1280,
+    "height": 1024
+  },
+  "render": {
+    "width": 800,
+    "height": 640,
+    "previewWidth": 480,
+    "previewHeight": 560,
+    "loopSeconds": 12,
+    "fps": 24,
+    "samples": 288
+  },
+  "plans": {
+    "one": {
+      "current": "../motion-plan.candles-4243.variant-a.json",
+      "calm": "./lab-one-calm.json",
+      "breeze": "./lab-one-breeze.json"
+    },
+    "a": {
+      "current": "../motion-plan.candles-4243.variant-a.json",
+      "lab": "./lab-living-fire.json"
+    },
+    "b": {
+      "current": "../motion-plan.candles-4243.variant-b.json",
+      "lab": "./lab-a-atmosphere.json"
+    }
+  },
+  "sections": {
+    "one": {
+      "title": "Deux climats d’air",
+      "current": "A actuel",
+      "calm": "Calme + rafales",
+      "breeze": "Brise alternée"
+    },
+    "a": {
+      "title": "A — Living Fire",
+      "current": "A actuel",
+      "lab": "A révisé, sans atmosphère"
+    },
+    "b": {
+      "title": "B — A + atmosphère",
+      "current": "A corrigée",
+      "lab": "A corrigée + ciel B"
+    }
+  }
+}

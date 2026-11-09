@@ -3,8 +3,8 @@
 Ce dépôt public est un **bundle de revue** de l’éditeur de scène local consacré
 au groupe **Bougies**. Il contient la page autonome, le baseline JSON v2, les
 variantes A/B, le schéma, les tests et les recettes. Il ne contient **aucun MP4,
-aucun master, aucune capture lourde ni image de validation hors du fond
-diagnostique**.
+aucun master ni capture de production** ; le seul média de mouvement est le GIF
+de revue A/B et le fond diagnostique.
 
 La graine 4243 n’est **pas une œuvre approuvée**. Ce bundle ne remplace ni la
 vidéo LTX rejetée ni une revue visuelle humaine.
@@ -32,6 +32,20 @@ Libellé exact affiché :
 
 **Motion intention preview—not a prediction of AI output.**
 
+## Étude A/B — laboratoire de mouvement
+
+Le laboratoire de la passe du 9 novembre 2026 est publié ici :
+
+- **Page interactive :** [quality-lab.html](https://actuune.github.io/candle-motion-preview/docs/prototypes/candle-motion/quality-lab.html)
+- **GIF de revue (12 s, A seule / A + ciel B) :** [quality-lab-a-b.gif](https://actuune.github.io/candle-motion-preview/docs/prototypes/candle-motion/quality-lab-a-b.gif)
+- **Étude et limites :** [QUALITY-STUDY.md](https://actuune.github.io/candle-motion-preview/docs/prototypes/candle-motion/QUALITY-STUDY.md)
+
+![Boucle de revue A seule / A + ciel B](docs/prototypes/candle-motion/quality-lab-a-b.gif)
+
+Le GIF est une **preuve de mouvement pour la revue**, pas un master ni une
+approbation. La page interactive expose les deux climats d’air et les deux
+lectures A/B ; les mesures affichées restent des diagnostics de présence.
+
 ## Contenu v2
 
 | Fichier | Rôle |
@@ -41,7 +55,11 @@ Libellé exact affiché :
 | `docs/prototypes/candle-motion/motion-plan.candles-4243.variant-a.json` | A · Original Alive, 12 s |
 | `docs/prototypes/candle-motion/motion-plan.candles-4243.variant-b.json` | B · Atmospheric Night, 12 s, atmosphère optionnelle |
 | `docs/prototypes/candle-motion/motion-plan.schema.json` | schéma du projet v2, `atmosphere` optionnelle |
-| `docs/prototypes/candle-motion/VARIANTS-C.md` | trois propositions C, non implémentées |
+| `docs/prototypes/candle-motion/VARIANTS-C.md` | trois propositions C, non implémentées ; C reste rejetée |
+| `docs/prototypes/candle-motion/quality-lab.html` | laboratoire A/B, profils calme et brise |
+| `docs/prototypes/candle-motion/quality-lab/` | plans de laboratoire et manifeste |
+| `docs/prototypes/candle-motion/QUALITY-STUDY.md` | décisions, mesures et limites de l’étude |
+| `docs/prototypes/candle-motion/quality-lab-a-b.gif` | boucle de revue 12 s, A seule / A + ciel B |
 | `docs/prototypes/candle-motion/README.md` | documentation détaillée du prototype |
 | `docs/prototypes/candle-motion/RECIPES.md` | bougies implémentées ; feuillage et tissu documentés seulement |
 | `docs/prototypes/candle-motion/EXCALIDRAW.md` | étude Excalidraw, non adopté |

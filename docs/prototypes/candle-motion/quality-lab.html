@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Étude de mouvement — deux climats d’air — Studio LTX</title>
+<style>
+  :root {
+    --bg: #07090d;
+    --surface: #0d1117;
+    --surface-2: #111721;
+    --line: #222b38;
+    --line-soft: #171f2a;
+    --text: #e9eef6;
+    --muted: #9aa8ba;
+    --faint: #657386;
+    --amber: #e9ad61;
+    --amber-soft: rgba(233,173,97,.10);
+    --cool: #8fb8ff;
+    --cool-soft: rgba(143,184,255,.10);
+    --ok: #69d2a0;
+    --danger: #ef8a7e;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font);
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(900px 480px at 12% -10%, rgba(233,173,97,.07), transparent 60%),
+      radial-gradient(700px 420px at 100% 0%, rgba(143,184,255,.05), transparent 60%);
+  }
+  h1, h2, h3, p, ul, ol, dl, dd { margin: 0; }
+  h1 { font-size: clamp(2rem, 4.2vw, 3.6rem); line-height: .98; letter-spacing: -.045em; font-weight: 650; max-width: 900px; }
+  h2 { font-size: 1.06rem; letter-spacing: -.01em; font-weight: 620; }
+  h3 { font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  a { color: var(--amber); }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .wrap { width: min(1480px, calc(100vw - 32px)); margin: 0 auto; }
+  .eyebrow { color: var(--amber); font: 600 .67rem/1.4 var(--mono); letter-spacing: .13em; text-transform: uppercase; margin-bottom: 18px; }
+  .top { padding: 30px 0 20px; border-bottom: 1px solid var(--line-soft); }
+  .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+  .head-copy { flex: 1 1 640px; }
+  .lede { max-width: 790px; margin-top: 18px; color: var(--muted); font-size: .96rem; }
+  .verdict { display: inline-flex; gap: 9px; align-items: center; margin-top: 18px; padding: 8px 11px; border: 1px solid rgba(239,138,126,.34); background: rgba(239,138,126,.08); border-radius: 8px; color: #f2b7ae; font-size: .74rem; }
+  .verdict b { color: #ffd0c9; font-weight: 650; }
+  .status { width: 310px; border: 1px solid var(--line); background: rgba(13,17,23,.78); border-radius: 11px; padding: 14px 16px; }
+  .status strong { display: block; font-size: .8rem; margin-bottom: 9px; }
+  .status dl { display: grid; grid-template-columns: 92px 1fr; gap: 6px 10px; font-size: .69rem; }
+  .status dt { color: var(--faint); }
+  .status dd { color: var(--muted); font-family: var(--mono); font-size: .65rem; overflow-wrap: anywhere; }
+  .status .ok { color: var(--ok); }
+  .status .warn { color: var(--amber); }
+  .tabs { display: flex; gap: 4px; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--line-soft); overflow-x: auto; }
+  .tab { border: 1px solid transparent; background: transparent; color: var(--muted); border-radius: 7px; padding: 6px 10px; font-size: .73rem; white-space: nowrap; }
+  .tab:hover { color: var(--text); background: var(--surface); }
+  .tab[aria-selected="true"] { color: var(--text); border-color: var(--line); background: var(--surface-2); }
+  .tab .n { color: var(--faint); font-family: var(--mono); font-size: .62rem; margin-right: 5px; }
+  .transport { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 7px; padding: 6px 10px; font-size: .72rem; }
+  .btn:hover { border-color: #34485e; background: #16202c; }
+  .btn.primary { background: var(--amber); border-color: var(--amber); color: #1d1408; font-weight: 650; }
+  .btn.primary:hover { background: #f5bd76; }
+  .btn.ghost { background: transparent; }
+  .scrub { flex: 1 1 300px; min-width: 220px; accent-color: var(--amber); }
+  .readout { font-family: var(--mono); font-size: .66rem; color: var(--faint); white-space: nowrap; }
+  .switch { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: .7rem; user-select: none; }
+  .switch input { accent-color: var(--amber); }
+  .tag { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; color: var(--faint); font: .6rem/1.5 var(--mono); white-space: nowrap; }
+  .tag.live { color: var(--ok); border-color: rgba(105,210,160,.28); background: rgba(105,210,160,.06); }
+  .tag.warn { color: var(--amber); border-color: rgba(233,173,97,.28); background: var(--amber-soft); }
+  .tag.cool { color: var(--cool); border-color: rgba(143,184,255,.28); background: var(--cool-soft); }
+  .tag.bad { color: var(--danger); border-color: rgba(239,138,126,.28); background: rgba(239,138,126,.07); }
+  main { padding: 26px 0 50px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; flex-wrap: wrap; margin-bottom: 18px; }
+  .section-head .kicker { color: var(--amber); font: 600 .65rem/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 8px; }
+  .section-head h2 { font-size: clamp(1.4rem, 2.4vw, 2.1rem); letter-spacing: -.035em; font-weight: 620; }
+  .section-head p { max-width: 700px; color: var(--muted); font-size: .86rem; margin-top: 7px; }
+  .section-head .section-tags { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+  .spec { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line-soft); border: 1px solid var(--line-soft); border-radius: 10px; overflow: hidden; margin-bottom: 14px; }
+  .spec > div { background: var(--surface); padding: 11px 12px; }
+  .spec h3 { font-size: .61rem; margin-bottom: 4px; }
+  .spec p { color: var(--muted); font-size: .71rem; line-height: 1.48; }
+  .spec b { color: var(--text); font-weight: 600; }
+  .wind-controls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 13px; border: 1px solid rgba(233,173,97,.22); background: rgba(233,173,97,.035); border-radius: 10px; margin: 14px 0; }
+  .control { min-width: 0; }
+  .control label { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: .68rem; margin-bottom: 5px; }
+  .control output { color: var(--amber); font-family: var(--mono); font-size: .64rem; }
+  .control input { width: 100%; accent-color: var(--amber); }
+  .wind-controls .meta { grid-column: 1 / -1; color: var(--faint); font-size: .63rem; font-family: var(--mono); padding-top: 2px; }
+  .source-strip { display: grid; grid-template-columns: 160px 1fr; gap: 12px; align-items: center; border: 1px solid var(--line-soft); background: var(--surface); border-radius: 10px; padding: 9px; margin-bottom: 14px; }
+  .source-strip canvas { width: 160px; display: block; border-radius: 5px; background: #030508; }
+  .source-strip p { color: var(--muted); font-size: .71rem; }
+  .source-strip strong { display: block; color: var(--text); font-size: .72rem; margin-bottom: 3px; }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .compare.three { grid-template-columns: repeat(3, 1fr); }
+  .card { border: 1px solid var(--line-soft); background: var(--surface); border-radius: 10px; overflow: hidden; min-width: 0; }
+  .card .cap { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-bottom: 1px solid var(--line-soft); flex-wrap: wrap; }
+  .card .cap strong { font-size: .72rem; font-weight: 600; }
+  .card .cap .note { color: var(--faint); font-size: .63rem; margin-left: auto; font-family: var(--mono); }
+  .card canvas { width: 100%; display: block; background: #030508; }
+  .card .foot { padding: 8px 11px; color: var(--faint); font-size: .65rem; border-top: 1px solid var(--line-soft); }
+  .card.revision { border-color: rgba(233,173,97,.24); }
+  .card.revision .cap { background: rgba(233,173,97,.035); }
+  .card.source .cap { background: rgba(143,184,255,.025); }
+  .card.cool { border-color: rgba(143,184,255,.23); }
+  .card.cool .cap { background: rgba(143,184,255,.035); }
+  .minor { margin-top: 14px; }
+  .wind-mode { margin-top: 16px; }
+  .mode-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
+  .mode-head h3 { color: var(--text); font-size: .75rem; }
+  .mode-head p { color: var(--faint); font-size: .67rem; }
+  .mode-head .tag { margin-left: 3px; }
+  .strip-wrap { border: 1px solid var(--line-soft); background: var(--surface); border-radius: 10px; overflow: hidden; margin-top: 14px; }
+  .strip-wrap .cap { padding: 9px 11px; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .strip-wrap .cap strong { font-size: .72rem; }
+  .strip-wrap .cap span { color: var(--faint); font-size: .63rem; }
+  .strip-wrap canvas { width: 100%; display: block; }
+  .strip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .strip-grid .strip-wrap { margin-top: 0; }
+  .checks { margin-top: 14px; border-left: 2px solid var(--line); padding: 8px 0 8px 12px; color: var(--faint); font-size: .69rem; line-height: 1.65; }
+  .checks b { color: var(--muted); font-weight: 600; }
+  .checks .good { color: var(--ok); }
+  .checks .warn { color: var(--amber); }
+  .checks .line { margin-top: 5px; }
+  .note-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+  .note-list > div { border-top: 1px solid var(--line-soft); padding-top: 9px; }
+  .note-list h3 { font-size: .62rem; margin-bottom: 5px; }
+  .note-list p, .note-list li { color: var(--muted); font-size: .71rem; }
+  .note-list ul { padding-left: 15px; }
+  .note-list li { margin-top: 3px; }
+  .micro { color: var(--faint); font-size: .65rem; line-height: 1.5; }
+  .standalone { border: 1px solid rgba(239,138,126,.24); background: rgba(239,138,126,.045); border-radius: 9px; padding: 11px 13px; color: #f0bbb4; font-size: .73rem; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+  footer { border-top: 1px solid var(--line-soft); padding: 22px 0 38px; color: var(--faint); font-size: .7rem; }
+  footer .foot-grid { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 20px; }
+  footer h3 { font-size: .62rem; margin-bottom: 5px; }
+  footer p, footer li { color: var(--faint); font-size: .67rem; }
+  footer ul { padding-left: 15px; margin: 0; }
+  footer li { margin-top: 3px; }
+  @media (max-width: 1050px) {
+    .spec, .wind-controls { grid-template-columns: 1fr 1fr; }
+    .compare.three { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 760px) {
+    .wrap { width: calc(100vw - 24px); }
+    .head { gap: 20px; }
+    .status { width: 100%; }
+    .compare, .compare.three, .strip-grid { grid-template-columns: 1fr; }
+    .note-list { grid-template-columns: 1fr; }
+    footer .foot-grid { grid-template-columns: 1fr; }
+    .spec, .wind-controls { grid-template-columns: 1fr; }
+    h1 { font-size: 2.2rem; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Studio LTX · étude de mouvement · 9 novembre 2026</div>
+    <div class="head">
+      <div class="head-copy">
+        <h1>L’air, la flamme, la lumière.</h1>
+        <p class="lede">Le laboratoire compare maintenant un flux d’air partagé à réponse individuelle, sa lumière locale liée, et le ciel B comme couche additionnelle. Les deux profils de vent partagent le même fond, le même modèle de lumière et la même boucle de 12 s. C / Poetic Breath est rejetée et n’est plus dans la page.</p>
+        <div class="verdict"><span>Verdict source</span><b>Aucun master image ou vidéo approuvé.</b></div>
+      </div>
+      <aside class="status" aria-label="État de l’étude">
+        <strong>État de la preview</strong>
+        <dl>
+          <dt>Branche</dt><dd>feature/motion-quality-study</dd>
+          <dt>Source</dt><dd>seed 4243 · 1280×1024</dd>
+          <dt>Boucle</dt><dd class="ok">12 s · 24 fps · 288 échantillons</dd>
+          <dt>Air</dt><dd>shared-air-v1 · seed 4243</dd>
+          <dt>Export</dt><dd class="warn">aucun nouveau MP4</dd>
+          <dt>Approbation</dt><dd class="warn">en attente</dd>
+        </dl>
+      </aside>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs wrap" aria-label="Directions">
+  <button class="tab" data-tab="one" aria-selected="true"><span class="n">0</span>Deux climats d’air</button>
+  <button class="tab" data-tab="a" aria-selected="false"><span class="n">A</span>Living Fire</button>
+  <button class="tab" data-tab="b" aria-selected="false"><span class="n">B</span>A + atmosphère</button>
+  <span class="tag" style="margin-left:auto">previews interactives · pas un export</span>
+</nav>
+
+<div class="transport wrap">
+  <button class="btn primary" id="play" type="button">Pause</button>
+  <button class="btn ghost" id="restart" type="button">Début</button>
+  <input class="scrub" id="scrub" type="range" min="0" max="12" step="0.0416667" value="0" aria-label="Position dans la boucle">
+  <span class="readout" id="readout">0.00 / 12.00 s</span>
+  <label class="switch"><input id="masks" type="checkbox"> afficher les masques</label>
+  <label class="switch"><input id="debug-wind" type="checkbox"> debug direction</label>
+</div>
+
+<main class="wrap">
+  <section class="panel active" id="panel-one" aria-labelledby="title-one">
+    <div class="section-head">
+      <div>
+        <div class="kicker">0 · une niche, deux climats</div>
+        <h2 id="title-one">Le même air, deux lectures.</h2>
+        <p>La niche gauche réunit deux flammes, un pool de niche et le pool de sol existant. Le flux est commun ; chaque flamme garde son ancre, sa sensibilité, son délai et un petit résidu. Aucun mouvement ne traverse la façade.</p>
+      </div>
+      <div class="section-tags"><span class="tag live">même fond</span><span class="tag warn">même lumière liée</span><span class="tag">boucle 12 s</span></div>
+    </div>
+
+    <div class="spec">
+      <div><h3>Driver</h3><p><b>shared-air-v1</b> · calme, rafale lissée, direction signée et bornée, seed 4243. Une approximation, pas une simulation physique.</p></div>
+      <div><h3>Réponses</h3><p>Sensibilité, délai, inclinaison, hauteur/largeur et résidu seedés par flamme. Deux flammes voisines peuvent se ressembler sans partager la même pose.</p></div>
+      <div><h3>Lumière</h3><p>Chaque pool dépend des états de ses flammes sources. <b>light.left-niche</b> et <b>light.left-floor</b> reçoivent deux contributions ; aucun oscillateur global.</p></div>
+      <div><h3>Ancres</h3><p>Mèches et bases fixes. Le haut des supports est élargi de 3 px natifs uniquement pour la pointe ; aucune ancre n’est déplacée.</p></div>
+    </div>
+
+    <div class="wind-controls" aria-label="Contrôles du vent">
+      <div class="control"><label for="wind-strength">Force <output id="wind-strength-out">0.52</output></label><input id="wind-strength" type="range" min="0.20" max="1" step="0.01" value="0.52"></div>
+      <div class="control"><label for="wind-frequency">Fréquence des rafales <output id="wind-frequency-out">2 / boucle</output></label><input id="wind-frequency" type="range" min="1" max="3" step="1" value="2"></div>
+      <div class="control"><label for="wind-balance">Équilibre directionnel <output id="wind-balance-out">+0.18</output></label><input id="wind-balance" type="range" min="-1" max="1" step="0.05" value="0.18"></div>
+      <div class="control"><label for="wind-variation">Variation individuelle <output id="wind-variation-out">0.65</output></label><input id="wind-variation" type="range" min="0" max="1" step="0.05" value="0.65"></div>
+      <div class="meta">Seed 4243 · quatre contrôles seulement · les mesures affichées sont celles du chargement</div>
+    </div>
+
+    <div class="source-strip">
+      <canvas id="one-source" width="160" height="180" aria-label="Source de la niche gauche"></canvas>
+      <div><strong>Fond commun</strong><p>La source 4243 reste la même dans les deux profils. La lumière de niche et le pool de sol sont déjà peints ; la révision les module localement, sans repeindre le cadre.</p></div>
+    </div>
+
+    <div class="wind-mode">
+      <div class="mode-head"><h3>Calme + rafales <span class="tag warn">rafales espacées</span></h3><p>De longues accalmies, puis une montée et une retombée lisses. La direction peut changer, mais reste bornée.</p></div>
+      <div class="compare">
+        <div class="card source">
+          <div class="cap"><strong>ACTUEL</strong><span class="tag">renderFrame</span><span class="note">A original</span></div>
+          <canvas id="one-calm-current" width="480" height="560" aria-label="Niche, renderer actuel"></canvas>
+          <div class="foot">Le vent actuel n’a pas de rafale partagée ni de délai par flamme.</div>
+        </div>
+        <div class="card revision">
+          <div class="cap"><strong>RÉVISION · CALME</strong><span class="tag warn">lab</span><span class="note">non approuvée</span></div>
+          <canvas id="one-calm-lab" width="480" height="560" aria-label="Niche, révision calme avec rafales"></canvas>
+          <div class="foot">Flux partagé, réponse seedée par flamme, lumière liée au même état.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wind-mode">
+      <div class="mode-head"><h3>Brise alternée <span class="tag cool">direction plus lisible</span></h3><p>Le même modèle et le même fond, avec une direction qui s’inverse plus franchement. Pas une onde qui parcourt la façade.</p></div>
+      <div class="compare">
+        <div class="card source">
+          <div class="cap"><strong>ACTUEL</strong><span class="tag">renderFrame</span><span class="note">identique</span></div>
+          <canvas id="one-breeze-current" width="480" height="560" aria-label="Niche, renderer actuel pour la brise"></canvas>
+          <div class="foot">Le renderer actuel reste la référence avant.</div>
+        </div>
+        <div class="card revision">
+          <div class="cap"><strong>RÉVISION · BRISE</strong><span class="tag warn">lab</span><span class="note">non approuvée</span></div>
+          <canvas id="one-breeze-lab" width="480" height="560" aria-label="Niche, révision avec brise alternée"></canvas>
+          <div class="foot">Mêmes pools, même source, même boucle ; le profil d’air change seul.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="strip-grid">
+      <div class="strip-wrap">
+        <div class="cap"><strong>Bord de boucle · calme</strong><span>11.71 → 11.96 → 0.00 s</span></div>
+        <canvas id="strip-one-calm" width="480" height="180"></canvas>
+      </div>
+      <div class="strip-wrap">
+        <div class="cap"><strong>Bord de boucle · brise</strong><span>11.71 → 11.96 → 0.00 s</span></div>
+        <canvas id="strip-one-breeze" width="480" height="180"></canvas>
+      </div>
+    </div>
+
+    <div class="checks" id="check-one">Contrôle de visibilité en cours…</div>
+
+    <div class="note-list">
+      <div><h3>Lecture honnête</h3><p>Le driver est une approximation visuelle déterministe, pas un écoulement d’air récupéré. La lumière reste peinte : la révision module les pools existants et ne promet pas une séparation physique.</p></div>
+      <div><h3>Ce qui doit rester protégé</h3><p>Le corps des bougies, le rebord de la niche, le mur hors support et le sol hors du pool de reflet. Le test de protection est un contrôle technique, pas une preuve de beauté.</p></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-a" aria-labelledby="title-a">
+    <div class="section-head">
+      <div>
+        <div class="kicker">A · direction artistique</div>
+        <h2 id="title-a">Living Fire.</h2>
+        <p>La flamme et sa lumière sont le sujet. Le flux partagé donne une réponse collective cohérente, mais chaque flamme garde sa sensibilité, son délai et son résidu. Aucune atmosphère B n’est ajoutée ici.</p>
+      </div>
+      <div class="section-tags"><span class="tag warn">A corrigée</span><span class="tag">8 flammes · 7 pools · 2 sols</span></div>
+    </div>
+
+    <div class="spec">
+      <div><h3>Idée principale</h3><p>Une flamme plus vivante et une lumière locale qui répond à l’état de sa propre flamme, pas à un oscillateur unique appliqué au cadre.</p></div>
+      <div><h3>Régions touchées</h3><p>Les 8 supports de flamme, les 7 pools de niche et les 2 pools de sol existants. Rien hors de ces supports.</p></div>
+      <div><h3>Paramètres</h3><p>HeightGain 0.19, inclinaison 0.46, halo 0.075, modulation 1.20, gain de niche ×5.20, glints 0.055, correction négative 0.055, sol ×0.40.</p></div>
+      <div><h3>Boucle</h3><p>12 s ; le flux et le résidu utilisent des harmoniques entières. Le raccord 11.96 → 0.00 s est vérifié par hash, pas jugé comme une preuve esthétique.</p></div>
+      <div><h3>Existant / nouveau</h3><p>Existant : flamme procédurale, pools et masques. Nouveau : flux partagé, délai par flamme, lumière liée localement. Pas de bloom séparé.</p></div>
+      <div><h3>Risques visuels</h3><p>Contour en lame, halo qui lave la niche, pool qui pompe. À rejeter si une flamme double, un patch sombre ou une aiguille blanche apparaît.</p></div>
+      <div><h3>Protégé</h3><p>Architecture, rebords, corps de bougie hors flamme, pixels hors supports. Aucun assombrissement global du cadre.</p></div>
+      <div><h3>Lecture</h3><p>Comparer le plein cadre, puis la niche. La moyenne plein cadre n’est pas le score principal.</p></div>
+    </div>
+
+    <div class="compare">
+      <div class="card source">
+        <div class="cap"><strong>PLEIN CADRE · ACTUEL</strong><span class="tag">renderFrame</span><span class="note">A original</span></div>
+        <canvas id="a-current" width="800" height="640" aria-label="Plein cadre A actuel"></canvas>
+        <div class="foot">Le mouvement est retenu ; la lumière reste un pool commun.</div>
+      </div>
+      <div class="card revision">
+        <div class="cap"><strong>PLEIN CADRE · RÉVISION</strong><span class="tag warn">lab</span><span class="note">A seule</span></div>
+        <canvas id="a-lab" width="800" height="640" aria-label="Plein cadre A révisé"></canvas>
+        <div class="foot">Même cadrage, même source, même boucle ; pas d’atmosphère.</div>
+      </div>
+    </div>
+
+    <div class="compare minor">
+      <div class="card">
+        <div class="cap"><strong>DÉTAIL · ACTUEL</strong><span class="tag">niche gauche</span><span class="note">×2</span></div>
+        <canvas id="a-current-detail" width="480" height="560" aria-label="Détail A actuel"></canvas>
+      </div>
+      <div class="card revision">
+        <div class="cap"><strong>DÉTAIL · RÉVISION</strong><span class="tag warn">niche gauche</span><span class="note">×2</span></div>
+        <canvas id="a-lab-detail" width="480" height="560" aria-label="Détail A révisé"></canvas>
+      </div>
+    </div>
+
+    <div class="strip-wrap">
+      <div class="cap"><strong>Bord de boucle · A</strong><span>11.71 → 11.96 → 0.00 s · détail de niche</span></div>
+      <canvas id="strip-a" width="960" height="340"></canvas>
+    </div>
+    <div class="checks" id="check-a">Contrôle de visibilité en cours…</div>
+  </section>
+
+  <section class="panel" id="panel-b" aria-labelledby="title-b">
+    <div class="section-head">
+      <div>
+        <div class="kicker">B · direction artistique additive</div>
+        <h2 id="title-b">A + atmosphère.</h2>
+        <p>B n’est pas une seconde version des flammes : c’est la même A corrigée, avec le ciel B comme seul ajout. Le contraste doit venir du mouvement du voile, pas d’une exposition globale.</p>
+      </div>
+      <div class="section-tags"><span class="tag cool">ciel seulement</span><span class="tag">étoiles off</span><span class="tag">lumière froide off</span></div>
+    </div>
+
+    <div class="spec">
+      <div><h3>Idée principale</h3><p>Une nuit qui dérive lentement dans le masque de ciel, avec plusieurs échelles spatiales et un contraste local. Aucun spotlight bleu.</p></div>
+      <div><h3>Régions touchées</h3><p><b>region.sky</b> uniquement pour B. Les flammes et les lumières de A restent identiques ; le ciel est le seul delta.</p></div>
+      <div><h3>Paramètres</h3><p>Intensité 0.72, deux cycles atmosphériques, bande 0.38, garde-fous de contour, de chaleur et de luminance. Étoiles et lumière froide désactivées.</p></div>
+      <div><h3>Boucle</h3><p>12 s, harmoniques entières et dérive à trois échelles. Le bord est contrôlé ; la visibilité réelle se juge dans la bande de ciel.</p></div>
+      <div><h3>Existant / nouveau</h3><p>Existant : région ciel, atmosphère, garde-fous. Nouveau : voile plus large, dérive multi-échelle, contraste local. Pas de pompage global.</p></div>
+      <div><h3>Risques visuels</h3><p>Glow bleu qui lave les arêtes, motif qui lit comme un défaut, ciel qui devient un projecteur. Réduire plutôt qu’ajouter.</p></div>
+      <div><h3>Protégé</h3><p>Silhouettes, arêtes chaudes, sol, bougies et pixels hors du polygone de ciel. Le cadre ne respire pas.</p></div>
+      <div><h3>Lecture</h3><p>Comparer A seule et A + ciel B, puis regarder la bande de ciel agrandie. L’ajout doit être identifiable sans devenir un projecteur.</p></div>
+    </div>
+
+    <div class="compare">
+      <div class="card">
+        <div class="cap"><strong>A CORRIGÉE</strong><span class="tag">révision</span><span class="note">sans ciel B</span></div>
+        <canvas id="b-a" width="800" height="640" aria-label="A corrigée sans atmosphère"></canvas>
+        <div class="foot">La référence interne : même A, même boucle, aucun ajout atmosphérique.</div>
+      </div>
+      <div class="card revision cool">
+        <div class="cap"><strong>A + CIEL B</strong><span class="tag cool">effet additionnel</span><span class="note">même A</span></div>
+        <canvas id="b-ab" width="800" height="640" aria-label="A corrigée avec atmosphère B"></canvas>
+        <div class="foot">Le seul delta est le voile de ciel B ; les flammes et les pools sont inchangés.</div>
+      </div>
+    </div>
+
+    <div class="compare minor">
+      <div class="card">
+        <div class="cap"><strong>CIEL · A SEULE</strong><span class="tag">bande agrandie</span><span class="note">référence</span></div>
+        <canvas id="b-a-detail" width="960" height="230" aria-label="Bande de ciel, A seule"></canvas>
+      </div>
+      <div class="card revision cool">
+        <div class="cap"><strong>CIEL · A + B</strong><span class="tag cool">bande agrandie</span><span class="note">delta</span></div>
+        <canvas id="b-ab-detail" width="960" height="230" aria-label="Bande de ciel avec atmosphère B"></canvas>
+      </div>
+    </div>
+
+    <div class="strip-wrap">
+      <div class="cap"><strong>Bord de boucle · A + ciel B</strong><span>11.71 → 11.96 → 0.00 s · plein cadre</span></div>
+      <canvas id="strip-b" width="960" height="300"></canvas>
+    </div>
+    <div class="checks" id="check-b">Contrôle de visibilité en cours…</div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <h3>Limites de cette page</h3>
+      <p>Les previews sont des rendus de laboratoire sur la source 4243. Elles ne prouvent ni photoréalisme, ni accord avec LTX, ni qualité d’un master. Les mesures par région servent au contrôle, pas de score artistique.</p>
+    </div>
+    <div>
+      <h3>Ce qui n’a pas été fait</h3>
+      <ul>
+        <li>Aucun nouvel export MP4 ou image.</li>
+        <li>Aucune fumée, aucun renderer de fumée.</li>
+        <li>Aucun LTX, modèle, téléchargement ou dépendance.</li>
+        <li>Aucune modification des projets A/B existants.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Prochaine décision</h3>
+      <p>Choisir A seule ou A + atmosphère B après inspection en mouvement, puis valider ou rejeter les deux profils d’air. Aucun export avant cette décision.</p>
+    </div>
+  </div>
+</footer>
+
+<script type="module">
+import {
+  renderFrame,
+  renderLabFrame,
+  renderWriteMask,
+  frameHash,
+  regionPixelBounds,
+  pointInSupport,
+  labAirflowAt
+} from './quality-lab-core.mjs';
+
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const fmt = (v, n = 2) => Number(v).toFixed(n);
+const CROPS = {
+  one: { x: 0.02, y: 0.48, w: 0.33, h: 0.515 },
+  a: { x: 0.035, y: 0.455, w: 0.305, h: 0.355 },
+  sky: { x: 0, y: 0, w: 0.78, h: 0.155 }
+};
+const W = 800;
+const H = 640;
+const DURATION = 12;
+const state = {
+  tab: 'one',
+  playing: true,
+  t: 0,
+  last: performance.now(),
+  showMasks: false,
+  debugWind: false,
+  ready: false,
+  manifest: null,
+  plans: {},
+  baseRGBA: null,
+  baseCanvas: document.createElement('canvas'),
+  renderCanvas: document.createElement('canvas'),
+  checksStarted: false,
+  windInitialized: false
+};
+state.baseCanvas.width = W;
+state.baseCanvas.height = H;
+state.renderCanvas.width = W;
+state.renderCanvas.height = H;
+const baseCtx = state.baseCanvas.getContext('2d', { willReadFrequently: true });
+const renderCtx = state.renderCanvas.getContext('2d', { willReadFrequently: true });
+const outA = new Uint8ClampedArray(W * H * 4);
+const outB = new Uint8ClampedArray(W * H * 4);
+
+const image = new Image();
+
+function putRGBA(ctx, rgba, width = W, height = H) {
+  ctx.putImageData(new ImageData(new Uint8ClampedArray(rgba), width, height), 0, 0);
+}
+
+function drawFull(canvas, rgba, plan = null) {
+  const ctx = canvas.getContext('2d');
+  const tmp = document.createElement('canvas');
+  tmp.width = W;
+  tmp.height = H;
+  putRGBA(tmp.getContext('2d'), rgba);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(tmp, 0, 0, canvas.width, canvas.height);
+  if (plan && state.showMasks) drawSupports(ctx, plan, canvas.width, canvas.height, { x: 0, y: 0, w: 1, h: 1 });
+}
+
+function drawCrop(canvas, rgba, crop) {
+  const ctx = canvas.getContext('2d');
+  const tmp = document.createElement('canvas');
+  tmp.width = W;
+  tmp.height = H;
+  putRGBA(tmp.getContext('2d'), rgba);
+  const sx = crop.x * W;
+  const sy = crop.y * H;
+  const sw = crop.w * W;
+  const sh = crop.h * H;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(tmp, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+}
+
+function drawSourceCrop(canvas, crop) {
+  const ctx = canvas.getContext('2d');
+  const sx = crop.x * W;
+  const sy = crop.y * H;
+  const sw = crop.w * W;
+  const sh = crop.h * H;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(state.baseCanvas, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+}
+
+function drawSupports(ctx, plan, cw, ch, crop) {
+  const regions = plan.regions.filter((r) => r.role === 'animated' || r.role === 'light-influence' || (plan.atmosphere?.enabled && r.id === plan.atmosphere.regionId));
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  for (const region of regions) {
+    ctx.strokeStyle = region.role === 'light-influence' ? 'rgba(105,210,160,.62)' : region.role === 'protected' ? 'rgba(143,184,255,.58)' : 'rgba(233,173,97,.66)';
+    const pts = region.support?.points || [];
+    if (!pts.length) continue;
+    ctx.beginPath();
+    pts.forEach(([nx, ny], i) => {
+      const px = ((nx - crop.x) / crop.w) * cw;
+      const py = ((ny - crop.y) / crop.h) * ch;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.closePath();
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawWindDebug(canvas, plan) {
+  if (!state.debugWind) return;
+  const air = labAirflowAt(plan, state.t);
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const arrow = air.flow >= 0 ? 1 : -1;
+  const right = w - 48;
+  const center = 32;
+  ctx.save();
+  ctx.fillStyle = 'rgba(7,9,13,.78)';
+  ctx.strokeStyle = 'rgba(143,184,255,.7)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(right - 40, 8, 60, 43, 5);
+  ctx.fill();
+  ctx.stroke();
+  ctx.strokeStyle = air.profile === 'breeze' ? 'rgba(143,184,255,.98)' : 'rgba(233,173,97,.98)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(right - 18, center);
+  ctx.lineTo(right + 8, center);
+  ctx.lineTo(right + 2, center - 5);
+  ctx.moveTo(right + 8, center);
+  ctx.lineTo(right + 2, center + 5);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(232,238,245,.92)';
+  ctx.font = '9px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText(arrow > 0 ? 'AIR →' : 'AIR ←', right - 35, 53);
+  ctx.fillStyle = 'rgba(143,184,255,.9)';
+  ctx.font = '8px ui-monospace, SFMono-Regular, Menlo, monospace';
+  ctx.fillText('DEBUG · HORS RENDU', 10, 18);
+  ctx.restore();
+}
+
+function renderCurrentLab(currentPlan, labPlan, t) {
+  renderFrame(state.baseRGBA, currentPlan, t, { width: W, height: H, out: outA });
+  renderLabFrame(state.baseRGBA, labPlan, t, { width: W, height: H, out: outB });
+}
+
+function renderLabPair(aPlan, bPlan, t) {
+  renderLabFrame(state.baseRGBA, aPlan, t, { width: W, height: H, out: outA });
+  renderLabFrame(state.baseRGBA, bPlan, t, { width: W, height: H, out: outB });
+}
+
+function drawOneMode(mode, currentPlan, labPlan, t) {
+  renderFrame(state.baseRGBA, currentPlan, t, { width: W, height: H, out: outA });
+  renderLabFrame(state.baseRGBA, labPlan, t, { width: W, height: H, out: outB });
+  drawCrop($(`one-${mode}-current`), outA, CROPS.one);
+  drawCrop($(`one-${mode}-lab`), outB, CROPS.one);
+  if (state.showMasks) drawSupports($(`one-${mode}-lab`).getContext('2d'), labPlan, $(`one-${mode}-lab`).width, $(`one-${mode}-lab`).height, CROPS.one);
+  drawWindDebug($(`one-${mode}-lab`), labPlan);
+}
+
+function drawSectionOne(t) {
+  drawSourceCrop($('one-source'), CROPS.one);
+  drawOneMode('calm', state.plans.one.current, state.plans.one.calm, t);
+  drawOneMode('breeze', state.plans.one.current, state.plans.one.breeze, t);
+}
+
+function drawSectionA(t) {
+  renderCurrentLab(state.plans.a.current, state.plans.a.lab, t);
+  drawFull($('a-current'), outA, state.plans.a.current);
+  drawFull($('a-lab'), outB, state.plans.a.lab);
+  drawCrop($('a-current-detail'), outA, CROPS.a);
+  drawCrop($('a-lab-detail'), outB, CROPS.a);
+  if (state.showMasks) drawSupports($('a-lab-detail').getContext('2d'), state.plans.a.lab, $('a-lab-detail').width, $('a-lab-detail').height, CROPS.a);
+}
+
+function drawSectionB(t) {
+  renderLabPair(state.plans.a.lab, state.plans.b.lab, t);
+  drawFull($('b-a'), outA, state.plans.a.lab);
+  drawFull($('b-ab'), outB, state.plans.b.lab);
+  drawCrop($('b-a-detail'), outA, CROPS.sky);
+  drawCrop($('b-ab-detail'), outB, CROPS.sky);
+  if (state.showMasks) drawSupports($('b-ab').getContext('2d'), state.plans.b.lab, $('b-ab').width, $('b-ab').height, { x: 0, y: 0, w: 1, h: 1 });
+}
+
+function drawCurrentTab(t) {
+  if (!state.ready) return;
+  if (state.tab === 'one') drawSectionOne(t);
+  else if (state.tab === 'a') drawSectionA(t);
+  else if (state.tab === 'b') drawSectionB(t);
+}
+
+function loopStrip(canvas, plan, crop, full = false) {
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#07090d';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const times = [11.708333, 11.958333, 0];
+  const labels = ['11.71 s', '11.96 s', '0.00 s'];
+  const gap = 8;
+  const cellW = (canvas.width - gap * 4) / 3;
+  const top = 24;
+  const cellH = canvas.height - top - 12;
+  const tmp = document.createElement('canvas');
+  tmp.width = W; tmp.height = H;
+  const tctx = tmp.getContext('2d');
+  for (let i = 0; i < 3; i++) {
+    const frame = new Uint8ClampedArray(W * H * 4);
+    renderLabFrame(state.baseRGBA, plan, times[i], { width: W, height: H, out: frame });
+    putRGBA(tctx, frame);
+    const x = gap + i * (cellW + gap);
+    ctx.fillStyle = 'rgba(13,17,23,.9)';
+    ctx.fillRect(x, 6, cellW, cellH + 6);
+    if (full) {
+      ctx.drawImage(tmp, 0, 0, W, H, x, top, cellW, cellH);
+    } else {
+      const sx = crop.x * W;
+      const sy = crop.y * H;
+      const sw = crop.w * W;
+      const sh = crop.h * H;
+      ctx.drawImage(tmp, sx, sy, sw, sh, x, top, cellW, cellH);
+    }
+    ctx.strokeStyle = i === 2 ? 'rgba(105,210,160,.7)' : 'rgba(233,173,97,.45)';
+    ctx.strokeRect(x + .5, top + .5, cellW - 1, cellH - 1);
+    ctx.fillStyle = i === 2 ? 'rgba(105,210,160,.9)' : 'rgba(154,168,186,.85)';
+    ctx.font = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
+    ctx.fillText(labels[i], x + 3, 18);
+  }
+}
+
+function makeRegionMask(plan, ids, width, height) {
+  const mask = new Uint8Array(width * height);
+  const regions = plan.regions.filter((r) => ids.includes(r.id));
+  for (const region of regions) {
+    const b = regionPixelBounds(region, width, height);
+    for (let y = b.y0; y <= b.y1; y++) {
+      for (let x = b.x0; x <= b.x1; x++) {
+        if (pointInSupport(region, (x + .5) / width, (y + .5) / height)) mask[y * width + x] = 1;
+      }
+    }
+  }
+  return mask;
+}
+
+function smallBase() {
+  const c = document.createElement('canvas');
+  c.width = 320; c.height = 256;
+  c.getContext('2d').drawImage(state.baseCanvas, 0, 0, 320, 256);
+  return c.getContext('2d').getImageData(0, 0, 320, 256).data;
+}
+
+function measurePair(beforePlan, afterPlan, ids, excludeIds = [], bothLab = false) {
+  const w = 320;
+  const h = 256;
+  const base = smallBase();
+  const mask = makeRegionMask(afterPlan, ids, w, h);
+  const exclude = excludeIds.length ? makeRegionMask(afterPlan, excludeIds, w, h) : null;
+  const a = new Uint8ClampedArray(w * h * 4);
+  const b = new Uint8ClampedArray(w * h * 4);
+  const times = [0, 2, 4, 6, 8, 10];
+  const values = [];
+  let max = 0;
+  for (const t of times) {
+    if (bothLab) renderLabFrame(base, beforePlan, t, { width: w, height: h, out: a });
+    else renderFrame(base, beforePlan, t, { width: w, height: h, out: a });
+    renderLabFrame(base, afterPlan, t, { width: w, height: h, out: b });
+    for (let p = 0; p < mask.length; p++) {
+      if (!mask[p] || (exclude && exclude[p])) continue;
+      const i = p * 4;
+      const d = (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2])) / 3;
+      values.push(d);
+      if (d > max) max = d;
+    }
+  }
+  values.sort((x, y) => x - y);
+  const count = values.length;
+  const mean = count ? values.reduce((s, x) => s + x, 0) / count : 0;
+  const p95 = count ? values[Math.floor((count - 1) * 0.95)] : 0;
+  const changed = values.filter((x) => x > 2).length;
+  return { mean, p95, max, count, changed, base, w, h };
+}
+
+function temporalStats(plan, ids) {
+  const w = 320;
+  const h = 256;
+  const base = smallBase();
+  const mask = makeRegionMask(plan, ids, w, h);
+  const times = [3, 6, 9];
+  const frames = times.map((t) => {
+    const frame = new Uint8ClampedArray(w * h * 4);
+    renderLabFrame(base, plan, t, { width: w, height: h, out: frame });
+    return frame;
+  });
+  let total = 0;
+  let max = 0;
+  let count = 0;
+  for (let k = 0; k < frames.length - 1; k++) {
+    for (let p = 0; p < mask.length; p++) {
+      if (!mask[p]) continue;
+      const i = p * 4;
+      const d = (Math.abs(frames[k][i] - frames[k + 1][i]) + Math.abs(frames[k][i + 1] - frames[k + 1][i + 1]) + Math.abs(frames[k][i + 2] - frames[k + 1][i + 2])) / 3;
+      total += d;
+      max = Math.max(max, d);
+      count++;
+    }
+  }
+  return { mean: count ? total / count : 0, max };
+}
+
+function airflowText(plan) {
+  const air = [];
+  for (let i = 0; i < 48; i++) air.push(labAirflowAt(plan, (i / 48) * DURATION));
+  const flows = air.map((a) => a.flow);
+  const min = Math.min(...flows);
+  const max = Math.max(...flows);
+  let flips = 0;
+  for (let i = 1; i < flows.length; i++) if (Math.sign(flows[i]) !== Math.sign(flows[i - 1])) flips++;
+  const calm = air.map((a) => a.envelope);
+  return `air signé min ${fmt(min, 2)} / max ${fmt(max, 2)} · ${flips} changements de signe · enveloppe ${fmt(Math.min(...calm), 2)}–${fmt(Math.max(...calm), 2)}`;
+}
+
+function analyze(beforePlan, afterPlan, target, label, groups, bothLab = false) {
+  const main = measurePair(beforePlan, afterPlan, groups.flatMap((g) => g.ids), [], bothLab);
+  const parts = groups.map((group) => {
+    const m = measurePair(beforePlan, afterPlan, group.ids, group.exclude || [], bothLab);
+    return `<b>${group.label}</b> Δmoy ${fmt(m.mean, 2)}/255 · p95 ${fmt(m.p95, 1)} · max ${fmt(m.max, 1)} · ${fmt((m.changed / Math.max(1, m.count)) * 100, 0)} % &gt; 2/255`;
+  });
+  const writeMask = renderWriteMask(afterPlan, main.w, main.h);
+  const c = new Uint8ClampedArray(main.w * main.h * 4);
+  renderLabFrame(main.base, afterPlan, 3.1, { width: main.w, height: main.h, out: c });
+  let outside = 0;
+  for (let p = 0; p < writeMask.length; p++) {
+    if (writeMask[p]) continue;
+    const i = p * 4;
+    for (let k = 0; k < 4; k++) if (c[i + k] !== main.base[i + k]) outside++;
+  }
+  const f0 = new Uint8ClampedArray(main.w * main.h * 4);
+  const f1 = new Uint8ClampedArray(main.w * main.h * 4);
+  renderLabFrame(main.base, afterPlan, 0, { width: main.w, height: main.h, out: f0 });
+  renderLabFrame(main.base, afterPlan, DURATION, { width: main.w, height: main.h, out: f1 });
+  const loop = frameHash(f0) === frameHash(f1);
+  const temporal = temporalStats(afterPlan, groups.flatMap((g) => g.ids));
+  target.innerHTML = `<b>${label}</b> · ${parts.join(' ; ')} · temporel t3→t6→t9 Δmoy ${fmt(temporal.mean, 2)} / max ${fmt(temporal.max, 1)} · hors masques <span class="${outside === 0 ? 'good' : 'warn'}">${outside} octet${outside > 1 ? 's' : ''}</span> · boucle 0/12 s <span class="${loop ? 'good' : 'warn'}">${loop ? 'identique' : 'à vérifier'}</span>. <span style="opacity:.75">Présence de changement, pas un score artistique.</span>`;
+  return { mean: main.mean, max: main.max, outside, loop, temporal, summary: target.innerHTML };
+}
+
+async function runChecks() {
+  if (state.checksStarted || !state.ready) return;
+  state.checksStarted = true;
+  await new Promise((r) => setTimeout(r, 80));
+  const one = state.plans.one;
+  const calmView = document.createElement('div');
+  const breezeView = document.createElement('div');
+  const calmResult = analyze(one.current, one.calm, calmView, 'Calme + rafales', [
+    { label: 'flammes', ids: ['flame.left-a', 'flame.left-b'] },
+    { label: 'lumières hors flammes', ids: ['light.left-niche', 'light.left-floor'], exclude: ['flame.left-a', 'flame.left-b'] }
+  ]);
+  const breezeResult = analyze(one.current, one.breeze, breezeView, 'Brise alternée', [
+    { label: 'flammes', ids: ['flame.left-a', 'flame.left-b'] },
+    { label: 'lumières hors flammes', ids: ['light.left-niche', 'light.left-floor'], exclude: ['flame.left-a', 'flame.left-b'] }
+  ]);
+  const calmTemporal = temporalStats(one.calm, ['flame.left-a', 'flame.left-b']);
+  const breezeTemporal = temporalStats(one.breeze, ['flame.left-a', 'flame.left-b']);
+  $('check-one').innerHTML = [
+    `<div class="line"><b>Calme + rafales</b> · ${airflowText(one.calm)} · flammes temporel Δmoy ${fmt(calmTemporal.mean, 2)} / max ${fmt(calmTemporal.max, 1)} · protection <span class="${calmResult.outside === 0 ? 'good' : 'warn'}">${calmResult.outside} octet</span> · boucle <span class="${calmResult.loop ? 'good' : 'warn'}">${calmResult.loop ? 'identique' : 'à vérifier'}</span></div>`,
+    `<div class="line"><b>Brise alternée</b> · ${airflowText(one.breeze)} · flammes temporel Δmoy ${fmt(breezeTemporal.mean, 2)} / max ${fmt(breezeTemporal.max, 1)} · protection <span class="${breezeResult.outside === 0 ? 'good' : 'warn'}">${breezeResult.outside} octet</span> · boucle <span class="${breezeResult.loop ? 'good' : 'warn'}">${breezeResult.loop ? 'identique' : 'à vérifier'}</span></div>`,
+    `<div class="line" style="opacity:.72">Mesures régionales au chargement ; elles ne classent pas la beauté et ne remplacent pas la lecture en mouvement.</div>`
+  ].join('');
+
+  const aIds = state.plans.a.lab.regions;
+  analyze(state.plans.a.current, state.plans.a.lab, $('check-a'), 'A seule', [
+    { label: 'flammes', ids: aIds.filter((r) => r.role === 'animated').map((r) => r.id) },
+    { label: 'lumières hors flammes', ids: aIds.filter((r) => r.role === 'light-influence').map((r) => r.id), exclude: aIds.filter((r) => r.role === 'animated').map((r) => r.id) }
+  ]);
+
+  analyze(state.plans.a.lab, state.plans.b.lab, $('check-b'), 'Ciel B seul ajout', [
+    { label: 'ciel', ids: ['region.sky'] }
+  ], true);
+  const bTemporal = temporalStats(state.plans.b.lab, ['region.sky']);
+  $('check-b').innerHTML += ` <span style="opacity:.75">Variation temporelle du ciel Δmoy ${fmt(bTemporal.mean, 2)} / max ${fmt(bTemporal.max, 1)}.</span>`;
+}
+
+function updateReadout() {
+  $('readout').textContent = `${fmt(state.t, 2)} / 12.00 s`;
+  $('scrub').value = String(state.t);
+}
+
+function applyWindControls() {
+  if (!state.plans.one) return;
+  const wind = {
+    strength: Number($('wind-strength').value),
+    gustFrequency: Number($('wind-frequency').value),
+    directionBalance: Number($('wind-balance').value),
+    individualVariation: Number($('wind-variation').value)
+  };
+  for (const plan of [state.plans.one.calm, state.plans.one.breeze]) {
+    Object.assign(plan.lab.wind, wind);
+  }
+  $('wind-strength-out').textContent = fmt(wind.strength, 2);
+  $('wind-frequency-out').textContent = `${wind.gustFrequency} / boucle`;
+  $('wind-balance-out').textContent = `${wind.directionBalance >= 0 ? '+' : ''}${fmt(wind.directionBalance, 2)}`;
+  $('wind-variation-out').textContent = fmt(wind.individualVariation, 2);
+  if (state.tab === 'one') drawSectionOne(state.t);
+}
+
+function initWindControls() {
+  if (state.windInitialized) return;
+  const wind = state.plans.one.calm.lab.wind;
+  $('wind-strength').value = String(wind.strength);
+  $('wind-frequency').value = String(wind.gustFrequency);
+  $('wind-balance').value = String(wind.directionBalance);
+  $('wind-variation').value = String(wind.individualVariation);
+  state.windInitialized = true;
+  applyWindControls();
+}
+
+function setTab(tab) {
+  state.tab = tab;
+  document.querySelectorAll('.tab').forEach((button) => button.setAttribute('aria-selected', String(button.dataset.tab === tab)));
+  document.querySelectorAll('.panel').forEach((panel) => panel.classList.toggle('active', panel.id === `panel-${tab}`));
+  drawCurrentTab(state.t);
+  if (state.ready && !state.checksStarted) runChecks();
+}
+
+function tick(now) {
+  if (state.playing) {
+    const dt = Math.max(0, (now - state.last) / 1000);
+    state.last = now;
+    state.t = (state.t + dt) % DURATION;
+    if (now - (state.lastDraw || 0) > 30) {
+      state.lastDraw = now;
+      drawCurrentTab(state.t);
+      updateReadout();
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+async function init() {
+  state.manifest = await fetch('./quality-lab/manifest.json').then((r) => {
+    if (!r.ok) throw new Error(`manifest ${r.status}`);
+    return r.json();
+  });
+  const manifestURL = new URL('./quality-lab/manifest.json', location.href);
+  const loadPlan = async (rel) => fetch(new URL(rel, manifestURL)).then((r) => {
+    if (!r.ok) throw new Error(`${rel} : ${r.status}`);
+    return r.json();
+  });
+  state.plans.one = {
+    current: await loadPlan(state.manifest.plans.one.current),
+    calm: await loadPlan(state.manifest.plans.one.calm),
+    breeze: await loadPlan(state.manifest.plans.one.breeze)
+  };
+  state.plans.a = {
+    current: await loadPlan(state.manifest.plans.a.current),
+    lab: await loadPlan(state.manifest.plans.a.lab)
+  };
+  state.plans.b = {
+    current: await loadPlan(state.manifest.plans.b.current),
+    lab: await loadPlan(state.manifest.plans.b.lab)
+  };
+  image.src = new URL(state.manifest.source.path, location.href).href;
+  await image.decode();
+  baseCtx.drawImage(image, 0, 0, W, H);
+  state.baseRGBA = baseCtx.getImageData(0, 0, W, H).data;
+  state.ready = true;
+  const params = new URLSearchParams(location.search);
+  if (params.has('t')) state.t = clamp(Number(params.get('t')) || 0, 0, DURATION);
+  if (params.get('pause') === '1') {
+    state.playing = false;
+    $('play').textContent = 'Lecture';
+  }
+  state.last = performance.now();
+  initWindControls();
+  loopStrip($('strip-one-calm'), state.plans.one.calm, CROPS.one);
+  loopStrip($('strip-one-breeze'), state.plans.one.breeze, CROPS.one);
+  loopStrip($('strip-a'), state.plans.a.lab, CROPS.a);
+  loopStrip($('strip-b'), state.plans.b.lab, null, true);
+  if (['one', 'a', 'b'].includes(params.get('view'))) setTab(params.get('view'));
+  drawCurrentTab(state.t);
+  updateReadout();
+  runChecks();
+  requestAnimationFrame(tick);
+  document.body.dataset.ready = 'true';
+  if (params.get('view')) setTimeout(() => document.getElementById(`panel-${params.get('view')}`).scrollIntoView({ block: 'start' }), 120);
+}
+
+document.querySelectorAll('.tab').forEach((button) => button.addEventListener('click', () => setTab(button.dataset.tab)));
+$('play').addEventListener('click', () => {
+  state.playing = !state.playing;
+  $('play').textContent = state.playing ? 'Pause' : 'Lecture';
+  if (state.playing) state.last = performance.now();
+});
+$('restart').addEventListener('click', () => {
+  state.t = 0;
+  drawCurrentTab(0);
+  updateReadout();
+});
+$('scrub').addEventListener('input', () => {
+  state.t = Number($('scrub').value) || 0;
+  state.playing = false;
+  $('play').textContent = 'Lecture';
+  drawCurrentTab(state.t);
+  updateReadout();
+});
+$('masks').addEventListener('change', () => {
+  state.showMasks = $('masks').checked;
+  drawCurrentTab(state.t);
+});
+$('debug-wind').addEventListener('change', () => {
+  state.debugWind = $('debug-wind').checked;
+  drawCurrentTab(state.t);
+});
+for (const id of ['wind-strength', 'wind-frequency', 'wind-balance', 'wind-variation']) {
+  $(id).addEventListener('input', () => {
+    applyWindControls();
+    updateReadout();
+  });
+}
+
+init().catch((error) => {
+  console.error(error);
+  const node = document.createElement('div');
+  node.className = 'standalone';
+  node.style.margin = '20px auto';
+  node.style.maxWidth = '900px';
+  node.innerHTML = `<b>La preview n’a pas pu charger.</b> ${String(error.message || error)}. Servir le dossier studio-ltx en HTTP, pas en file://.`;
+  document.querySelector('main').prepend(node);
+});
+</script>
+</body>
+</html>
