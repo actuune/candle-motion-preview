@@ -1,9 +1,10 @@
-# Éditeur de scène des bougies — bundle public v2
+# Éditeur de scène des bougies — bundle public, variantes A/B
 
 Ce dépôt public est un **bundle de revue** de l’éditeur de scène local consacré
-au groupe **Bougies**. Il contient la page autonome, le projet JSON v2, le
-schéma, les tests et les recettes. Il ne contient **aucun MP4, aucun master,
-aucune image de validation hors du fond diagnostique**.
+au groupe **Bougies**. Il contient la page autonome, le baseline JSON v2, les
+variantes A/B, le schéma, les tests et les recettes. Il ne contient **aucun MP4,
+aucun master, aucune capture lourde ni image de validation hors du fond
+diagnostique**.
 
 La graine 4243 n’est **pas une œuvre approuvée**. Ce bundle ne remplace ni la
 vidéo LTX rejetée ni une revue visuelle humaine.
@@ -36,19 +37,26 @@ Libellé exact affiché :
 | Fichier | Rôle |
 | --- | --- |
 | `docs/prototypes/candle-motion/index.html` | page autonome : scène groupée, rendu déterministe, édition, projet, checks |
-| `docs/prototypes/candle-motion/motion-plan.candles-4243.json` | projet `candle-motion-project/v2`, source de vérité |
-| `docs/prototypes/candle-motion/motion-plan.schema.json` | schéma du projet v2 |
+| `docs/prototypes/candle-motion/motion-plan.candles-4243.json` | baseline `candle-motion-project/v2`, source de vérité inchangée |
+| `docs/prototypes/candle-motion/motion-plan.candles-4243.variant-a.json` | A · Original Alive, 12 s |
+| `docs/prototypes/candle-motion/motion-plan.candles-4243.variant-b.json` | B · Atmospheric Night, 12 s, atmosphère optionnelle |
+| `docs/prototypes/candle-motion/motion-plan.schema.json` | schéma du projet v2, `atmosphere` optionnelle |
+| `docs/prototypes/candle-motion/VARIANTS-C.md` | trois propositions C, non implémentées |
 | `docs/prototypes/candle-motion/README.md` | documentation détaillée du prototype |
 | `docs/prototypes/candle-motion/RECIPES.md` | bougies implémentées ; feuillage et tissu documentés seulement |
 | `docs/prototypes/candle-motion/EXCALIDRAW.md` | étude Excalidraw, non adopté |
 | `docs/prototypes/candle-motion/PORTAL.md` | concept séparé de portail récursif |
 | `tests/test_candle_motion_plan.mjs` | contrôles déterministes Node |
+| `tests/test_scene_variants.mjs` | contrôles A/B, ciel borné, occlusion, boucle |
 | `validation/2026-11-09-video-test/RECONCILIATION.md` | rejet vidéo, comptes, géométrie, audio |
 | `validation/2026-11-09-reconstruction-v2/outputs/reconstruction-seed-4243.png` | fond diagnostique, 1280×1024, non approuvé |
 
 ## Ce que fait l’éditeur
 
-- Groupe `Bougies` : **8 flammes**, **7 lumières**, 15 supports.
+- Groupe `Bougies` : **8 flammes**, **7 lumières**, 15 supports dans le baseline.
+- Variantes : **A · Original Alive** (12 s, mêmes flammes et liaisons) et
+  **B · Atmospheric Night** (A + ciel manuel, atmosphère bornée, étoiles et
+  lumière froide optionnelles, désactivées par défaut).
 - Sélection depuis l’image et la liste de scène, multi-sélection.
 - Précédence affichée **override d’élément > réglage de groupe > preset**.
 - Cinq presets versionnés, dont **Sobre** pour un mouvement retenu.
@@ -72,10 +80,13 @@ Depuis la racine du dépôt :
 
 ```bash
 node tests/test_candle_motion_plan.mjs
+node tests/test_scene_variants.mjs
 ```
 
-Sortie attendue : `test_candle_motion_plan: ok`, avec 8 flammes, 7 lumières,
-5 presets, boucle bit-identique et protection native **0 octet hors supports**.
+Sorties attendues : `test_candle_motion_plan: ok` et
+`test_scene_variants: ok`, avec 8 flammes, 7 lumières, 5 presets, baseline
+intact, A/B à 12 s, boucle bit-identique et protection native **0 octet hors
+supports**.
 
 Les checks intégrés à la page se lancent avec **Lancer les vérifications**.
 Ils couvrent à 320×256 la précédence, le déterminisme, la boucle, la continuité,
@@ -104,14 +115,17 @@ revendiquée.
 ## Limites
 
 Flammes stylisées, non photoréalistes ; nettoyage local par atténuation, non
-reconstructif ; lumière additive non physique. Feuillage et tissu sont des
-recettes documentées, pas des simulations implémentées. Aucun exporteur vidéo,
-aucun rendu final, aucun master. Le prototype est un aperçu d’intention, pas une
-prédiction de la sortie IA.
+reconstructif ; lumière additive non physique. Le ciel de B est une région
+manuelle avec garde-fou heuristique, pas une occlusion sémantique ; les étoiles
+sont rares et seedées, et la lumière froide n’est pas une source physique. C
+reste une proposition non implémentée. Feuillage et tissu sont des recettes
+documentées, pas des simulations implémentées. Aucun exporteur vidéo, aucun
+rendu final, aucun master. Le prototype est un aperçu d’intention, pas une
+prédiction de la sortie IA. La capture navigateur A→B n’est pas publiée ici.
 
 ## Source et droits
 
 Bundle public de la v2 issue de `studio-ltx`, branche
-`feature/candle-group-editor`, commit `c36bfbe`, sans historique ni médias
+`feature/scene-ux-refinement`, commit `482923f`, sans historique ni médias
 lourds. Aucune licence n’est ajoutée. La graine 4243 reste non approuvée : ne pas
 la réutiliser comme master ni comme artwork validé.

@@ -4,6 +4,13 @@
 `reconstruction-seed-4243.png` n’est ni un master ni une œuvre validée. Cette
 passe ne produit aucune vidéo, n’appelle aucun moteur et ne modifie aucun média.
 
+**Build visible :** `2.2.0-variants.1`. **Format projet :**
+`candle-motion-project/v2`, identifiant historique conservé pour charger les
+projets bougies. **Branche de cette passe :** `feature/scene-ux-refinement`,
+crée depuis `937d428` (fondation image-agnostique). La preview publique
+connue reste `actuune/candle-motion-preview` `b9bf116` ; cette branche ne la met
+pas à jour et ne pousse rien.
+
 Libellé affiché, exact :
 
 > Motion intention preview—not a prediction of AI output.
@@ -14,24 +21,88 @@ La lecture pixel d’une image locale est bloquée en `file://`. Servir le dép�
 statique :
 
 ```sh
-cd candle-motion-public
-python3 -m http.server 8794
+cd studio-ltx
+python3 -m http.server 8791
 ```
 
 Puis ouvrir `localhost:8791/docs/prototypes/candle-motion/`. Aucun build, aucune
-dépendance, aucun service. Une seule requête locale est faite **à l’import d’un
-projet** pour relire les octets du PNG et vérifier son SHA-256.
+dépendance, aucun service. L’import d’une image locale lit ses octets dans le
+navigateur et calcule son SHA-256 localement ; aucune requête réseau n’est faite
+pour vérifier l’asset. Une image importée n’est pas approuvée et n’est pas
+dupliquée dans le JSON.
+
+## 1 bis. Parcours principal et interface
+
+La page est organisée autour d’un seul parcours :
+
+```
+Importer une image → sélectionner → choisir un comportement → vérifier l’aperçu → enregistrer
+```
+
+- **Barre haute compacte** : Importer (action primaire), Ouvrir, Enregistrer,
+  Annuler/Rétablir et état du projet.
+- **Canvas central large** : aperçu, lecture/pause, scrub et comparaison.
+- **Scène** : groupes et éléments, sélection simple ou multiple, tracé d’une
+  nouvelle région.
+- **Comportement** : preset du groupe, intensité, vitesse,
+  activation/désactivation et lumière.
+- **Réglages avancés** repliés : tous les paramètres existants, supports et
+  propositions.
+- **Détails du projet** repliés : format, source, durée, seed et approbations.
+- **Diagnostic du plan** replié : vérifications techniques et métriques.
+- **À venir** : feuillage, tissu, détection, transformation et export,
+  clairement non exécutables.
+
+Protection : « Garder immobile » ne dessine aucun pixel ; « Protéger tous les
+pixels » fige tout le groupe sans supprimer les réglages ; « Autoriser les
+changements de lumière » reste désactivé si tous les pixels sont verrouillés.
+Le format `candle-motion-project/v2` reste le format de chargement et le
+baseline garde son renderer. La variante B ajoute une couche `atmosphere`
+**optionnelle** ; aucun champ requis n’est ajouté et aucun projet existant ne
+migre.
+
+Captures de la passe : non incluses dans ce bundle public. Elles restent des
+artefacts locaux de revue.
+
+## 1 ter. Variantes A/B — brouillons non approuvés
+
+Le sélecteur compact **Variantes** ne crée aucune copie destructive : le projet
+baseline et ses presets restent inchangés. Chaque variante est un projet JSON
+complet, rechargeable, et le changement passe par l’historique (undo/redo).
+
+| Variante | Contenu | Durée |
+|---|---|---|
+| **Référence** | image, 8 flammes, 7 lumières liées et presets d’origine | 6 s historique |
+| **A · Original Alive** | mêmes flammes, mêmes liaisons explicites, mêmes reflets ; aucune région ni liaison ajoutée | 12 s |
+| **B · Atmospheric Night** | A + région de ciel manuelle protégée + atmosphère procédurale ; étoiles et lumière froide optionnelles | 12 s |
+| **C · à choisir** | trois propositions seulement ; aucune implémentation | — |
+
+- A ne relie pas automatiquement le passage central à toutes les bougies. Les
+  sources de lumière restent celles du projet, explicites et éditables.
+- B ne déplace ni l’architecture ni le cadrage. Le ciel est une région bornée ;
+  les bords chauds sont atténués par un garde-fou, pas par une segmentation
+  sémantique. Les étoiles sont **désactivées par défaut**. La lumière froide des
+  hauts de murs est une couche opt-in séparée, pas une source physique.
+- A et B sont à **12 s**, 24 fps, 288 échantillons `k·T/N`, endpoint exclusif.
+  Les cycles atmosphériques sont des entiers de la boucle : aucun cycle
+  indépendant de 20 s dans un export de 12 s.
+- Les trois propositions C sont détaillées dans `VARIANTS-C.md` et dans le
+  panneau « C · à choisir ». Ne pas les combiner sans choix utilisateur.Captures et capture navigateur A→B : non incluses dans ce bundle public pour éviter les médias lourds. Elles restent dans l’espace local de travail, non publié ici ; ce n’est pas un export du renderer.
 
 ## 2. Fichiers
 
 | Fichier | Rôle |
 |---|---|
 | `index.html` | page autonome, cœur, interface, sauvegarde/import |
-| `motion-plan.candles-4243.json` | projet v2, source de vérité |
-| `motion-plan.schema.json` | schéma du projet v2 |
+| `motion-plan.candles-4243.json` | baseline v2, source de vérité inchangée |
+| `motion-plan.candles-4243.variant-a.json` | variante A, 12 s |
+| `motion-plan.candles-4243.variant-b.json` | variante B, 12 s, atmosphère |
+| `motion-plan.schema.json` | schéma du projet v2, `atmosphere` optionnelle |
+| `VARIANTS-C.md` | trois propositions C, non implémentées |
 | `RECIPES.md` | trois recettes : bougies, feuillage, tissu |
 | `EXCALIDRAW.md` | étude de non-adoption |
 | `../../../tests/test_candle_motion_plan.mjs` | tests Node déterministes |
+| `../../../tests/test_scene_variants.mjs` | tests A/B, ciel, occlusion, boucle |
 
 Le projet est aussi **embarqué** entre `PLAN:BEGIN` / `PLAN:END`. Le test exige
 l’égalité exacte avec le JSON externe.
@@ -45,11 +116,18 @@ Le format `candle-motion-project/v2` contient :
 - un **groupe** `Bougies` qui référence 8 flammes et 7 lumières ;
 - des **presets versionnés** ; `vivant` est le défaut, `sobre` est le preset
   retenu ;
-- une **timeline/loop** : `T = 6,000 s`, 24 fps, 144 échantillons `k·T/N`,
-  endpoint exclusif, aucune frame finale dupliquée ;
+- une **timeline/loop** : baseline `T = 6,000 s`, 24 fps, 144 échantillons
+  `k·T/N`, endpoint exclusif, aucune frame finale dupliquée ; les variantes A/B
+  utilisent 12 s et 288 échantillons ;
 - la graine déterministe `4243` ;
 - le statut d’approbation ;
 - des **propositions** de détection, vides dans cette instance.
+
+La version `2.1.0` ajoute une fondation image-agnostique : import PNG/JPEG/WebP,
+projet vide, régions protégées, groupes, recettes supportées vs proposées,
+sortie cible et approbations séparées. Les groupes/regions/presets peuvent être
+vides. Les champs inconnus sont conservés au chargement. Aucun redimensionnement
+silencieux n’est appliqué ; une source non 5:4 reste dans son repère.
 
 Le fichier projet ne duplique **jamais** l’image. L’import vérifie d’abord les
 dimensions et le SHA-256 ; une différence bloque le chargement et demande un
@@ -170,10 +248,12 @@ un export.
 
 ```sh
 node tests/test_candle_motion_plan.mjs
+node tests/test_scene_project.mjs
+node tests/test_scene_variants.mjs
 ```
 
 Le test vérifie le contrat de page (un script, un style, deux canvas, aucune URL
-réseau, une seule requête locale d’asset), le projet embarqué, le schéma v2, les
+ou requête réseau, hash local), le projet embarqué, le schéma v2, les
 8 flammes / 7 lumières, le groupe, les cinq presets, les supports, le PNG et son
 SHA-256, la précédence, le déterminisme, la boucle, la continuité, les masques
 étendus, la désactivation, le rendu natif, l’historique, le round-trip JSON, la
@@ -182,7 +262,9 @@ compatibilité d’asset et la confirmation d’une proposition en Protéger.
 ## 12. Limites connues
 
 - Le groupe Bougies est le seul groupe implémenté. Feuillage et tissu sont des
-  recettes documentées, pas des démos exécutables.
+  recettes documentées, pas des démos exécutables. La fondation accepte des
+  projets génériques et des régions protégées, mais ne prouve pas un renderer
+  feuillage/tissu.
 - Pas de détection automatique, pas de segmentation promptable intégrée.
 - Pas d’exécution de transformation, pas de retouche générative.
 - Pas d’export vidéo, pas d’encodeur, pas de master, pas d’intégration LTX.
@@ -190,13 +272,19 @@ compatibilité d’asset et la confirmation d’une proposition en Protéger.
   opération distincte.
 - Le SHA-256 n’est vérifié qu’à l’import ; le chargement initial est celui du
   prototype.
-- Ce dépôt public correspond à la v2 issue de `studio-ltx`, branche
-  `feature/candle-group-editor`, commit `c36bfbe`. Il ne vaut ni approbation
-  visuelle, ni master, ni validation LTX.
+- La variante B est une **approximation artistique** : le ciel est un masque
+  manuel, l’occlusion des arêtes est heuristique, et la lumière froide n’est pas
+  récupérée physiquement. Les étoiles optionnelles sont rares et seedées.
+- La variante C n’est **pas** implémentée. Le choix d’une intervention, son
+  support et son renderer restent à approuver.
+- La copie publique `candle-motion-preview` (`b9bf116`) n’est pas mise à jour
+  par cette branche et ne doit pas être présentée comme la version éditée.
 
 ## 13. Suite
 
 Verdict visuel humain sur cette passe, en particulier : mouvement retenu de
 `Sobre`, cohérence vent/flamme/lumière, lisibilité de la précédence, propreté des
-bords de masque et absence de flamme doublée. Aucune génération LTX ni vidéo ne
-doit être lancée avant ce verdict.
+bords de masque et absence de flamme doublée. Vérifier aussi le parcours
+simplifié sur un écran réel : sélection, preset, surcharge, protection,
+sauvegarde et réouverture. Aucune génération LTX ni vidéo ne doit être lancée
+avant ce verdict.

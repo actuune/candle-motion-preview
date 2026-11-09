@@ -32,7 +32,7 @@ assert.ok(!/<img\s+[^>]*src\s*=/i.test(html), "aucune image déclarée en dur");
 assert.ok(!/https?:\/\//i.test(html), "aucune URL réseau");
 assert.ok(!/@import\b/i.test(html), "aucun import CSS");
 assert.ok(!/(?:background|background-image|border-image|list-style-image)\s*:[^;{}]*url\s*\(/i.test(html), "aucune ressource CSS");
-assert.equal((html.match(/\bfetch\s*\(/g) || []).length, 1, "une seule requête, locale, pour vérifier le SHA de l’asset");
+assert.equal((html.match(/\bfetch\s*\(/g) || []).length, 0, "aucune requête réseau : l’image locale est hashée dans le navigateur");
 assert.ok(!/fetch\s*\(\s*["'`]https?:/i.test(html), "fetch ne doit pas viser une URL distante");
 assert.ok(!/XMLHttpRequest|WebSocket/.test(html), "aucun accès réseau annexe");
 assert.ok(!/\blocalStorage\b/.test(html), "aucun stockage persistant");
@@ -42,6 +42,10 @@ assert.ok(html.includes("ne sert qu’à faire avancer la lecture"), "rAF doit �
 assert.ok(html.includes("downloadProject"), "export projet attendu");
 assert.ok(html.includes("loadProjectFile"), "import projet attendu");
 assert.ok(html.includes("verifySourceAsset"), "vérification d’asset attendue");
+assert.ok(html.includes("createEmptyProject"), "création de projet générique attendue");
+assert.ok(html.includes("importLocalImage"), "import d’image locale attendu");
+assert.ok(html.includes("setAddRegionMode"), "ajout manuel de région attendu");
+assert.ok(html.includes("PROTOTYPE_BUILD"), "identifiant de build attendu");
 assert.ok(html.includes("createHistory"), "historique attendu");
 assert.ok(html.includes("confirmProposal"), "confirmation de proposition attendue");
 
@@ -169,7 +173,9 @@ assert.ok(coreEnd > coreStart, "fin du cœur absente");
 const coreSource = html.slice(coreStart, coreEnd);
 assert.ok(!/Math\.random|Date\.now|performance\.now/.test(coreSource), "le cœur ne doit pas lire d’horloge ni d’aléatoire");
 const core = await import("data:text/javascript;base64," + Buffer.from(coreSource, "utf8").toString("base64"));
-assert.equal(core.CORE_VERSION, "candle-motion-core/2.0.0");
+assert.equal(core.CORE_VERSION, "scene-motion-core/2.2.0");
+assert.equal(core.PROTOTYPE_BUILD, "2.2.0-variants.1");
+assert.equal(core.PROJECT_SCHEMA, "candle-motion-project/v2");
 
 const W = 640;
 const H = 512;
@@ -396,7 +402,7 @@ assert.equal(core.checkSourceCompatibility(plan, {
   height: plan.source.height
 }).code, "asset-dimensions-mismatch");
 assert.throws(() => core.parseProject(JSON.stringify({ ...plan, schema: "candle-motion-project/v1" })), /Format/);
-assert.throws(() => core.parseProject(JSON.stringify({ ...plan, groups: [] })), /Aucun groupe/);
+assert.deepEqual(core.parseProject(JSON.stringify({ ...plan, groups: [], regions: [], presets: [] })).groups, [], "un projet vide reste lisible");
 
 /* proposition confirmée : élément créé en Protéger, jamais animé silencieusement */
 const proposalPlan = structuredClone(plan);

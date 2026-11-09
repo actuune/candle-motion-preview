@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "candle-motion-project/v2",
-  "title": "Candle grouped-scene project",
-  "description": "Projet local versionné pour l’éditeur de scène par éléments. Ce schéma ne décrit ni une entrée moteur LTX ni un export.",
+  "title": "Image-agnostic scene project (candles legacy compatible)",
+  "description": "Projet local versionné pour l’éditeur de scène par éléments. Compatible avec le cas bougies historique ; ne décrit ni une entrée moteur LTX ni un export.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -90,7 +90,31 @@
         "width": { "type": "integer", "minimum": 1 },
         "height": { "type": "integer", "minimum": 1 },
         "colorSpace": { "type": "string", "minLength": 3 },
-        "role": { "const": "diagnostic-background" }
+        "role": { "enum": ["diagnostic-background", "local-import", "concept-sheet-crop"] }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "aspectRatio": { "type": "string", "minLength": 3 },
+        "fps": { "type": "integer", "minimum": 1 },
+        "colorSpace": { "type": "string", "minLength": 3 },
+        "audio": { "enum": ["none", "requested"] },
+        "status": { "enum": ["unresolved", "defined", "verified"] }
+      }
+    },
+    "approvals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceImage": { "enum": ["not-reviewed", "approved", "rejected"] },
+        "imagePreparation": { "enum": ["not-reviewed", "approved", "rejected", "not-required"] },
+        "preview": { "enum": ["not-reviewed", "approved", "rejected"] },
+        "duration": { "enum": ["not-approved", "approved"] },
+        "output": { "enum": ["unresolved", "approved", "rejected"] }
       }
     },
     "workingSpace": {
@@ -142,23 +166,24 @@
     "seed": { "type": "integer" },
     "groups": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 0,
       "items": { "$ref": "#/$defs/group" }
     },
     "regions": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 0,
       "items": { "$ref": "#/$defs/region" }
     },
     "presets": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 0,
       "items": { "$ref": "#/$defs/preset" }
     },
     "proposals": {
       "type": "array",
       "items": { "$ref": "#/$defs/proposal" }
-    }
+    },
+    "atmosphere": { "$ref": "#/$defs/atmosphere" }
   },
   "$defs": {
     "normalized": { "type": "number", "minimum": 0, "maximum": 1 },
@@ -240,7 +265,7 @@
       "additionalProperties": false,
       "required": ["action", "phase"],
       "properties": {
-        "action": { "enum": ["flame-shape", "warm-pool"] },
+        "action": { "enum": ["flame-shape", "warm-pool", "none"] },
         "phase": { "type": "number", "minimum": 0, "exclusiveMaximum": 1 }
       }
     },
@@ -249,14 +274,15 @@
       "additionalProperties": false,
       "required": ["id", "role", "label", "supportStatus", "support", "motion", "render", "notes", "groupId", "category", "operation", "overrides"],
       "properties": {
-        "id": { "type": "string", "pattern": "^(flame|light)\\.[a-z0-9-]+$" },
-        "role": { "enum": ["animated", "light-influence"] },
-        "category": { "enum": ["flame", "light"] },
+        "id": { "type": "string", "pattern": "^(flame|light|region)\\.[a-z0-9-]+$" },
+        "role": { "enum": ["animated", "light-influence", "protected"] },
+        "category": { "enum": ["flame", "light", "other", "foliage", "fabric"] },
         "groupId": { "type": "string", "pattern": "^group\\.[a-z0-9-]+$" },
         "label": { "type": "string", "minLength": 3 },
         "supportStatus": { "enum": ["declared", "visually-checked"] },
         "support": { "$ref": "#/$defs/support" },
         "operation": { "enum": ["animate", "protect", "transform"] },
+        "recipe": { "enum": ["protect", "candle-flame", "candle-light", "foliage", "fabric", "camera-transform"] },
         "animationEnabled": { "type": "boolean" },
         "transformPlan": {
           "type": "object",
@@ -293,7 +319,7 @@
           "additionalProperties": false,
           "required": ["method", "workingSpace"],
           "properties": {
-            "method": { "enum": ["procedural-flame-v1", "local-warm-pool-v1"] },
+            "method": { "enum": ["procedural-flame-v1", "local-warm-pool-v1", "none"] },
             "workingSpace": { "const": "linear" },
             "suppression": { "type": "number", "minimum": 0, "maximum": 1 },
             "gain": { "type": "number", "exclusiveMinimum": 0, "maximum": 0.5 },
@@ -336,14 +362,14 @@
     "group": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "category", "elementIds", "presetId", "presetVersion", "animationEnabled", "settings"],
+      "required": ["id", "label", "category", "elementIds", "animationEnabled", "settings"],
       "properties": {
         "id": { "type": "string", "pattern": "^group\\.[a-z0-9-]+$" },
         "label": { "type": "string", "minLength": 2 },
-        "category": { "enum": ["candles", "foliage", "fabric"] },
+        "category": { "enum": ["candles", "foliage", "fabric", "generic"] },
         "elementIds": {
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "uniqueItems": true,
           "items": { "type": "string" }
         },
@@ -404,6 +430,22 @@
         "notes": { "type": "string" },
         "confirmedElementId": { "type": "string" },
         "uncertainty": { "type": "string" }
+      }
+    },
+    "atmosphere": {
+      "type": "object",
+      "description": "Calque optionnel de variante B. Le support de la région référencée borne toutes les écritures.",
+      "additionalProperties": false,
+      "required": ["enabled", "regionId", "intensity", "cycles", "stars", "coolLight", "note"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "regionId": { "type": "string", "pattern": "^region\\.[a-z0-9-]+$" },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "cycles": { "type": "integer", "minimum": 1, "maximum": 3 },
+        "stars": { "type": "boolean" },
+        "coolLight": { "type": "boolean" },
+        "coolLightRegionId": { "type": "string", "pattern": "^region\\.[a-z0-9-]+$" },
+        "note": { "type": "string", "minLength": 10 }
       }
     }
   }

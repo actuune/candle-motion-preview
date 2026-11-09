@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Éditeur de scène — bougies — Studio LTX</title>
+<title>Éditeur de scène — mouvement local — Studio LTX</title>
 <style>
   :root {
     --bg: #070a0e;
@@ -59,6 +59,7 @@
   .status-card { min-width: 230px; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 12px 14px; font-size: .74rem; color: var(--muted); }
   .status-card strong { color: var(--text); display: block; font-size: .8rem; margin-bottom: 4px; }
   .status-line { display: flex; align-items: center; gap: 7px; margin-top: 8px; font-family: var(--mono); font-size: .7rem; color: var(--faint); }
+  .build-line { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line-soft); font-family: var(--mono); font-size: .62rem; color: var(--faint); }
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--faint); }
   .dot.ok { background: var(--ok); }
   .dot.bad { background: var(--danger); }
@@ -210,58 +211,253 @@
   .compare-split-wrap { flex: 1 1 230px; display: flex; align-items: center; gap: 6px; min-width: 180px; }
   .compare-split-wrap input { flex: 1; }
   .region-list { max-height: 320px; }
+  .scene-tools { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 7px; }
+  .project-grid { display: flex; flex-direction: column; gap: 6px; }
+  .meta-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: .66rem; color: var(--muted); border-bottom: 1px solid var(--line-soft); padding-bottom: 5px; }
+  .meta-row:last-child { border-bottom: 0; padding-bottom: 0; }
+  .meta-row span:last-child { color: var(--text); text-align: right; font-family: var(--mono); font-size: .59rem; }
+  .approval-line { display: flex; flex-wrap: wrap; gap: 4px; }
+  .approval-badge { border: 1px solid var(--line); border-radius: 999px; padding: 1px 5px; font-size: .54rem; color: var(--muted); }
+  .approval-badge.warn { color: #e9c999; border-color: rgba(240,179,91,.35); }
+  .approval-badge.unresolved { color: #f3b0a8; border-color: rgba(244,119,107,.35); }
+  .delivery-note { margin-top: 6px; border-left: 2px solid var(--line); padding-left: 7px; color: var(--faint); font-size: .6rem; line-height: 1.4; }
+  .swatch.protected { background: #93a8ff; }
+  .mini-badge.recipe { color: #b9c5ff; border-color: rgba(147,168,255,.4); }
+  .mini-badge.proposed { color: #e2b6ff; border-color: rgba(216,155,255,.4); }
   @media (max-width: 640px) {
     .toolbar { margin-top: 10px; }
     .compare-split-wrap { flex-basis: 100%; }
   }
+
+  /* ---------- raffinement UX 2026-11-09 ---------- */
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .app-header {
+    position: sticky; top: 0; z-index: 15;
+    border-bottom: 1px solid var(--line-soft);
+    background: rgba(7,10,14,.92);
+    backdrop-filter: blur(12px);
+  }
+  .header-inner { display: flex; align-items: center; gap: 22px; min-height: 62px; padding: 9px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; flex: none; }
+  .brand-mark { color: var(--amber); font-size: 1.05rem; line-height: 1; }
+  .brand .eyebrow { margin-bottom: 1px; font-size: .55rem; letter-spacing: .15em; }
+  .brand h1 { font-size: 1.12rem; letter-spacing: -.015em; font-weight: 640; }
+  .header-status { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-right: auto; color: var(--muted); font-size: .66rem; }
+  .header-status .pill { font-size: .58rem; padding: 2px 7px; }
+  .header-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .header-actions .btn { padding: 6px 10px; font-size: .72rem; }
+  .header-sep { width: 1px; height: 22px; background: var(--line); margin: 0 2px; }
+  .header-sub { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 0 9px; flex-wrap: wrap; }
+  .header-sub #scene-lede { color: var(--muted); font-size: .72rem; }
+  .header-notes { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .label-inline { font-family: var(--mono); font-size: .56rem; color: var(--faint); }
+  .save-state { font-size: .6rem; color: var(--faint); border: 1px solid var(--line-soft); border-radius: 999px; padding: 2px 7px; white-space: nowrap; }
+  .save-state.dirty { color: #e9c999; border-color: rgba(240,179,91,.4); background: var(--amber-soft); }
+  .save-state.saved { color: var(--ok); border-color: rgba(99,214,158,.35); background: rgba(99,214,158,.07); }
+  .status-strip { padding: 7px 0 0; }
+  .status-strip .project-status { margin: 0; }
+
+  .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; padding: 12px 0 26px; }
+  .stage { border: 1px solid var(--line-soft); background: var(--surface); border-radius: 13px; overflow: hidden; }
+  .stage-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line-soft); flex-wrap: wrap; }
+  .stage-title { margin-right: auto; }
+  .stage-title h2 { font-size: .88rem; }
+  .stage-title p { color: var(--faint); font-size: .58rem; margin-top: 1px; }
+  .stage-spacer { margin-left: auto; }
+  .transport { padding: 8px 12px; }
+  .stage-foot { padding: 8px 12px 10px; color: var(--faint); font-size: .62rem; }
+
+  .rail { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .rail-card { border: 1px solid var(--line-soft); background: var(--surface); border-radius: 12px; padding: 11px; min-width: 0; }
+  .rail-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .rail-head h2 { font-size: .84rem; }
+  .rail-meta { color: var(--faint); font-size: .58rem; text-align: right; }
+  .rail-sub { color: var(--muted); font-size: .63rem; margin-bottom: 8px; }
+  .rail-body { border-top: 1px solid var(--line-soft); margin-top: 9px; padding-top: 9px; }
+  .scene-card .region-list { max-height: 252px; overflow: auto; margin-top: 2px; }
+  .scene-tools { margin-bottom: 6px; }
+  .behavior-card { border-color: rgba(240,179,91,.3); }
+  .subsection { border-top: 1px solid var(--line-soft); margin-top: 8px; padding-top: 9px; }
+  #preset-section { border-top: 0; margin-top: 0; padding-top: 0; }
+  .subsection-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .subsection-head h3 { color: var(--muted); font-size: .64rem; font-weight: 500; }
+  .preset-grid { grid-template-columns: 1fr 1fr; gap: 5px; }
+  .preset { padding: 7px 8px; font-size: .7rem; }
+  .preset span { font-size: .57rem; }
+
+  .rail-card > summary { display: flex; align-items: baseline; gap: 8px; cursor: pointer; list-style: none; font-size: .8rem; font-weight: 600; }
+  .rail-card > summary::-webkit-details-marker { display: none; }
+  .rail-card > summary::after { content: "+"; margin-left: auto; color: var(--faint); font-family: var(--mono); font-size: .8rem; }
+  .rail-card[open] > summary::after { content: "−"; }
+  .rail-card > summary small { color: var(--faint); font-size: .56rem; font-weight: 400; margin-left: auto; text-align: right; }
+  .rail-card > summary::after { margin-left: 0; }
+
+  .simple-empty { color: var(--muted); font-size: .68rem; line-height: 1.45; }
+  .simple-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .simple-title { font-size: .84rem; font-weight: 620; }
+  .simple-kind { color: var(--faint); font-size: .58rem; text-align: right; }
+  .simple-note { color: var(--faint); font-size: .61rem; line-height: 1.45; margin-top: 6px; }
+  .simple-note.warn { color: #e9c999; }
+  .simple-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+  .simple-actions .btn { flex: 1 1 auto; }
+  .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 8px 0 2px; }
+  .seg-btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 7px 8px; text-align: left; }
+  .seg-btn strong { display: block; font-size: .72rem; font-weight: 600; }
+  .seg-btn small { display: block; color: var(--faint); font-size: .57rem; margin-top: 2px; line-height: 1.35; }
+  .seg-btn[aria-pressed="true"] { border-color: var(--amber); background: var(--amber-soft); }
+  .seg-btn:disabled { opacity: .42; cursor: not-allowed; }
+  .simple-control { display: flex; flex-direction: column; gap: 3px; margin-top: 9px; }
+  .simple-control-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: .66rem; color: var(--muted); }
+  .simple-control-head output { font-family: var(--mono); font-size: .61rem; color: var(--text); }
+  .simple-control input[type="range"] { width: 100%; }
+  .simple-control .micro { margin-top: 1px; }
+  .simple-toggle { margin-top: 9px; }
+  .simple-toggle small { line-height: 1.4; }
+  .protection-list { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; border-top: 1px solid var(--line-soft); padding-top: 8px; }
+  .protection-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: .63rem; color: var(--muted); }
+  .status-chip { font-family: var(--mono); font-size: .54rem; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--faint); white-space: nowrap; }
+  .status-chip.on { color: var(--ok); border-color: rgba(99,214,158,.35); background: rgba(99,214,158,.08); }
+  .status-chip.locked { color: #b9c5ff; border-color: rgba(147,168,255,.35); background: rgba(147,168,255,.08); }
+
+  .future-card { border: 1px dashed #2b3b4d; border-radius: 12px; padding: 11px; background: rgba(13,19,27,.45); }
+  .future-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+  .future-head h2 { font-size: .8rem; }
+  .future-list { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 3px; }
+  .future-list li { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: .63rem; color: var(--muted); border-bottom: 1px solid var(--line-soft); padding-bottom: 3px; }
+  .future-list li:last-child { border-bottom: 0; }
+  .future-list em { font-style: normal; color: var(--faint); font-size: .56rem; }
+  .source-block { border-top: 1px solid var(--line-soft); margin-top: 8px; padding-top: 8px; font-size: .64rem; color: var(--muted); }
+  .source-block strong { display: block; color: var(--text); font-size: .74rem; margin-bottom: 2px; }
+  .source-block p { margin-top: 3px; }
+  .pill-line { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+  .footer-inner { display: flex; flex-direction: column; gap: 8px; }
+  .footer-inner > p { font-size: .66rem; }
+  .footer-details summary { cursor: pointer; color: var(--muted); font-size: .66rem; }
+  .footer-details .limits { margin-top: 12px; }
+  .footer-details .limits h3 { font-size: .74rem; }
+  .footer-details .limits li { font-size: .66rem; }
+
+  /* ---------- variantes A/B 2026-11-09 ---------- */
+  .variant-bar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; padding: 8px 0 0; }
+  .variant-label { color: var(--faint); font-family: var(--mono); font-size: .57rem; letter-spacing: .08em; text-transform: uppercase; }
+  .variant-options { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .variant-btn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 7px; padding: 4px 8px; font-size: .64rem; color: var(--muted); }
+  .variant-btn:hover { color: var(--text); border-color: var(--line-strong); }
+  .variant-btn[aria-pressed="true"] { color: var(--text); border-color: var(--amber); background: var(--amber-soft); }
+  .variant-status { margin-left: auto; color: var(--faint); font-size: .57rem; white-space: nowrap; }
+  .variant-c { position: relative; }
+  .variant-c > summary { cursor: pointer; list-style: none; border: 1px dashed var(--line); border-radius: 7px; padding: 4px 8px; color: var(--faint); font-size: .64rem; }
+  .variant-c > summary::-webkit-details-marker { display: none; }
+  .variant-c > summary::before { content: "+ "; font-family: var(--mono); }
+  .variant-c[open] > summary::before { content: "− "; }
+  .variant-c-panel { position: absolute; z-index: 30; right: 0; top: calc(100% + 6px); width: min(470px, calc(100vw - 40px)); padding: 11px; border: 1px solid var(--line-strong); border-radius: 10px; background: #0b121b; box-shadow: 0 12px 30px rgba(0,0,0,.38); }
+  .variant-c-panel ol { margin: 7px 0 0; padding-left: 17px; color: var(--muted); font-size: .62rem; line-height: 1.45; }
+  .variant-c-panel li { margin-bottom: 5px; }
+  .variant-c-panel strong { color: var(--text); font-weight: 600; }
+  .variant-scope { margin: 4px auto 0; color: var(--faint); font-size: .6rem; line-height: 1.4; }
+  .atmosphere-card { border-color: rgba(122,151,255,.3); background: linear-gradient(180deg, rgba(42,58,98,.18), var(--surface)); }
+  .atmosphere-card .rail-sub { margin-bottom: 0; }
+  .atmosphere-card .simple-toggle { border-top: 1px solid var(--line-soft); padding-top: 8px; }
+  .atmosphere-advanced { margin-top: 9px; border-top: 1px solid var(--line-soft); padding-top: 8px; }
+  .atmosphere-advanced > summary { cursor: pointer; color: var(--muted); font-size: .65rem; }
+  .atmosphere-advanced .btn { margin-top: 8px; }
+
+  @media (max-width: 1080px) {
+    .header-inner { flex-wrap: wrap; }
+    .header-status { order: 3; width: 100%; margin-right: 0; }
+    .workspace { grid-template-columns: 1fr; }
+    .rail { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+    .future-card, .diagnostics-card { grid-column: 1 / -1; }
+  }
+  @media (max-width: 760px) {
+    .rail { grid-template-columns: 1fr; }
+    .header-actions { width: 100%; }
+    .header-actions .btn { flex: 1 1 auto; }
+    .header-sep { display: none; }
+    .header-sub { align-items: flex-start; }
+    .future-card, .diagnostics-card { grid-column: auto; }
+  }
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="wrap">
-    <div class="head-row">
-      <div class="head-copy">
-        <p class="eyebrow">Studio LTX · prototype local · éditeur de scène</p>
-        <h1>Scène de bougies — éditeur groupé</h1>
-        <p class="lede">Un aperçu procédural déterministe des huit flammes et des régions de lumière chaude de la graine 4243. Éditeur de groupe, overrides locaux, caméra fixe, aucune inférence, aucune vidéo produite.</p>
-        <p class="label-exact" id="exact-label">Motion intention preview—not a prediction of AI output.</p>
-        <div class="pills">
-          <span class="pill"><strong>8</strong> flammes</span>
-          <span class="pill"><strong>7</strong> régions de lumière</span>
-          <span class="pill">boucle <strong>6,000 s</strong></span>
-          <span class="pill">144 échantillons</span>
-          <span class="pill danger">fond non approuvé</span>
-        </div>
-        <div class="toolbar" aria-label="Édition et projet">
-          <button class="btn small" id="undo" type="button" disabled>Annuler</button>
-          <button class="btn small" id="redo" type="button" disabled>Rétablir</button>
-          <button class="btn small ghost" id="save-project" type="button">Enregistrer JSON</button>
-          <button class="btn small ghost" id="open-project" type="button">Ouvrir JSON</button>
-          <input id="project-file" type="file" accept="application/json,.json" hidden>
-        </div>
-      </div>
-      <div class="status-card">
-        <strong>Fond diagnostique seed 4243</strong>
-        1280×1024 · SHA-256 <span class="mono">9806594…</span><br>
-        Candidat non approuvé, non master. Le prototype ne modifie pas le fichier.
-        <div class="status-line"><span class="dot" id="ready-dot"></span><span id="ready-text">Chargement…</span></div>
+<header class="app-header">
+  <div class="wrap header-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">◆</span>
+      <div>
+        <p class="eyebrow">Studio LTX · prototype local</p>
+        <h1>Éditeur de scène</h1>
       </div>
     </div>
+    <div class="header-status" aria-live="polite">
+      <span class="dot" id="ready-dot"></span>
+      <span id="ready-text">Chargement…</span>
+      <span class="pill" id="pill-elements">15 éléments</span>
+      <span class="pill" id="pill-groups">1 groupe</span>
+      <span class="pill" id="pill-duration">boucle 6,000 s</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn primary" id="import-image" type="button">Importer une image</button>
+      <button class="btn" id="open-project" type="button">Ouvrir</button>
+      <button class="btn" id="save-project" type="button">Enregistrer</button>
+      <span class="header-sep" aria-hidden="true"></span>
+      <button class="btn ghost" id="undo" type="button" disabled>Annuler</button>
+      <button class="btn ghost" id="redo" type="button" disabled>Rétablir</button>
+    </div>
   </div>
+  <div class="wrap header-sub">
+    <p id="scene-lede">Ouvrir une image, sélectionner une zone, choisir son comportement, vérifier l’aperçu, enregistrer le projet.</p>
+    <div class="header-notes">
+      <span class="save-state" id="save-state">Projet de démonstration</span>
+      <span class="label-inline" id="exact-label">Motion intention preview—not a prediction of AI output.</span>
+    </div>
+  </div>
+  <input id="image-file" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+  <input id="project-file" type="file" accept="application/json,.json" hidden>
 </header>
 
-<main class="app wrap">
+<div class="status-strip wrap">
+  <p class="project-status" id="project-status" role="status">Projet v2 local · non approuvé</p>
+</div>
+
+<div class="variant-bar wrap" id="variant-bar" hidden>
+  <span class="variant-label">Variantes</span>
+  <div class="variant-options" role="group" aria-label="Variantes artistiques du tableau">
+    <button class="variant-btn" type="button" data-variant="baseline" aria-pressed="true">Référence</button>
+    <button class="variant-btn" type="button" data-variant="a" aria-pressed="false">A · Original Alive</button>
+    <button class="variant-btn" type="button" data-variant="b" aria-pressed="false">B · Atmospheric Night</button>
+    <details class="variant-c">
+      <summary>C · à choisir</summary>
+      <div class="variant-c-panel">
+        <p class="micro">Trois interventions possibles. Aucune n’est implémentée avant votre choix ; elles ne se combinent pas automatiquement.</p>
+        <ol>
+          <li><strong>Ombre géométrique retenue.</strong> Suppose un occultant et une source ; masque, nettoyage local et nouveau renderer d’ombre. Pas de contenu image ajouté.</li>
+          <li><strong>Fil de fumée fin.</strong> Suppose un support et un mouvement approuvés ; masque, nettoyage local et nouveau renderer de fumée. Aucun encens existant n’est revendiqué.</li>
+          <li><strong>Petit mouvement textile.</strong> Suppose une nouvelle matière image ou une région dessinée ; masque, nettoyage des plis et nouveau renderer textile.</li>
+        </ol>
+      </div>
+    </details>
+  </div>
+  <span class="variant-status" id="variant-status">brouillon non approuvé</span>
+</div>
+<p class="variant-scope wrap" id="variant-scope" hidden></p>
+
+<main class="workspace wrap">
   <section class="stage" aria-label="Aperçu du mouvement">
     <div class="stage-bar">
-      <h2>Aperçu</h2>
+      <div class="stage-title">
+        <h2>Aperçu</h2>
+        <p>Caméra fixe · rendu déterministe</p>
+      </div>
       <span class="tag live">caméra fixe</span>
       <span class="tag" id="frame-tag">frame 0</span>
+      <span class="stage-spacer"></span>
       <button class="btn small ghost" id="toggle-regions" type="button" aria-pressed="true">Régions</button>
       <button class="btn small ghost" id="compare" type="button" aria-pressed="false">Comparer</button>
     </div>
     <div class="frame-wrap" id="frame-wrap">
-      <canvas id="view" width="1280" height="1024" aria-label="Aperçu animé des flammes de bougies"></canvas>
-      <canvas id="overlay" width="1280" height="1024" aria-label="Régions animées et régions de lumière"></canvas>
+      <canvas id="view" width="1280" height="1024" aria-label="Aperçu animé de la scène"></canvas>
+      <canvas id="overlay" width="1280" height="1024" aria-label="Régions et supports de la scène"></canvas>
       <p class="frame-note">Motion intention preview—not a prediction of AI output.</p>
       <span class="compare-label before" id="compare-before" hidden>Avant</span>
       <span class="compare-label after" id="compare-after" hidden>Après</span>
@@ -283,93 +479,233 @@
         <span class="readout">Après</span>
       </div>
     </div>
-    <p class="stage-foot">Le temps affiché est la seule horloge du rendu. <span class="mono">requestAnimationFrame</span> ne sert qu’à faire avancer la lecture ; chaque image est calculée par <span class="mono">renderAt</span>. Aucun zoom, panoramique ou recadrage.</p>
+    <p class="stage-foot">Le temps affiché est la seule horloge. <span class="mono">requestAnimationFrame</span> ne sert qu’à faire avancer la lecture ; chaque image est calculée par <span class="mono">renderAt</span>. Aucun zoom, panoramique ou recadrage.</p>
   </section>
 
-  <aside class="panel">
-    <section class="card">
-      <div class="card-head"><h2>Presets du groupe</h2><p id="preset-meta">Bougies · vivant v1</p></div>
-      <div class="preset-grid" id="preset-grid"></div>
-      <p class="micro" style="margin-top:7px">Changer de preset change la couche de défaut du groupe. Les réglages de groupe et les surcharges d’élément restent prioritaires. Chaque flamme conserve sa phase.</p>
-    </section>
-
-    <section class="card">
-      <div class="card-head"><h2>Scène</h2><p id="region-count">15 éléments</p></div>
-      <p class="micro scene-summary" id="scene-summary">8 flammes · 7 lumières · 1 groupe</p>
+  <aside class="rail" aria-label="Scène et comportement">
+    <section class="rail-card scene-card" aria-labelledby="scene-title">
+      <div class="rail-head">
+        <h2 id="scene-title">Scène</h2>
+        <span id="region-count" class="rail-meta">15 éléments</span>
+      </div>
+      <p class="rail-sub" id="scene-summary">8 animés · 7 lumières · 0 protégés · 1 groupe</p>
+      <div class="scene-tools">
+        <button class="btn small" id="add-group" type="button">Nouveau groupe</button>
+        <button class="btn small" id="add-region" type="button">Nouvelle région</button>
+        <button class="btn small ghost" id="add-region-cancel" type="button" hidden>Annuler le tracé</button>
+      </div>
+      <p class="micro" id="region-hint" hidden>Dessinez un rectangle sur l’image : il crée une région protégée, sans recette active.</p>
       <div class="region-list" id="region-list" role="group" aria-label="Scène groupée"></div>
-      <div class="editor" id="editor"></div>
-      <div class="proposal-wrap">
-        <p class="editor-section">Propositions</p>
-        <div id="proposal-box"></div>
-      </div>
-      <p class="project-status" id="project-status">Projet v2 local · non approuvé</p>
     </section>
 
-    <section class="card">
-      <div class="card-head"><h2>Contrôles déterministes</h2><p>réduite + native 1280×1024</p></div>
-      <button class="btn" id="run-checks" type="button">Lancer les vérifications</button>
-      <ul class="check-list" id="check-list" aria-live="polite"></ul>
-      <div class="metrics" id="metrics"></div>
+    <section class="rail-card behavior-card" aria-labelledby="behavior-title">
+      <div class="rail-head">
+        <h2 id="behavior-title">Comportement</h2>
+        <span id="simple-selection-meta" class="rail-meta"></span>
+      </div>
+      <div class="subsection" id="preset-section">
+        <div class="subsection-head">
+          <h3>Preset du groupe</h3>
+          <span id="preset-meta" class="rail-meta">Bougies · vivant v1</span>
+        </div>
+        <div class="preset-grid" id="preset-grid"></div>
+      </div>
+      <div id="simple-inspector"></div>
     </section>
 
-    <section class="card">
-      <div class="card-head"><h2>Couches et opérations</h2></div>
-      <div class="split">
-        <p><b>Intention artistique</b> — décrite dans le projet, jamais une garantie.</p>
-        <p><b>Réglages d’aperçu</b> — preset, région visible, comparaison, lecture.</p>
-        <p><b>Opérations</b> — <b>Protéger</b> ne dessine rien ; <b>Animer</b> applique la recette bougies ; <b>Transformer</b> reste une proposition non exécutable.</p>
-        <p><b>Détection</b> — aucune détection automatique ici. Une proposition future devra afficher catégorie, masque, confiance et demander confirmation.</p>
-        <p><b>Contrôles moteur</b> — <span class="mono">[]</span>. Aucune annotation n’est un signal de conditionnement LTX.</p>
+    <section class="rail-card atmosphere-card" id="atmosphere-card" aria-labelledby="atmosphere-title" hidden>
+      <div class="rail-head">
+        <h2 id="atmosphere-title">Atmosphère</h2>
+        <span class="rail-meta">approximation</span>
       </div>
+      <p class="rail-sub">Variante B · ciel manuel + couche procédurale. Flammes et architecture inchangées.</p>
+      <label class="simple-toggle">
+        <span><input id="atmosphere-enabled" type="checkbox"> Activer l’atmosphère</span>
+        <small>Le ciel ne s’applique qu’à l’intérieur de sa région protégée.</small>
+      </label>
+      <div class="simple-control">
+        <div class="simple-control-head"><span>Intensité</span><output id="atmosphere-intensity-out">0,42</output></div>
+        <input id="atmosphere-intensity" type="range" min="0" max="1" step="0.01" value="0.42" aria-label="Intensité de l’atmosphère">
+      </div>
+      <div class="simple-control">
+        <div class="simple-control-head"><span>Cycles sur la boucle</span><output id="atmosphere-cycles-out">1×</output></div>
+        <input id="atmosphere-cycles" type="range" min="1" max="3" step="1" value="1" aria-label="Nombre de cycles atmosphériques sur la boucle">
+      </div>
+      <label class="simple-toggle">
+        <span><input id="atmosphere-stars" type="checkbox"> Étoiles (optionnel)</span>
+        <small>Désactivées par défaut. Aucune étoile n’est ajoutée sans cette activation.</small>
+      </label>
+      <details class="atmosphere-advanced">
+        <summary>Avancé</summary>
+        <label class="simple-toggle">
+          <span><input id="atmosphere-cool" type="checkbox"> Lumière froide sur les hauts de mur</span>
+          <small>Couche opt-in séparée ; approximation indirecte, pas une source lumineuse récupérée.</small>
+        </label>
+        <button class="btn small ghost" id="select-sky" type="button">Sélectionner la région du ciel</button>
+        <p class="micro" id="atmosphere-note">Approximation artistique. Les bords et les pixels chauds sont atténués ; aucun masque sémantique automatique.</p>
+      </details>
+    </section>
+
+    <details class="rail-card advanced-card" id="advanced-details">
+      <summary>
+        <span>Réglages avancés</span>
+        <small>Tous les paramètres existants</small>
+      </summary>
+      <div class="rail-body">
+        <p class="micro">Précédence : élément &gt; groupe &gt; preset. Les valeurs et les supports restent modifiables ici.</p>
+        <div class="editor" id="editor"></div>
+        <div class="proposal-wrap">
+          <p class="editor-section">Propositions de détection</p>
+          <div id="proposal-box"></div>
+        </div>
+      </div>
+    </details>
+
+    <details class="rail-card project-details">
+      <summary>
+        <span>Détails du projet</span>
+        <small id="project-format">format · build</small>
+      </summary>
+      <div class="rail-body">
+        <div id="project-meta"></div>
+        <div class="source-block">
+          <strong id="source-title">Fond diagnostique seed 4243</strong>
+          <p id="source-meta">1280×1024 · SHA-256 <span class="mono">9806594…</span></p>
+          <p id="source-approval">Candidat non approuvé, non master. Le prototype ne modifie pas le fichier.</p>
+          <p class="build-line" id="build-line">build · projet</p>
+          <div class="pill-line">
+            <span class="pill" id="pill-samples">144 échantillons</span>
+            <span class="pill" id="build-pill">build…</span>
+            <span class="pill danger" id="source-pill">image non approuvée</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details class="rail-card diagnostics-card">
+      <summary>
+        <span>Diagnostic du plan</span>
+        <small>Vérifications techniques</small>
+      </summary>
+      <div class="rail-body">
+        <p class="micro">Mesures de boucle, de protection pixel et de précédence. Elles ne prouvent ni le photoréalisme ni un accord LTX.</p>
+        <button class="btn" id="run-checks" type="button">Lancer les vérifications</button>
+        <ul class="check-list" id="check-list" aria-live="polite"></ul>
+        <div class="metrics" id="metrics"></div>
+        <div class="split">
+          <p><b>Intention artistique</b> — décrite dans le projet, jamais une garantie.</p>
+          <p><b>Opérations</b> — <b>Protéger</b> ne dessine rien ; <b>Animer</b> n’existe que pour les recettes bougies supportées.</p>
+          <p><b>Recettes</b> — flammes et lumières chaudes sont supportées. Feuillage, tissu et transformation restent des propositions sans renderer.</p>
+          <p><b>Détection</b> — aucune détection automatique. Une proposition future devra demander confirmation.</p>
+          <p><b>Moteur</b> — <span class="mono">[]</span>. Aucune annotation n’est un signal de conditionnement LTX.</p>
+        </div>
+      </div>
+    </details>
+
+    <section class="future-card" aria-labelledby="future-title">
+      <div class="future-head">
+        <h2 id="future-title">À venir</h2>
+        <span class="tag">non disponible</span>
+      </div>
+      <p class="micro">Capacités documentées mais non implémentées. Elles ne modifient pas le projet et ne sont pas exécutables ici.</p>
+      <ul class="future-list">
+        <li><span>Feuillage</span><em>recette non branchée</em></li>
+        <li><span>Tissu</span><em>recette non branchée</em></li>
+        <li><span>Détection automatique</span><em>non exécutée</em></li>
+        <li><span>Transformation</span><em>plan seulement</em></li>
+        <li><span>Export vidéo</span><em>hors périmètre</em></li>
+      </ul>
     </section>
   </aside>
 </main>
 
 <footer>
-  <div class="wrap">
-    <div class="limits">
-      <div>
-        <h3>Ce que c’est</h3>
-        <ul>
-          <li>Un éditeur de scène local, déterministe et sans dépendance.</li>
-          <li>Un plan JSON versionné avec supports normalisés.</li>
-          <li>Une vérification de protection pixel et de boucle.</li>
-        </ul>
+  <div class="wrap footer-inner">
+    <p>Prototype local déterministe · aucun export vidéo · image source non approuvée.</p>
+    <details class="footer-details">
+      <summary>Limites et portée</summary>
+      <div class="limits">
+        <div>
+          <h3>Ce que c’est</h3>
+          <ul>
+            <li>Un éditeur de scène local, déterministe et sans dépendance.</li>
+            <li>Un import d’image locale, avec dimensions et SHA-256, sans redimensionnement.</li>
+            <li>Un plan JSON versionné avec supports normalisés.</li>
+            <li>Une vérification de protection pixel et de boucle.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Ce que ce n’est pas</h3>
+          <ul>
+            <li>Une prédiction de la sortie LTX.</li>
+            <li>Un renderer feuillage ou tissu dans cette passe.</li>
+            <li>Un exporteur vidéo ou un master.</li>
+            <li>Une détection automatique ou une transformation exécutée.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Limites connues</h3>
+          <ul>
+            <li>Le seul renderer est encore celui des bougies ; il reste stylisé et non photoréaliste.</li>
+            <li>La lumière est additive et bornée, sans simulation physique.</li>
+            <li>La boucle et le mouvement sont contrôlés à 320×256 ; la protection est aussi vérifiée à la résolution native de la source.</li>
+            <li>La cible 1280×1024 / 5:4 n’est pas une dimension LED confirmée ; licences et lecture restent à vérifier.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Prochain test</h3>
+          <ul>
+            <li>Verdict visuel humain sur les bougies, sans le confondre avec une approbation de production.</li>
+            <li>Choisir le cas tissu (rideau rouge Inspi) et son mouvement avant d’implémenter la seconde recette.</li>
+            <li>Ne pas ouvrir l’exporteur avant ces deux validations.</li>
+          </ul>
+        </div>
       </div>
-      <div>
-        <h3>Ce que ce n’est pas</h3>
-        <ul>
-          <li>Une prédiction de la sortie LTX.</li>
-          <li>Des flammes photoréalistes.</li>
-          <li>Un exporteur vidéo ou un master.</li>
-        </ul>
-      </div>
-      <div>
-        <h3>Limites connues</h3>
-        <ul>
-          <li>Le nettoyage atténue la flamme statique ; il ne reconstruit pas le mur.</li>
-          <li>La lumière est additive et bornée, sans simulation physique.</li>
-          <li>La boucle et le mouvement sont contrôlés à 320×256 ; la protection est aussi vérifiée à 1280×1024 natif.</li>
-          <li>La détection et la transformation ne sont pas exécutées ; aucune ne doit être présentée comme un contrôle moteur.</li>
-        </ul>
-      </div>
-      <div>
-        <h3>Prochain test</h3>
-        <ul>
-          <li>Verdict visuel humain sur cet aperçu.</li>
-          <li>Puis, si approuvé, une seule génération LTX avec caméra fixe et image d’entrée approuvée.</li>
-          <li>Comparer les deux, sans modifier ce prototype pour imiter LTX.</li>
-        </ul>
-      </div>
-    </div>
-    <p>Prototype local · aucune dépendance, aucun traitement du MP4 · fond diagnostique non approuvé. Le fichier <span class="mono">motion-plan.candles-4243.json</span> est la source du projet v2 ; le projet embarqué est vérifié contre lui. À l’import, une requête locale lit les octets de l’asset pour vérifier dimensions et SHA-256 ; aucune image n’est dupliquée dans le JSON.</p>
+    </details>
   </div>
 </footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script type="module">
 /* === CORE:BEGIN === */
-export const CORE_VERSION = "candle-motion-core/2.0.0";
+export const CORE_VERSION = "scene-motion-core/2.2.0";
+export const PROTOTYPE_BUILD = "2.2.0-variants.1";
+export const PROJECT_SCHEMA = "candle-motion-project/v2";
+export const PROJECT_LABEL = "Motion intention preview—not a prediction of AI output.";
+export const DELIVERY_DURATIONS = Object.freeze([10, 11, 12, 13, 14, 15]);
+export const SUPPORTED_RECIPES = Object.freeze(["protect", "candle-flame", "candle-light"]);
+export const PROPOSED_RECIPES = Object.freeze(["foliage", "fabric", "camera-transform"]);
+export const DELIVERY_OUTPUT = Object.freeze({ width: 1280, height: 1024, aspectRatio: "5:4" });
+
+/* Les anciens projets n’ont pas de champ recipe : le rôle suffit à retrouver la recette. */
+export function recipeOf(element) {
+  if (element && typeof element.recipe === "string" && element.recipe) return element.recipe;
+  if (element?.role === "animated" || element?.category === "flame") return "candle-flame";
+  if (element?.role === "light-influence" || element?.category === "light") return "candle-light";
+  return "protect";
+}
+
+export function isSupportedRecipe(recipe) {
+  return SUPPORTED_RECIPES.includes(recipe);
+}
+
+export function isCandleRecipe(recipe) {
+  return recipe === "candle-flame" || recipe === "candle-light";
+}
+
+/* Variante B : ciel manuel + couche atmosphérique optionnelle. Aucun champ requis n’est ajouté au format. */
+export const VARIANT_A_ID = "candles-4243.variant-a";
+export const VARIANT_B_ID = "candles-4243.variant-b";
+
+export function atmosphereOf(plan) {
+  const config = plan?.atmosphere;
+  if (!config || config.enabled !== true) return null;
+  const region = (plan.regions || []).find((item) => item.id === config.regionId);
+  if (!region) return null;
+  const group = (plan.groups || []).find((item) => item.id === region.groupId);
+  if (group && group.animationEnabled === false) return null;
+  return { config, region };
+}
 
 /* Décodage sRGB -> linéaire, table 256 entrées. */
 const S2L = (() => {
@@ -489,6 +825,10 @@ export function resolveSettings(plan, element) {
 
 /* Une opération non animée ou un élément désactivé reste dans la scène et dans le fond. */
 export function isElementAnimated(plan, element) {
+  const recipe = recipeOf(element);
+  if (!isSupportedRecipe(recipe) || recipe === "protect") return false;
+  if (recipe === "candle-flame" && element.role !== "animated") return false;
+  if (recipe === "candle-light" && element.role !== "light-influence") return false;
   if ((element.operation || "animate") !== "animate") return false;
   if (element.animationEnabled === true) return true;
   if (element.animationEnabled === false) return false;
@@ -831,12 +1171,132 @@ function paintFlame(ctx, region, support) {
   }
 }
 
+/*
+ * Ciel procédural volontairement borné : le masque manuel décide des pixels autorisés.
+ * Un garde-fou de contour et de couleur évite de laver les arêtes chaudes de l’architecture.
+ */
+function paintAtmosphere(ctx, region, support) {
+  const { out, width, height, plan, time } = ctx;
+  const config = plan.atmosphere;
+  const intensity = clamp(Number(config?.intensity) || 0, 0, 1);
+  if (!(intensity > 0)) return;
+  const cycles = clamp(Math.round(Number(config?.cycles) || 1), 1, 3);
+  const u = phaseAt(time, plan.loop.durationSeconds);
+  const phase = Math.PI * 2 * cycles * u;
+  const { bounds } = support;
+  const lumAt = (x, y) => {
+    const i = (y * width + x) * 4;
+    return 0.2126 * S2L[out[i]] + 0.7152 * S2L[out[i + 1]] + 0.0722 * S2L[out[i + 2]];
+  };
+  for (let y = bounds.y0; y <= bounds.y1; y++) {
+    for (let x = bounds.x0; x <= bounds.x1; x++) {
+      if (!containsPrepared(support, x + 0.5, y + 0.5)) continue;
+      const i = (y * width + x) * 4;
+      const r = S2L[out[i]];
+      const g = S2L[out[i + 1]];
+      const b = S2L[out[i + 2]];
+      const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const dx = Math.abs(lumAt(Math.min(width - 1, x + 1), y) - lumAt(Math.max(0, x - 1), y));
+      const dy = Math.abs(lumAt(x, Math.min(height - 1, y + 1)) - lumAt(x, Math.max(0, y - 1)));
+      const edgeGuard = 1 - 0.86 * Math.min(1, (dx + dy) * 90);
+      const warmGuard = 1 - 0.82 * clamp((r - b) * 26, 0, 1);
+      const skyGuard = 0.38 + 0.62 * (1 - smoothstep(0.012, 0.10, lum));
+      const nx = (x + 0.5) / width;
+      const ny = (y + 0.5) / height;
+      const field = 0.5
+        + 0.28 * Math.sin(phase + nx * 7.0 + ny * 3.0)
+        + 0.22 * Math.sin(2 * phase - nx * 4.0 + ny * 5.0);
+      const amount = intensity * 0.085 * (0.62 + 0.38 * field) * edgeGuard * warmGuard * skyGuard;
+      const rr = r + amount * 0.18;
+      const gg = g + amount * 0.34;
+      const bb = b + amount * 0.95;
+      out[i] = encode(shoulder(rr));
+      out[i + 1] = encode(shoulder(gg));
+      out[i + 2] = encode(shoulder(bb));
+    }
+  }
+  if (config.stars) paintAtmosphereStars(ctx, support, intensity, phase);
+}
+
+function paintAtmosphereStars(ctx, support, intensity, phase) {
+  const { out, base, width, height, plan } = ctx;
+  const count = 18;
+  const bx0 = support.bounds.x0 / width;
+  const bx1 = Math.min(1, (support.bounds.x1 + 1) / width);
+  const by0 = support.bounds.y0 / height;
+  const by1 = Math.min(1, (support.bounds.y1 + 1) / height);
+  for (let i = 0; i < count; i++) {
+    const nx = bx0 + (bx1 - bx0) * seededUnit(`atmosphere:star:x:${i}:${plan.seed}`);
+    const ny = by0 + (by1 - by0) * seededUnit(`atmosphere:star:y:${i}:${plan.seed}`);
+    const px = Math.min(width - 0.001, Math.max(0.001, nx * width));
+    const py = Math.min(height - 0.001, Math.max(0.001, ny * height));
+    if (!containsPrepared(support, px, py)) continue;
+    const ci = (Math.floor(py) * width + Math.floor(px)) * 4;
+    const baseLum = 0.2126 * S2L[base[ci]] + 0.7152 * S2L[base[ci + 1]] + 0.0722 * S2L[base[ci + 2]];
+    if (baseLum > 0.022 || base[ci] > base[ci + 2] + 5) continue;
+    const twinkle = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(phase + seededUnit(`atmosphere:star:phase:${i}:${plan.seed}`) * Math.PI * 2));
+    const alpha = intensity * 0.30 * twinkle;
+    const cx = Math.floor(px);
+    const cy = Math.floor(py);
+    for (const [ox, oy, weight] of [[0, 0, 1], [1, 0, 0.32], [-1, 0, 0.32], [0, 1, 0.25], [0, -1, 0.25]]) {
+      const x = cx + ox;
+      const y = cy + oy;
+      if (x < 0 || y < 0 || x >= width || y >= height) continue;
+      const k = (y * width + x) * 4;
+      out[k] = encode(shoulder(S2L[out[k]] + alpha * weight * 0.55));
+      out[k + 1] = encode(shoulder(S2L[out[k + 1]] + alpha * weight * 0.72));
+      out[k + 2] = encode(shoulder(S2L[out[k + 2]] + alpha * weight));
+    }
+  }
+}
+
+/* Couche distincte, opt-in, bornée par un second support manuel (hauts de murs). */
+function paintCoolLight(ctx, config, region, support) {
+  const { out, width, height, plan, time } = ctx;
+  const intensity = clamp(Number(config.intensity) || 0, 0, 1);
+  if (!(intensity > 0)) return;
+  const cycles = clamp(Math.round(Number(config.cycles) || 1), 1, 3);
+  const phase = Math.PI * 2 * cycles * phaseAt(time, plan.loop.durationSeconds);
+  const { bounds } = support;
+  const lumAt = (x, y) => {
+    const i = (y * width + x) * 4;
+    return 0.2126 * S2L[out[i]] + 0.7152 * S2L[out[i + 1]] + 0.0722 * S2L[out[i + 2]];
+  };
+  for (let y = bounds.y0; y <= bounds.y1; y++) {
+    for (let x = bounds.x0; x <= bounds.x1; x++) {
+      if (!containsPrepared(support, x + 0.5, y + 0.5)) continue;
+      const i = (y * width + x) * 4;
+      const r = S2L[out[i]];
+      const g = S2L[out[i + 1]];
+      const b = S2L[out[i + 2]];
+      const dx = Math.abs(lumAt(Math.min(width - 1, x + 1), y) - lumAt(Math.max(0, x - 1), y));
+      const dy = Math.abs(lumAt(x, Math.min(height - 1, y + 1)) - lumAt(x, Math.max(0, y - 1)));
+      const edgeGuard = 1 - 0.86 * Math.min(1, (dx + dy) * 90);
+      const field = 0.5
+        + 0.28 * Math.sin(phase + ((x + 0.5) / width) * 6.0 + ((y + 0.5) / height) * 4.0)
+        + 0.22 * Math.sin(2 * phase - ((x + 0.5) / width) * 3.0 + ((y + 0.5) / height) * 5.0);
+      const amount = intensity * 0.020 * (0.62 + 0.38 * field) * edgeGuard;
+      out[i] = encode(shoulder(r + amount * 0.28));
+      out[i + 1] = encode(shoulder(g + amount * 0.50));
+      out[i + 2] = encode(shoulder(b + amount));
+    }
+  }
+}
+
 export function renderFrame(base, plan, time, options = {}) {
   const width = options.width || plan.source.width;
   const height = options.height || plan.source.height;
   const out = options.out || new Uint8ClampedArray(base.length);
   if (out !== base) out.set(base);
   const ctx = { base, out, width, height, plan, time };
+  const atmosphere = atmosphereOf(plan);
+  if (atmosphere) {
+    paintAtmosphere(ctx, atmosphere.region, prepareSupport(atmosphere.region, width, height));
+    if (atmosphere.config.coolLight && atmosphere.config.coolLightRegionId) {
+      const cool = (plan.regions || []).find((region) => region.id === atmosphere.config.coolLightRegionId);
+      if (cool) paintCoolLight(ctx, atmosphere.config, cool, prepareSupport(cool, width, height));
+    }
+  }
   const active = (plan.regions || []).filter((region) => isElementAnimated(plan, region));
   const lights = active.filter((region) => region.role === "light-influence");
   const flames = active.filter((region) => region.role === "animated");
@@ -866,6 +1326,27 @@ export function supportMask(plan, width, height, roles = ["animated", "light-inf
   for (const region of plan.regions || []) {
     if (!roles.includes(region.role)) continue;
     if (options.activeOnly && !isElementAnimated(plan, region)) continue;
+    const support = prepareSupport(region, width, height);
+    for (let y = support.bounds.y0; y <= support.bounds.y1; y++) {
+      for (let x = support.bounds.x0; x <= support.bounds.x1; x++) {
+        if (containsPrepared(support, x + 0.5, y + 0.5)) mask[y * width + x] = 1;
+      }
+    }
+  }
+  return mask;
+}
+
+/* Union des pixels que le renderer est autorisé à écrire, atmosphère comprise. */
+export function renderWriteMask(plan, width, height) {
+  const mask = supportMask(plan, width, height, ["animated", "light-influence"], { activeOnly: true });
+  const atmosphere = atmosphereOf(plan);
+  if (!atmosphere) return mask;
+  const regions = [atmosphere.region];
+  if (atmosphere.config.coolLight && atmosphere.config.coolLightRegionId) {
+    const cool = (plan.regions || []).find((region) => region.id === atmosphere.config.coolLightRegionId);
+    if (cool) regions.push(cool);
+  }
+  for (const region of regions) {
     const support = prepareSupport(region, width, height);
     for (let y = support.bounds.y0; y <= support.bounds.y1; y++) {
       for (let x = support.bounds.x0; x <= support.bounds.x1; x++) {
@@ -924,15 +1405,16 @@ export function serializeProject(plan) {
 export function parseProject(text) {
   const project = JSON.parse(text);
   if (!project || typeof project !== "object") throw new Error("Projet JSON invalide.");
-  if (project.schema !== "candle-motion-project/v2") {
+  if (project.schema !== PROJECT_SCHEMA) {
     throw new Error("Format de projet non pris en charge : candle-motion-project/v2 attendu.");
   }
   for (const key of ["source", "loop", "groups", "regions", "presets", "proposals"]) {
     if (!(key in project)) throw new Error("Projet incomplet : " + key + " absent.");
   }
-  if (!Array.isArray(project.groups) || !project.groups.length) throw new Error("Aucun groupe dans le projet.");
-  if (!Array.isArray(project.regions) || !project.regions.length) throw new Error("Aucun élément dans le projet.");
-  if (!Array.isArray(project.presets) || !project.presets.length) throw new Error("Aucun preset dans le projet.");
+  if (!Array.isArray(project.groups)) throw new Error("Liste de groupes invalide.");
+  if (!Array.isArray(project.regions)) throw new Error("Liste d’éléments invalide.");
+  if (!Array.isArray(project.presets)) throw new Error("Liste de presets invalide.");
+  if (!Array.isArray(project.proposals)) throw new Error("Liste de propositions invalide.");
   if (!/^[0-9a-f]{64}$/.test(project.source.sha256 || "")) throw new Error("Empreinte source absente ou invalide.");
   return project;
 }
@@ -954,6 +1436,330 @@ export function checkSourceCompatibility(project, actual) {
     };
   }
   return { ok: true, code: "match", message: "Asset compatible : dimensions et empreinte vérifiées." };
+}
+
+/* Projet vide, image-agnostique : aucune région, aucun groupe, aucun preset inventé. */
+export function createEmptyProject(source, options = {}) {
+  const sha256 = String(source?.sha256 || "");
+  if (!/^[0-9a-f]{64}$/.test(sha256)) throw new Error("Empreinte source invalide pour créer le projet.");
+  const width = Math.round(Number(source.width));
+  const height = Math.round(Number(source.height));
+  if (!(width > 0) || !(height > 0)) throw new Error("Dimensions source invalides pour créer le projet.");
+  const requestedDuration = Number(options.duration ?? 12);
+  const duration = requestedDuration === 6 || DELIVERY_DURATIONS.includes(requestedDuration)
+    ? requestedDuration
+    : 12;
+  const fps = Math.max(1, Math.round(Number(options.fps ?? 24) || 24));
+  return {
+    schema: PROJECT_SCHEMA,
+    id: options.id || `motion.local-${sha256.slice(0, 12)}.draft`,
+    version: "2.1.0",
+    status: "diagnostic-not-approved",
+    approval: {
+      status: "not-approved",
+      source: "création locale dans l’éditeur",
+      note: "Projet créé depuis une image locale. L’image, l’aperçu et la durée ne sont pas approuvés ; aucun master n’est créé."
+    },
+    label: PROJECT_LABEL,
+    artistIntent: {
+      summary: "Définir manuellement les régions d’une image source, choisir une recette supportée et vérifier une boucle déterministe sans modifier les zones protégées.",
+      constraints: [
+        "Aucun redimensionnement ni repositionnement silencieux des masques.",
+        "Les coordonnées de support restent normalisées dans le repère de l’image source.",
+        "Une recette non supportée reste proposée et n’écrit aucun pixel.",
+        "La caméra reste fixe et la boucle est exclusive à l’endpoint."
+      ],
+      nonGoals: [
+        "Détecter automatiquement les objets ou segments de l’image.",
+        "Produire une vidéo ou un master.",
+        "Transformer une annotation en contrôle moteur.",
+        "Déduire les dimensions LED de la cible 1280×1024."
+      ]
+    },
+    previewSettings: {
+      preset: "none",
+      showRegions: true,
+      playbackRate: 1,
+      compare: false,
+      compareSplit: 0.5,
+      note: "Réglages d’aperçu uniquement ; aucun preset de recette n’est créé par défaut."
+    },
+    engineControls: {
+      conditioningSignals: [],
+      note: "Aucune région, annotation ou intention de ce projet n’est un signal de conditionnement LTX. Le projet décrit un aperçu local."
+    },
+    source: {
+      id: source.id || `local-${sha256.slice(0, 12)}`,
+      path: source.path || `local/${sha256.slice(0, 12)}`,
+      sha256,
+      width,
+      height,
+      colorSpace: source.colorSpace || "sRGB navigateur (non certifié)",
+      role: source.role || "local-import"
+    },
+    workingSpace: {
+      name: "linear-sRGB",
+      decode: "EOTF sRGB par table de 256 entrées",
+      encode: "OETF sRGB par table de 65536 entrées",
+      highlight: "Épaulement doux au-dessus de 0,78 en linéaire ; maximum asymptotique 1,0.",
+      note: "Les pixels hors support sont recopiés octet pour octet ; aucune image n’est rééchantillonnée dans le projet."
+    },
+    camera: {
+      mode: "fixed",
+      catalogId: "A-01",
+      note: "Caméra fixe ; aucune trajectoire n’est simulée."
+    },
+    loop: {
+      durationSeconds: duration,
+      fps,
+      samples: Math.round(duration * fps),
+      endpoint: "exclusive",
+      boundaryTolerance: 0,
+      phaseRule: "u = ((t / T) mod 1 + 1) mod 1 ; oscillations à fréquences entières de u.",
+      note: `${duration} s à ${fps} fps ; les temps d’export sont k·T/N pour k = 0…N−1, sans frame finale dupliquée. Durée non approuvée.`
+    },
+    protection: {
+      definition: "Tout pixel hors de l’union des supports actifs est recopié octet pour octet depuis le fond décodé. Une région protégée n’autorise aucune écriture.",
+      overlapPolicy: "Les recettes supportées restent bornées à leur support ; une région protégée peut chevaucher un support sans être modifiée. Aucun patch de suppression global n’est créé.",
+      edgePolicy: "Les dégradés s’annulent avant le bord du support ; un masque non supporté ne déclenche aucun rendu."
+    },
+    output: {
+      width: DELIVERY_OUTPUT.width,
+      height: DELIVERY_OUTPUT.height,
+      aspectRatio: DELIVERY_OUTPUT.aspectRatio,
+      fps,
+      colorSpace: "sRGB (convention non certifiée)",
+      audio: "none",
+      status: "unresolved"
+    },
+    approvals: {
+      sourceImage: "not-reviewed",
+      imagePreparation: "not-reviewed",
+      preview: "not-reviewed",
+      duration: "not-approved",
+      output: "unresolved"
+    },
+    seed: Math.max(0, Math.round(Number(options.seed ?? 4243) || 0)),
+    groups: [],
+    regions: [],
+    presets: [],
+    proposals: []
+  };
+}
+
+/* Durée de livraison : 10–15 s pour les nouveaux projets ; 6 s reste lisible pour l’historique. */
+export function setLoopDuration(plan, seconds) {
+  const duration = Number(seconds);
+  if (!(duration > 0) || (duration !== 6 && !DELIVERY_DURATIONS.includes(duration))) {
+    throw new Error("Durée non supportée : choisir 10–15 s (ou 6 s pour un projet historique).");
+  }
+  if (!plan?.loop) throw new Error("Timeline absente.");
+  const fps = Math.max(1, Math.round(Number(plan.loop.fps) || 24));
+  plan.loop.durationSeconds = duration;
+  plan.loop.fps = fps;
+  plan.loop.samples = Math.round(duration * fps);
+  plan.loop.endpoint = "exclusive";
+  plan.loop.boundaryTolerance = 0;
+  plan.loop.note = `${duration} s à ${fps} fps ; les temps d’export sont k·T/N pour k = 0…N−1, sans frame finale dupliquée.`;
+  if (plan.approvals) plan.approvals.duration = "not-approved";
+  return plan.loop;
+}
+
+/* Variante A : dérivée du baseline, sans nouvelle région ni nouvelle liaison. */
+export function createOriginalAliveVariant(plan) {
+  const variant = JSON.parse(JSON.stringify(plan));
+  delete variant.atmosphere;
+  variant.groups = (variant.groups || []).filter((group) => group.id !== "group.atmosphere");
+  variant.regions = (variant.regions || []).filter((region) => region.id !== "region.sky" && region.id !== "region.cool-light");
+  variant.id = VARIANT_A_ID;
+  variant.version = "2.1.0";
+  variant.status = "provisional";
+  variant.approval = {
+    status: "not-approved",
+    source: "variante artistique dérivée du diagnostic 4243",
+    note: "Variante A proposée, non approuvée. L’image source reste un fond diagnostique, pas un master."
+  };
+  variant.artistIntent = {
+    summary: "Variante A — Original Alive. Animer uniquement les flammes existantes, leurs lumières locales explicitement liées et les reflets existants.",
+    constraints: [
+      "La géométrie, le cadrage et le ciel restent ceux du diagnostic 4243.",
+      "Aucune liaison de lumière n’est ajoutée : chaque source reste explicite et éditable.",
+      "Les supports, les presets et le nombre d’éléments restent inchangés.",
+      "Boucle de 12 s, endpoint exclusif, même seed déterministe."
+    ],
+    nonGoals: [
+      "Modifier l’architecture ou le ciel de l’image source.",
+      "Relier automatiquement le passage central ou une lumière à toutes les bougies.",
+      "Créer un master, une vidéo ou une sortie LTX."
+    ]
+  };
+  setLoopDuration(variant, 12);
+  variant.loop.note = "12 s à 24 fps ; temps k·T/N, aucune frame finale dupliquée. Variante non approuvée.";
+  return variant;
+}
+
+/* Variante B : A + ciel manuel + couche atmosphérique et lumière froide opt-in. */
+export function createAtmosphericNightVariant(plan) {
+  const variant = createOriginalAliveVariant(plan);
+  variant.id = VARIANT_B_ID;
+  variant.approval = {
+    status: "not-approved",
+    source: "variante artistique dérivée du diagnostic 4243",
+    note: "Variante B proposée, non approuvée. Ciel, atmosphère et lumière froide sont des approximations artistiques."
+  };
+  variant.artistIntent = {
+    summary: "Variante B — Atmospheric Night. Partir de A, ajouter un ciel manuel et une atmosphère procédurale retenue, avec étoiles et lumière froide optionnelles.",
+    constraints: [
+      "Le ciel reste une région manuelle, protégée et éditable ; aucun masque sémantique automatique.",
+      "L’atmosphère ne remplace pas le ciel par un noir neutre et ne pompe pas l’exposition globale.",
+      "Les étoiles sont désactivées par défaut ; aucune lune ni lumière lunaire n’est ajoutée.",
+      "La lumière froide sur les hauts de mur est une couche opt-in séparée, pas une source physique.",
+      "Aucune étoile, aucun nuage ni aucune lumière n’est ajouté automatiquement parce que la scène est nocturne."
+    ],
+    nonGoals: [
+      "Détecter le ciel ou les bâtiments automatiquement.",
+      "Promouvoir la variante en master ou en règle universelle de collection.",
+      "Ajouter une lune, des nuages ou une illumination lunaire."
+    ]
+  };
+  variant.groups = variant.groups.filter((group) => group.id !== "group.atmosphere");
+  variant.regions = variant.regions.filter((region) => region.id !== "region.sky" && region.id !== "region.cool-light");
+  const skyPoints = [
+    [0.0, 0.0], [1.0, 0.0], [1.0, 0.06], [0.985, 0.06], [0.985, 0.075],
+    [0.61, 0.075], [0.61, 0.055], [0.59, 0.055], [0.59, 0.082], [0.47, 0.082],
+    [0.47, 0.07], [0.45, 0.07], [0.45, 0.09], [0.06, 0.09], [0.06, 0.078], [0.0, 0.078]
+  ];
+  const skyGroup = {
+    id: "group.atmosphere",
+    label: "Atmosphère",
+    category: "generic",
+    elementIds: ["region.sky", "region.cool-light"],
+    animationEnabled: true,
+    settings: {}
+  };
+  variant.groups.push(skyGroup);
+  variant.regions.push({
+    id: "region.sky",
+    role: "protected",
+    category: "other",
+    groupId: "group.atmosphere",
+    label: "Ciel nocturne — région manuelle",
+    supportStatus: "declared",
+    support: { type: "polygon", points: skyPoints, extraRects: [], extraCircles: [] },
+    operation: "protect",
+    recipe: "protect",
+    overrides: {},
+    motion: { action: "none", phase: 0 },
+    render: { method: "none", workingSpace: "linear" },
+    notes: "Région de ciel dessinée manuellement. L’atmosphère ne peut écrire qu’à l’intérieur ; les arêtes chaudes sont atténuées, sans masque sémantique automatique."
+  });
+  variant.regions.push({
+    id: "region.cool-light",
+    role: "protected",
+    category: "other",
+    groupId: "group.atmosphere",
+    label: "Hauts de murs — lumière froide optionnelle",
+    supportStatus: "declared",
+    support: {
+      type: "polygon",
+      points: [[0.04, 0.072], [0.45, 0.072], [0.45, 0.105], [0.04, 0.105]],
+      extraRects: [
+        { x0: 0.59, y0: 0.055, x1: 0.98, y1: 0.09 },
+        { x0: 0.68, y0: 0.30, x1: 0.98, y1: 0.33 }
+      ],
+      extraCircles: []
+    },
+    operation: "protect",
+    recipe: "protect",
+    overrides: {},
+    motion: { action: "none", phase: 0 },
+    render: { method: "none", workingSpace: "linear" },
+    notes: "Couche opt-in, distincte du ciel. Elle approxime une lumière froide indirecte sur quelques hauts de murs ; ce n’est pas une source lumineuse récupérée."
+  });
+  variant.atmosphere = {
+    enabled: true,
+    regionId: "region.sky",
+    intensity: 0.42,
+    cycles: 2,
+    stars: false,
+    coolLight: false,
+    coolLightRegionId: "region.cool-light",
+    note: "Approximation artistique : bleu indigo localisé, boucle entière, aucun pompage global. Étoiles et lumière froide désactivées par défaut."
+  };
+  return variant;
+}
+
+function uniqueSceneId(plan, base) {
+  const clean = String(base || "scene").toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") || "scene";
+  let id = clean;
+  let suffix = 2;
+  while ((plan.groups || []).some((group) => group.id === id)) id = `${clean}-${suffix++}`;
+  return id;
+}
+
+export function createGroup(plan, options = {}) {
+  if (!plan || !Array.isArray(plan.groups)) throw new Error("Projet sans liste de groupes.");
+  const id = uniqueSceneId(plan, options.id || "group.scene");
+  const group = {
+    id,
+    label: String(options.label || "Scène"),
+    category: options.category || "generic",
+    elementIds: [],
+    animationEnabled: true,
+    settings: {}
+  };
+  plan.groups.push(group);
+  return group;
+}
+
+export function attachRegionToGroup(plan, region, groupId) {
+  const group = (plan.groups || []).find((item) => item.id === groupId);
+  if (!group) throw new Error("Groupe introuvable.");
+  for (const item of plan.groups) item.elementIds = (item.elementIds || []).filter((id) => id !== region.id);
+  if (!group.elementIds.includes(region.id)) group.elementIds.push(region.id);
+  region.groupId = group.id;
+  return group;
+}
+
+export function createProtectedRegion(plan, options = {}) {
+  const group = (plan.groups || []).find((item) => item.id === options.groupId);
+  if (!group) throw new Error("Un groupe est requis avant d’ajouter une région.");
+  const points = (options.points || []).map(([x, y]) => [Number(x), Number(y)]);
+  if (points.length < 3 || points.some(([x, y]) => !(x >= 0 && x <= 1 && y >= 0 && y <= 1))) {
+    throw new Error("Support polygonal invalide.");
+  }
+  let baseId = "region.element";
+  let id = baseId;
+  let suffix = 2;
+  while (plan.regions.some((region) => region.id === id)) id = `${baseId}-${suffix++}`;
+  const region = {
+    id,
+    role: "protected",
+    category: "other",
+    groupId: group.id,
+    label: String(options.label || "Région protégée"),
+    supportStatus: "declared",
+    support: { type: "polygon", points, extraRects: [], extraCircles: [] },
+    operation: "protect",
+    recipe: "protect",
+    overrides: {},
+    motion: { action: "none", phase: 0 },
+    render: { method: "none", workingSpace: "linear" },
+    notes: "Région ajoutée manuellement. Protégée par défaut ; aucune recette n’écrit de pixel tant qu’une recette supportée n’est pas choisie."
+  };
+  plan.regions.push(region);
+  group.elementIds.push(region.id);
+  return region;
+}
+
+export function removeRegion(plan, regionId) {
+  const index = (plan.regions || []).findIndex((region) => region.id === regionId);
+  if (index < 0) return null;
+  const [removed] = plan.regions.splice(index, 1);
+  for (const group of plan.groups || []) {
+    group.elementIds = (group.elementIds || []).filter((id) => id !== regionId);
+  }
+  return removed;
 }
 
 /* Une proposition confirmée crée un élément Protéger, jamais une animation silencieuse. */
@@ -2068,8 +2874,8 @@ const PLAN_JSON = /* === PLAN:BEGIN === */
 }
 /* === PLAN:END === */;
 const PRISTINE = JSON.parse(JSON.stringify(PLAN_JSON));
-const W = PLAN_JSON.source.width;
-const H = PLAN_JSON.source.height;
+let W = PLAN_JSON.source.width;
+let H = PLAN_JSON.source.height;
 let T = PLAN_JSON.loop.durationSeconds;
 let FPS = PLAN_JSON.loop.fps;
 let N = PLAN_JSON.loop.samples;
@@ -2083,9 +2889,9 @@ const state = {
   raf: null,
   last: 0,
   playback: 0,
-  selectedGroupId: PLAN_JSON.groups[0].id,
-  selectedIds: new Set(PLAN_JSON.groups[0].elementIds),
-  primaryId: PLAN_JSON.groups[0].elementIds[0],
+  selectedGroupId: PLAN_JSON.groups[0]?.id || null,
+  selectedIds: new Set(PLAN_JSON.groups[0]?.elementIds || []),
+  primaryId: PLAN_JSON.groups[0]?.elementIds?.[0] || PLAN_JSON.regions[0]?.id || null,
   showRegions: true,
   edit: false,
   maskTool: null,
@@ -2094,6 +2900,17 @@ const state = {
   compare: PLAN_JSON.previewSettings.compare === true,
   compareSplit: PLAN_JSON.previewSettings.compareSplit || 0.5,
   projectStatusKind: "",
+  dirty: false,
+  persisted: true,
+  build: PROTOTYPE_BUILD,
+  currentAsset: {
+    sha256: PLAN_JSON.source.sha256,
+    width: PLAN_JSON.source.width,
+    height: PLAN_JSON.source.height,
+    path: PLAN_JSON.source.path,
+    origin: "declared-diagnostic"
+  },
+  addRegionMode: false
 };
 
 const $ = (id) => document.getElementById(id);
@@ -2118,6 +2935,28 @@ const fmt = (value, digits = 2) => value.toLocaleString("fr-FR", {
   maximumFractionDigits: digits,
 });
 
+function configureCanvas(width, height) {
+  W = Math.max(1, Math.round(width));
+  H = Math.max(1, Math.round(height));
+  for (const canvas of [view, overlay, baseCanvas]) {
+    canvas.width = W;
+    canvas.height = H;
+  }
+  $("frame-wrap").style.aspectRatio = `${W} / ${H}`;
+  outImage = viewCtx.createImageData(W, H);
+  overlayCtx.clearRect(0, 0, W, H);
+}
+
+function syncTimeline() {
+  T = Math.max(0.001, Number(state.plan.loop?.durationSeconds) || T);
+  FPS = Math.max(1, Math.round(Number(state.plan.loop?.fps) || FPS));
+  N = Math.max(2, Math.round(Number(state.plan.loop?.samples) || T * FPS));
+  $("scrub").max = String(T);
+  if (state.time >= T) state.time = 0;
+  state.playback = state.time;
+  $("scrub").value = String(Math.min(state.time, T));
+}
+
 function toast(message) {
   const node = $("toast");
   node.textContent = message;
@@ -2136,6 +2975,166 @@ function setProjectStatus(kind, text) {
   node.className = "project-status " + kind;
   node.textContent = text;
   state.projectStatusKind = kind;
+}
+
+function setDirty(dirty, stateLabel = "demo") {
+  state.dirty = Boolean(dirty);
+  const node = $("save-state");
+  if (!node) return;
+  node.classList.toggle("dirty", state.dirty);
+  node.classList.toggle("saved", !state.dirty && stateLabel === "saved");
+  node.textContent = state.dirty
+    ? "Modifications non enregistrées"
+    : stateLabel === "saved"
+      ? "Enregistré localement"
+      : "Projet de démonstration";
+}
+
+function markDirty() {
+  if (!state.dirty) setDirty(true);
+}
+
+function shortHash(sha) {
+  return String(sha || "").slice(0, 12) + "…";
+}
+
+function approvalBadge(label, value) {
+  const badge = document.createElement("span");
+  const status = String(value || "unresolved");
+  badge.className = "approval-badge " + (status === "approved" ? "" : status === "unresolved" || status === "not-approved" ? "unresolved" : "warn");
+  badge.textContent = `${label} : ${status === "approved" ? "approuvé" : status === "not-reviewed" ? "non revu" : status === "not-approved" ? "non approuvé" : "non résolu"}`;
+  return badge;
+}
+
+function buildProjectPanel() {
+  const meta = $("project-meta");
+  if (!meta) return;
+  meta.replaceChildren();
+  const plan = state.plan;
+  const source = plan.source || {};
+  const loop = plan.loop || {};
+  const output = plan.output || { ...DELIVERY_OUTPUT, fps: loop.fps || 24 };
+  const approvals = plan.approvals || {};
+  const grid = document.createElement("div");
+  grid.className = "project-grid";
+
+  const format = document.createElement("div");
+  format.className = "meta-row";
+  format.innerHTML = `<span>Projet</span><span>${plan.schema || "—"} · v${plan.version || "—"}</span>`;
+  grid.append(format);
+
+  const sourceRow = document.createElement("div");
+  sourceRow.className = "meta-row";
+  sourceRow.innerHTML = `<span>Image source</span><span>${source.width || "?"}×${source.height || "?"} · ${shortHash(source.sha256)}</span>`;
+  grid.append(sourceRow);
+
+  const outputRow = document.createElement("div");
+  outputRow.className = "meta-row";
+  outputRow.innerHTML = `<span>Cible de livraison</span><span>${output.width || 1280}×${output.height || 1024} · ${output.aspectRatio || "5:4"} · ${output.fps || loop.fps || 24} fps</span>`;
+  grid.append(outputRow);
+
+  const durationRow = document.createElement("div");
+  durationRow.className = "control";
+  const durationHead = document.createElement("div");
+  durationHead.className = "control-head";
+  const durationLabel = document.createElement("span");
+  durationLabel.textContent = "Durée de boucle";
+  const durationStatus = sourceBadge("intrinsic");
+  durationStatus.textContent = loop.durationSeconds === 6 ? "historique" : "à approuver";
+  durationHead.append(durationLabel, durationStatus);
+  const durationSelect = document.createElement("select");
+  const durations = [...DELIVERY_DURATIONS];
+  if (loop.durationSeconds === 6) durations.unshift(6);
+  if (!durations.includes(loop.durationSeconds)) durations.push(loop.durationSeconds);
+  for (const value of durations) {
+    const option = document.createElement("option");
+    option.value = String(value);
+    option.textContent = value === 6 ? "6 s — projet historique" : `${value} s — ${value === 10 ? "mouvement court" : value === 15 ? "mouvement long" : "à valider"}`;
+    durationSelect.append(option);
+  }
+  durationSelect.value = String(loop.durationSeconds || 12);
+  durationSelect.addEventListener("change", () => {
+    try {
+      mutate(() => setLoopDuration(state.plan, Number(durationSelect.value)), "Durée mise à jour ; elle reste non approuvée.");
+    } catch (error) {
+      toast(error.message);
+      buildProjectPanel();
+    }
+  });
+  durationRow.append(durationHead, durationSelect);
+  grid.append(durationRow);
+
+  const seedRow = document.createElement("div");
+  seedRow.className = "control";
+  const seedHead = document.createElement("div");
+  seedHead.className = "control-head";
+  const seedLabel = document.createElement("span");
+  seedLabel.textContent = "Seed déterministe (projet)";
+  seedHead.append(seedLabel, sourceBadge("project"));
+  const seedInput = document.createElement("input");
+  seedInput.type = "number";
+  seedInput.min = "0";
+  seedInput.max = "999999";
+  seedInput.step = "1";
+  seedInput.value = String(plan.seed ?? 0);
+  seedInput.addEventListener("change", () => {
+    const value = Math.max(0, Math.round(Number(seedInput.value) || 0));
+    if (value === state.plan.seed) return;
+    mutate(() => { state.plan.seed = value; }, `Seed ${value} appliqué à tout le projet.`);
+  });
+  seedRow.append(seedHead, seedInput);
+  grid.append(seedRow);
+
+  const approvalLine = document.createElement("div");
+  approvalLine.className = "approval-line";
+  approvalLine.append(
+    approvalBadge("Image", approvals.sourceImage || "not-reviewed"),
+    approvalBadge("Préparation", approvals.imagePreparation || "not-reviewed"),
+    approvalBadge("Aperçu", approvals.preview || "not-reviewed"),
+    approvalBadge("Durée", approvals.duration || "not-approved"),
+    approvalBadge("Sortie", approvals.output || "unresolved")
+  );
+  grid.append(approvalLine);
+
+  const note = document.createElement("p");
+  note.className = "delivery-note";
+  note.textContent = "La cible 1280×1024 / 5:4 est une exigence de livraison proposée, pas une dimension LED confirmée. Licence commerciale et spécifications de lecture restent non résolues. Aucun master n’est produit ici.";
+  grid.append(note);
+
+  if (Number(source.width) && Number(source.height)) {
+    const ratio = Number(source.width) / Number(source.height);
+    if (Math.abs(ratio - 1.25) > 0.002) {
+      const warning = document.createElement("p");
+      warning.className = "micro warn";
+      warning.textContent = `Source ${source.width}×${source.height} : le masque reste dans ce repère. Aucun recadrage ni redimensionnement 5:4 n’est appliqué.`;
+      grid.append(warning);
+    }
+  }
+
+  meta.append(grid);
+  $("project-format").textContent = `${plan.schema || "—"} · build ${state.build}`;
+}
+
+function updateHeaderMeta() {
+  const plan = state.plan;
+  const regions = plan.regions || [];
+  const flames = regions.filter((region) => region.role === "animated");
+  const lights = regions.filter((region) => region.role === "light-influence");
+  const protectedRegions = regions.filter((region) => region.role !== "animated" && region.role !== "light-influence");
+  $("pill-elements").textContent = `${regions.length} élément${regions.length > 1 ? "s" : ""}`;
+  $("pill-groups").textContent = `${(plan.groups || []).length} groupe${(plan.groups || []).length > 1 ? "s" : ""}`;
+  $("pill-duration").textContent = `boucle ${fmt(plan.loop?.durationSeconds || 0, 3)} s`;
+  $("pill-samples").textContent = `${plan.loop?.samples || 0} échantillons`;
+  $("build-pill").textContent = `build ${state.build}`;
+  $("build-line").textContent = `build ${state.build} · ${plan.schema || "—"} · v${plan.version || "—"}`;
+  const source = plan.source || {};
+  $("source-title").textContent = source.role === "diagnostic-background" ? "Fond diagnostique" : "Image source locale";
+  $("source-meta").innerHTML = `${source.width || "?"}×${source.height || "?"} · SHA-256 <span class="mono">${shortHash(source.sha256)}</span>`;
+  $("source-approval").textContent = source.role === "diagnostic-background"
+    ? "Candidat non approuvé, non master. Le prototype ne modifie pas le fichier."
+    : "Image importée non approuvée ; aucune préparation ni master n’est revendiqué.";
+  $("source-pill").textContent = source.role === "diagnostic-background" ? "fond non approuvé" : "image importée non approuvée";
+  $("scene-summary").textContent = `${flames.length} animés · ${lights.length} lumières · ${protectedRegions.length} protégés · ${(plan.groups || []).length} groupe${(plan.groups || []).length > 1 ? "s" : ""}`;
 }
 
 function updateHistoryButtons() {
@@ -2181,7 +3180,10 @@ function cancelEdit() {
 
 function commitEdit() {
   if (!editBefore) return false;
-  if (editDirty) history.push(editBefore);
+  if (editDirty) {
+    history.push(editBefore);
+    markDirty();
+  }
   editBefore = null;
   editDirty = false;
   updateHistoryButtons();
@@ -2194,32 +3196,210 @@ function mutate(mutator, message) {
   history.push(before);
   editBefore = null;
   editDirty = false;
+  markDirty();
   afterPlanChange(message);
+}
+
+function refreshStaticUI() {
+  syncTimeline();
+  buildProjectPanel();
+  updateHeaderMeta();
+  buildPresets();
+  buildSimpleInspector();
+  buildSceneList();
+  buildEditor();
+  buildProposals();
+  buildVariantUI();
+  syncAtmosphereUI();
+  updateHistoryButtons();
+  updateCompareUI();
 }
 
 function afterPlanChange(message) {
   ensureSelection();
-  buildPresets();
-  buildSceneList();
-  buildEditor();
-  buildProposals();
-  updateHistoryButtons();
-  updateCompareUI();
+  refreshStaticUI();
   draw();
   if (message) toast(message);
 }
+
+/* ---------- variantes A/B et contrôles contextuels ---------- */
+
+const VARIANT_SCOPES = {
+  baseline: "Référence : image, bougies, lumières liées et presets d’origine. Aucun ciel procédural.",
+  a: "A agit uniquement sur le temps : flammes, lumières explicitement liées et reflets existants. Aucune région ni liaison ajoutée.",
+  b: "B part de A, ajoute une région de ciel protégée et une atmosphère optionnelle. Flammes, architecture et cadrage ne sont pas déplacés."
+};
+
+function variantIdOfPlan(plan) {
+  if (plan?.id === VARIANT_A_ID) return "a";
+  if (plan?.id === VARIANT_B_ID) return "b";
+  if (plan?.id === PRISTINE.id) return "baseline";
+  return null;
+}
+
+function variantsAvailable() {
+  return Boolean(state.plan?.source?.sha256 === PRISTINE.source.sha256
+    && (state.plan.groups || []).some((group) => group.category === "candles"));
+}
+
+function setVariantScope(id) {
+  const node = $("variant-scope");
+  if (!node) return;
+  const text = VARIANT_SCOPES[id];
+  node.hidden = !text;
+  if (text) node.textContent = text;
+}
+
+function buildVariantUI() {
+  const bar = $("variant-bar");
+  if (!bar) return;
+  const available = variantsAvailable();
+  bar.hidden = !available;
+  if (!available) {
+    const scope = $("variant-scope");
+    if (scope) scope.hidden = true;
+    return;
+  }
+  const active = variantIdOfPlan(state.plan) || "baseline";
+  for (const button of document.querySelectorAll("[data-variant]")) {
+    button.setAttribute("aria-pressed", String(button.dataset.variant === active));
+  }
+  const status = $("variant-status");
+  if (status) status.textContent = state.plan.status === "approved-preview" ? "variante approuvée" : "brouillon non approuvé";
+  setVariantScope(active);
+}
+
+function applyVariant(id) {
+  if (!variantsAvailable() || !["baseline", "a", "b"].includes(id)) return;
+  if ((variantIdOfPlan(state.plan) || "baseline") === id) {
+    toast("Cette variante est déjà active.");
+    return;
+  }
+  const next = id === "baseline"
+    ? clone(PRISTINE)
+    : id === "a"
+      ? createOriginalAliveVariant(PRISTINE)
+      : createAtmosphericNightVariant(PRISTINE);
+  const group = next.groups.find((item) => item.category === "candles") || next.groups[0];
+  const ids = group ? group.elementIds.filter((elementId) => next.regions.some((region) => region.id === elementId)) : [];
+  mutate(() => {
+    state.plan = clone(next);
+    state.basePlan = clone(next);
+    state.selectedGroupId = group?.id || null;
+    state.selectedIds = new Set(ids);
+    state.primaryId = ids[0] || next.regions[0]?.id || null;
+    state.time = 0;
+    state.playback = 0;
+    state.edit = false;
+    state.maskTool = null;
+    state.addRegionMode = false;
+    state.compare = next.previewSettings.compare === true;
+    state.compareSplit = next.previewSettings.compareSplit || 0.5;
+    state.showRegions = next.previewSettings.showRegions !== false;
+    state.persisted = false;
+  }, id === "baseline" ? "Référence restaurée." : id === "a" ? "Variante A appliquée." : "Variante B appliquée : ciel et atmosphère ajoutés.");
+  $("scrub").value = "0";
+  $("toggle-regions").setAttribute("aria-pressed", String(state.showRegions));
+  $("add-region-cancel").hidden = true;
+  $("region-hint").hidden = true;
+  overlay.classList.remove("editing");
+}
+
+function syncAtmosphereUI() {
+  const card = $("atmosphere-card");
+  if (!card) return;
+  const config = state.plan.atmosphere;
+  card.hidden = !(variantsAvailable() && config);
+  if (card.hidden) return;
+  const enabled = config.enabled === true;
+  const intensity = clamp(Number(config.intensity) || 0, 0, 1);
+  const cycles = clamp(Math.round(Number(config.cycles) || 1), 1, 3);
+  $("atmosphere-enabled").checked = enabled;
+  $("atmosphere-intensity").value = String(intensity);
+  $("atmosphere-intensity").disabled = !enabled;
+  $("atmosphere-intensity-out").textContent = fmt(intensity, 2);
+  $("atmosphere-cycles").value = String(cycles);
+  $("atmosphere-cycles").disabled = !enabled;
+  $("atmosphere-cycles-out").textContent = `${cycles}×`;
+  $("atmosphere-stars").checked = config.stars === true;
+  $("atmosphere-stars").disabled = !enabled;
+  $("atmosphere-cool").checked = config.coolLight === true;
+  $("atmosphere-cool").disabled = !enabled;
+  $("select-sky").disabled = !(config.regionId && elementById(config.regionId));
+  $("atmosphere-note").textContent = config.note || "Approximation artistique.";
+}
+
+function editAtmosphereField(field, value) {
+  if (!state.plan.atmosphere) return;
+  beginEdit();
+  state.plan.atmosphere[field] = value;
+  editDirty = true;
+  draw();
+}
+
+function commitAtmosphereField(field, value, message) {
+  if (!state.plan.atmosphere) return;
+  if (editBefore) {
+    state.plan.atmosphere[field] = value;
+    editDirty = true;
+    commitEdit();
+    afterPlanChange(message);
+  } else {
+    mutate(() => { state.plan.atmosphere[field] = value; }, message);
+  }
+}
+
+function wireVariantControls() {
+  for (const button of document.querySelectorAll("[data-variant]")) {
+    button.addEventListener("click", () => applyVariant(button.dataset.variant));
+    button.addEventListener("mouseenter", () => setVariantScope(button.dataset.variant));
+    button.addEventListener("focus", () => setVariantScope(button.dataset.variant));
+    const restore = () => setVariantScope(variantIdOfPlan(state.plan) || "baseline");
+    button.addEventListener("mouseleave", restore);
+    button.addEventListener("blur", restore);
+  }
+  $("atmosphere-enabled").addEventListener("change", (event) => {
+    mutate(() => { state.plan.atmosphere.enabled = event.target.checked; }, event.target.checked ? "Atmosphère activée." : "Atmosphère désactivée ; le ciel reste une région protégée.");
+  });
+  $("atmosphere-intensity").addEventListener("input", (event) => {
+    const value = Number(event.target.value);
+    $("atmosphere-intensity-out").textContent = fmt(value, 2);
+    editAtmosphereField("intensity", value);
+  });
+  $("atmosphere-intensity").addEventListener("change", (event) => {
+    commitAtmosphereField("intensity", Number(event.target.value), "Intensité atmosphérique mise à jour.");
+  });
+  $("atmosphere-cycles").addEventListener("input", (event) => {
+    const value = clamp(Math.round(Number(event.target.value) || 1), 1, 3);
+    $("atmosphere-cycles-out").textContent = `${value}×`;
+    editAtmosphereField("cycles", value);
+  });
+  $("atmosphere-cycles").addEventListener("change", (event) => {
+    commitAtmosphereField("cycles", clamp(Math.round(Number(event.target.value) || 1), 1, 3), "Cycle atmosphérique mis à jour.");
+  });
+  $("atmosphere-stars").addEventListener("change", (event) => {
+    mutate(() => { state.plan.atmosphere.stars = event.target.checked; }, event.target.checked ? "Étoiles optionnelles activées." : "Étoiles désactivées.");
+  });
+  $("atmosphere-cool").addEventListener("change", (event) => {
+    mutate(() => { state.plan.atmosphere.coolLight = event.target.checked; }, event.target.checked ? "Lumière froide optionnelle activée." : "Lumière froide optionnelle désactivée.");
+  });
+  $("select-sky").addEventListener("click", () => {
+    const regionId = state.plan.atmosphere?.regionId;
+    if (!regionId || !elementById(regionId)) return toast("Région de ciel introuvable.");
+    selectElement(regionId);
+    toast("Région du ciel sélectionnée ; modifiez son support dans Avancé.");
+  });
+}
+
+wireVariantControls();
 
 function undo() {
   const previous = history.undo(clone(state.plan));
   if (!previous) return;
   state.plan = previous;
   ensureSelection();
-  buildPresets();
-  buildSceneList();
-  buildEditor();
-  buildProposals();
-  updateHistoryButtons();
-  updateCompareUI();
+  markDirty();
+  refreshStaticUI();
   draw();
   toast("Édition annulée.");
 }
@@ -2229,12 +3409,8 @@ function redo() {
   if (!next) return;
   state.plan = next;
   ensureSelection();
-  buildPresets();
-  buildSceneList();
-  buildEditor();
-  buildProposals();
-  updateHistoryButtons();
-  updateCompareUI();
+  markDirty();
+  refreshStaticUI();
   draw();
   toast("Édition rétablie.");
 }
@@ -2289,7 +3465,7 @@ function ensureSelection() {
     const group = selectedGroup();
     if (group) state.selectedIds = new Set(group.elementIds.filter((id) => ids.has(id)));
   }
-  if (groups().length === 1 && !state.selectedGroupId && state.selectedIds.size === state.plan.regions.length) {
+  if (groups().length === 1 && !state.selectedGroupId && !state.primaryId && state.selectedIds.size === state.plan.regions.length) {
     state.selectedGroupId = groups()[0].id;
   }
 }
@@ -2306,9 +3482,15 @@ function selectGroup(groupId) {
   state.maskTool = null;
   state.vertexIndex = null;
   overlay.classList.remove("editing");
+  buildPresets();
+  buildSimpleInspector();
   buildSceneList();
   buildEditor();
   drawOverlay();
+  requestAnimationFrame(() => {
+    const row = document.querySelector(`.group-select[data-group="${group.id}"]`);
+    if (row) row.focus({ preventScroll: true });
+  });
 }
 
 function selectElement(id, additive = false) {
@@ -2332,9 +3514,62 @@ function selectElement(id, additive = false) {
   state.maskTool = null;
   state.vertexIndex = null;
   overlay.classList.remove("editing");
+  buildPresets();
+  buildSimpleInspector();
   buildSceneList();
   buildEditor();
   drawOverlay();
+  requestAnimationFrame(() => {
+    const row = document.querySelector(`.region-row[data-id="${id}"]`);
+    if (row) row.focus({ preventScroll: true });
+  });
+}
+
+function setAddRegionMode(active) {
+  state.addRegionMode = Boolean(active);
+  if (state.addRegionMode) {
+    state.edit = false;
+    state.maskTool = null;
+    state.vertexIndex = null;
+  }
+  overlay.classList.toggle("editing", state.addRegionMode || state.edit);
+  const button = $("add-region");
+  button.textContent = state.addRegionMode ? "Tracer sur l’image…" : "Nouvelle région";
+  button.setAttribute("aria-pressed", String(state.addRegionMode));
+  $("add-region-cancel").hidden = !state.addRegionMode;
+  $("region-hint").hidden = !state.addRegionMode;
+}
+
+function ensureDefaultGroup() {
+  const current = selectedGroup() || groups()[0];
+  if (current) return current;
+  const group = createGroup(state.plan, { id: "group.scene", label: "Scène" });
+  state.selectedGroupId = group.id;
+  return group;
+}
+
+function addGroupAction() {
+  let created = null;
+  mutate(() => {
+    created = createGroup(state.plan, { label: `Groupe ${state.plan.groups.length + 1}` });
+    state.selectedGroupId = created.id;
+    state.selectedIds = new Set();
+    state.primaryId = null;
+  }, "Groupe ajouté. Les régions peuvent maintenant lui être affectées.");
+  return created;
+}
+
+function removeCurrentElement() {
+  const element = primaryElement();
+  if (!element) return;
+  mutate(() => {
+    removeRegion(state.plan, element.id);
+    state.selectedIds.delete(element.id);
+    state.primaryId = [...state.selectedIds].find((id) => elementById(id)) || state.plan.regions[0]?.id || null;
+    if (state.selectedGroupId === element.groupId && !state.plan.groups.some((group) => group.id === element.groupId)) {
+      state.selectedGroupId = null;
+    }
+  }, "Région supprimée du projet ; Annuler permet de la restaurer.");
 }
 
 function isAnimated(element) {
@@ -2351,18 +3586,23 @@ function sceneItem(element, group) {
   row.dataset.id = element.id;
   row.setAttribute("aria-pressed", String(state.selectedIds.has(element.id)));
   const overrides = countLeaves(element.overrides);
+  const recipe = recipeOf(element);
+  const supported = isSupportedRecipe(recipe) && recipe !== "protect";
   const linked = element.role === "animated"
     ? state.plan.regions.filter((light) => light.role === "light-influence" && (light.sources || []).includes(element.id)).length
     : (element.sources || []).length;
-  const status = element.operation === "protect" ? "protégé"
-    : element.operation === "transform" ? "transform. proposée"
-      : !isAnimated(element) ? "statique" : "";
-  row.innerHTML = `<span class="swatch ${element.role === "animated" ? "flame" : "light"}"></span>
+  const status = !isSupportedRecipe(recipe) ? "proposée, non exécutable"
+    : recipe === "protect" ? "protégé"
+      : element.operation === "protect" ? "protégé"
+        : element.operation === "transform" ? "transform. proposée"
+          : !isAnimated(element) ? "statique" : "";
+  const kind = element.role === "animated" ? "flame" : element.role === "light-influence" ? "light" : "protected";
+  row.innerHTML = `<span class="swatch ${kind}"></span>
     <span class="scene-label">${element.label}</span>
-    ${status ? `<span class="mini-badge ${element.operation}">${status}</span>` : ""}
+    ${status ? `<span class="mini-badge ${!isSupportedRecipe(recipe) ? "proposed" : element.operation === "protect" ? "protect" : element.operation}">${status}</span>` : ""}
     ${overrides ? `<span class="mini-badge override">${overrides} surch.</span>` : ""}
     ${element.role === "animated" && !linked ? `<span class="mini-badge warn">sans lumière</span>` : ""}
-    <span class="rid">${element.id.replace(/^(flame|light)\./, "")}</span>`;
+    <span class="rid">${element.id.replace(/^(flame|light|region)\./, "")}</span>`;
   row.addEventListener("click", (event) => {
     selectElement(element.id, event.shiftKey || event.metaKey || event.ctrlKey);
   });
@@ -2370,6 +3610,7 @@ function sceneItem(element, group) {
   toggle.type = "checkbox";
   toggle.className = "anim-toggle";
   toggle.checked = isAnimated(element);
+  toggle.disabled = !isSupportedRecipe(recipe) || recipe === "protect";
   toggle.title = "Activer ou désactiver l’animation sans masquer l’élément";
   toggle.setAttribute("aria-label", `Animer ${element.label}`);
   toggle.addEventListener("click", (event) => event.stopPropagation());
@@ -2386,6 +3627,12 @@ function sceneItem(element, group) {
 function buildSceneList() {
   const list = $("region-list");
   list.replaceChildren();
+  if (!groups().length) {
+    const empty = document.createElement("p");
+    empty.className = "micro";
+    empty.textContent = "Projet vide : ajoutez un groupe et tracez une région sur l’image. Une région est protégée par défaut.";
+    list.append(empty);
+  }
   for (const group of groups()) {
     const groupRow = document.createElement("div");
     groupRow.className = "group-row";
@@ -2401,12 +3648,17 @@ function buildSceneList() {
     const select = document.createElement("button");
     select.type = "button";
     select.className = "group-select";
+    select.dataset.group = group.id;
     const preset = presetFor(group);
-    select.innerHTML = `<span class="group-mark">◆</span><span><strong>${group.label}</strong><small>${group.elementIds.length} éléments · preset ${preset.label} v${preset.version}</small></span>`;
+    const presetText = preset ? `preset ${preset.label} v${preset.version}` : "sans preset de recette";
+    select.innerHTML = `<span class="group-mark">◆</span><span><strong>${group.label}</strong><small>${group.elementIds.length} éléments · ${presetText}</small></span>`;
     select.addEventListener("click", () => selectGroup(group.id));
     groupRow.append(toggle, select);
     list.append(groupRow);
-    for (const [role, label] of [["animated", "Flammes"], ["light-influence", "Lumières"]]) {
+    const sections = group.category === "candles"
+      ? [["animated", "Flammes"], ["light-influence", "Lumières"]]
+      : [["animated", "Animés"], ["light-influence", "Lumières"], ["protected", "Protégés"]];
+    for (const [role, label] of sections) {
       const section = document.createElement("div");
       section.className = "scene-section";
       const elements = group.elementIds.map(elementById).filter((element) => element && element.role === role);
@@ -2417,19 +3669,456 @@ function buildSceneList() {
   }
   const flames = state.plan.regions.filter((element) => element.role === "animated");
   const lights = state.plan.regions.filter((element) => element.role === "light-influence");
+  const protectedRegions = state.plan.regions.filter((element) => element.role !== "animated" && element.role !== "light-influence");
   $("region-count").textContent = `${state.plan.regions.length} éléments · ${state.selectedIds.size} sélectionné(s)`;
-  $("scene-summary").textContent = `${flames.length} flammes · ${lights.length} lumières · ${groups().length} groupe`;
+  $("scene-summary").textContent = `${flames.length} animés · ${lights.length} lumières · ${protectedRegions.length} protégés · ${groups().length} groupe${groups().length > 1 ? "s" : ""}`;
+}
+
+/* ---------- presets ---------- */
+
+/* ---------- panneau simple ---------- */
+
+function scopeContext() {
+  const group = selectedGroup();
+  if (group) return { kind: "group", group };
+  const elements = selectedElements();
+  if (elements.length === 1) return { kind: "element", element: elements[0], group: groupFor(elements[0]) };
+  if (elements.length > 1) return { kind: "multi", elements, group: groupFor(elements[0]) };
+  return { kind: "none" };
+}
+
+function groupElements(group) {
+  return (group?.elementIds || []).map(elementById).filter(Boolean);
+}
+
+function groupFlames(group) {
+  return groupElements(group).filter((element) => element.role === "animated" && isCandleRecipe(recipeOf(element)));
+}
+
+function groupLights(group) {
+  return groupElements(group).filter((element) => element.role === "light-influence" && isCandleRecipe(recipeOf(element)));
+}
+
+function linkedLightCount(element) {
+  return state.plan.regions.filter((candidate) => candidate.role === "light-influence" && (candidate.sources || []).includes(element.id)).length;
+}
+
+function simpleHeading(parent, title, kind) {
+  const head = document.createElement("div");
+  head.className = "simple-head";
+  const strong = document.createElement("strong");
+  strong.className = "simple-title";
+  strong.textContent = title;
+  const span = document.createElement("span");
+  span.className = "simple-kind";
+  span.textContent = kind;
+  head.append(strong, span);
+  parent.append(head);
+}
+
+function simpleNote(parent, text, kind = "") {
+  const note = document.createElement("p");
+  note.className = "simple-note" + (kind ? " " + kind : "");
+  note.textContent = text;
+  parent.append(note);
+  return note;
+}
+
+function simpleActions(parent, buttons) {
+  const row = document.createElement("div");
+  row.className = "simple-actions";
+  for (const spec of buttons) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn small " + (spec.className || "ghost");
+    button.textContent = spec.label;
+    button.disabled = Boolean(spec.disabled);
+    button.addEventListener("click", spec.onClick);
+    row.append(button);
+  }
+  parent.append(row);
+}
+
+function simpleChoice(parent, options) {
+  const wrap = document.createElement("div");
+  wrap.className = "segmented";
+  for (const option of options) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "seg-btn";
+    button.disabled = Boolean(option.disabled);
+    button.setAttribute("aria-pressed", String(Boolean(option.active)));
+    const title = document.createElement("strong");
+    title.textContent = option.label;
+    button.append(title);
+    if (option.note) {
+      const note = document.createElement("small");
+      note.textContent = option.note;
+      button.append(note);
+    }
+    button.addEventListener("click", option.onClick);
+    wrap.append(button);
+  }
+  parent.append(wrap);
+}
+
+function simpleToggle(parent, labelText, checked, onChange, note, disabled = false) {
+  const row = document.createElement("label");
+  row.className = "toggle-row simple-toggle";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.checked = Boolean(checked);
+  input.disabled = Boolean(disabled);
+  input.addEventListener("change", () => onChange(input.checked));
+  const span = document.createElement("span");
+  span.textContent = labelText;
+  row.append(input, span);
+  if (note) {
+    const small = document.createElement("small");
+    small.textContent = note;
+    row.append(small);
+  }
+  parent.append(row);
+  return input;
+}
+
+function simpleRange(parent, options) {
+  const wrap = document.createElement("div");
+  wrap.className = "simple-control";
+  const head = document.createElement("div");
+  head.className = "simple-control-head";
+  const label = document.createElement("span");
+  label.textContent = options.label;
+  const output = document.createElement("output");
+  const format = options.format || ((value) => fmt(value, options.digits ?? 2));
+  output.textContent = format(Number(options.value));
+  head.append(label, output);
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = String(options.min);
+  input.max = String(options.max);
+  input.step = String(options.step);
+  input.value = String(options.value);
+  input.setAttribute("aria-label", options.label);
+  input.addEventListener("pointerdown", beginEdit);
+  input.addEventListener("focus", beginEdit);
+  input.addEventListener("input", () => {
+    const value = Number(input.value);
+    options.onInput(value);
+    editDirty = true;
+    markDirty();
+    output.textContent = format(value);
+    draw();
+  });
+  input.addEventListener("change", () => {
+    if (commitEdit()) {
+      markDirty();
+      updateHeaderMeta();
+    }
+  });
+  wrap.append(head, input);
+  if (options.note) {
+    const note = document.createElement("p");
+    note.className = "micro";
+    note.textContent = options.note;
+    wrap.append(note);
+  }
+  parent.append(wrap);
+  return input;
+}
+
+function simpleProtectionSummary(parent, rows) {
+  const wrap = document.createElement("div");
+  wrap.className = "protection-list";
+  for (const row of rows) {
+    const line = document.createElement("div");
+    line.className = "protection-row";
+    const label = document.createElement("span");
+    label.textContent = row.label;
+    const chip = document.createElement("span");
+    chip.className = "status-chip " + (row.kind || "");
+    chip.textContent = row.value;
+    line.append(label, chip);
+    wrap.append(line);
+  }
+  parent.append(wrap);
+}
+
+function openAdvanced() {
+  const details = $("advanced-details");
+  if (!details) return;
+  details.open = true;
+  details.scrollIntoView({ block: "start" });
+}
+
+function buildSimpleInspector() {
+  const box = $("simple-inspector");
+  if (!box) return;
+  box.replaceChildren();
+  const meta = $("simple-selection-meta");
+  if (meta) meta.textContent = "";
+  const context = scopeContext();
+  if (context.kind === "none") {
+    if (meta) meta.textContent = "aucune sélection";
+    simpleNote(box, "Sélectionnez un groupe ou une région dans la scène, ou cliquez directement dans l’image. Les réglages avancés restent disponibles plus bas.");
+    return;
+  }
+  if (context.kind === "multi") {
+    buildSimpleMulti(box, context.elements, meta);
+    return;
+  }
+  if (context.kind === "element") {
+    buildSimpleElement(box, context.element, context.group, meta);
+    return;
+  }
+  buildSimpleGroup(box, context.group, meta);
+}
+
+function buildSimpleGroup(box, group, meta) {
+  const candle = group.category === "candles";
+  const elements = groupElements(group);
+  const flames = groupFlames(group);
+  const lights = groupLights(group);
+  const preset = presetFor(group);
+  const animatedFlames = flames.filter((element) => isAnimated(element));
+  const groupOn = group.animationEnabled !== false;
+  if (meta) meta.textContent = `${elements.length} élément${elements.length > 1 ? "s" : ""}`;
+  simpleHeading(box, group.label, candle ? "groupe bougies" : "groupe générique");
+  simpleNote(box, candle
+    ? `${flames.length} flamme(s) · ${lights.length} lumière(s)${preset ? ` · preset ${preset.label} v${preset.version}` : ""}.`
+    : "Ce projet ne définit aucun preset animé. Les régions restent protégées par défaut ; l’animation n’est pas disponible.");
+
+  simpleToggle(box, "Animer ce groupe", groupOn, (checked) => {
+    mutate(() => { group.animationEnabled = checked; }, checked
+      ? "Groupe animé ; les réglages et les supports sont conservés."
+      : "Groupe figé : tous les pixels du groupe restent ceux de l’image. Réglages et liaisons conservés.");
+  }, groupOn ? "Désactiver fige tous les pixels du groupe sans rien supprimer." : "Tous les pixels du groupe sont protégés. Réactivez pour retrouver l’aperçu animé.");
+
+  if (!candle) {
+    simpleNote(box, "Aucune recette animée pour ce projet. « Garder immobile » est l’état par défaut des régions.", "warn");
+    simpleProtectionSummary(box, [
+      { label: "Position de l’image", value: "fixe", kind: "locked" },
+      { label: "Apparence", value: "protégée", kind: "locked" },
+      { label: "Lumière", value: "figée", kind: "" },
+      { label: "Animation", value: groupOn ? "autorisée" : "désactivée", kind: groupOn ? "" : "locked" }
+    ]);
+  } else {
+    const probe = { groupId: group.id, overrides: {} };
+    const intensity = Number(resolveField(state.plan, probe, "intensity").value);
+    const speed = Number(resolveField(state.plan, probe, "flame.harmonic").value);
+    simpleRange(box, {
+      label: "Intensité",
+      value: intensity,
+      min: 0.2, max: 1.8, step: 0.01, digits: 2,
+      onInput: (value) => { setPath(group.settings, "intensity", value); },
+      note: "Intensité partagée par le groupe ; une surcharge d’élément reste prioritaire."
+    });
+    simpleRange(box, {
+      label: "Vitesse",
+      value: speed,
+      min: 1, max: 4, step: 1,
+      format: (value) => `${value}×`,
+      onInput: (value) => { setPath(group.settings, "flame.harmonic", value); },
+      note: "Fréquence harmonique commune. 1× est le mouvement le plus lent."
+    });
+
+    const linked = lights.filter((light) => (light.sources || []).length > 0);
+    const lightingOn = groupOn && animatedFlames.length > 0 && lights.length > 0 && lights.every((light) => light.operation !== "protect");
+    const lightingAvailable = groupOn && animatedFlames.length > 0 && linked.length > 0;
+    const lightingNote = !groupOn
+      ? "Tous les pixels du groupe sont protégés : la lumière ne peut pas changer."
+      : animatedFlames.length === 0
+        ? "Aucune flamme animée : la lumière ne peut pas varier."
+        : linked.length === 0
+          ? "Aucune lumière n’est liée à une flamme. Ajoutez une liaison dans Avancé."
+          : `${linked.length} lumière(s) liée(s) peuvent suivre les flammes. Désactiver fige la lumière sans effacer les liaisons.`;
+    simpleToggle(box, "Autoriser les changements de lumière", lightingOn, (checked) => {
+      mutate(() => {
+        for (const light of lights) light.operation = checked ? "animate" : "protect";
+      }, checked ? "La lumière peut suivre les flammes liées." : "Lumière figée ; les liaisons sont conservées.");
+    }, lightingNote, !lightingAvailable);
+
+    simpleProtectionSummary(box, [
+      { label: "Position de l’image", value: "fixe", kind: "locked" },
+      { label: "Apparence", value: animatedFlames.length ? "animée" : "protégée", kind: animatedFlames.length ? "on" : "locked" },
+      { label: "Lumière", value: lightingOn ? "peut varier" : "figée", kind: lightingOn ? "on" : "" },
+      { label: "Animation", value: groupOn ? "activée" : "désactivée", kind: groupOn ? "on" : "locked" }
+    ]);
+  }
+
+  const actions = [];
+  if (!groupOn) {
+    actions.push({ label: "Réactiver l’animation", className: "primary", onClick: () => mutate(() => { group.animationEnabled = true; }, "Animation du groupe réactivée ; les réglages sont conservés.") });
+  } else if (candle) {
+    actions.push({
+      label: "Protéger tous les pixels",
+      onClick: () => {
+        const ok = window.confirm("Protéger tous les pixels fige l’aperçu de ce groupe : aucune flamme ni lumière ne sera redessinée. Les éléments, les supports, les réglages et les liaisons sont conservés. Continuer ?");
+        if (ok) mutate(() => { group.animationEnabled = false; }, "Tous les pixels du groupe sont protégés ; réglages conservés.");
+      }
+    });
+  }
+  actions.push({ label: "Réglages avancés", className: "ghost", onClick: openAdvanced });
+  simpleActions(box, actions);
+}
+
+function buildSimpleElement(box, element, group, meta) {
+  const recipe = recipeOf(element);
+  const supported = isCandleRecipe(recipe) && isSupportedRecipe(recipe);
+  const isFlame = element.role === "animated";
+  const isLight = element.role === "light-influence";
+  const animated = isAnimated(element);
+  const groupOn = !group || group.animationEnabled !== false;
+  const preset = presetFor(group);
+  if (meta) meta.textContent = element.id;
+
+  simpleHeading(box, element.label, isFlame ? "flamme" : isLight ? "lumière" : "région protégée");
+  simpleNote(box, group
+    ? `Groupe ${group.label}${preset ? ` · preset ${preset.label} v${preset.version}` : ""}.`
+    : "Aucun groupe.");
+
+  if (!supported && recipe !== "protect") {
+    simpleNote(box, "Recette proposée mais non exécutable dans cette passe. Les pixels d’origine restent protégés ; choisissez « Garder immobile » ou convertissez la recette dans Avancé.", "warn");
+  }
+  if (recipe === "protect") {
+    simpleNote(box, "Région protégée : aucune écriture de rendu. Choisissez une recette supportée dans Avancé si cette zone doit animer une flamme ou une lumière.");
+  }
+
+  if (supported) {
+    const still = element.operation === "protect";
+    simpleChoice(box, [
+      {
+        label: "Garder immobile",
+        note: "Pixels et apparence d’origine",
+        active: still,
+        onClick: () => mutate(() => { element.operation = "protect"; }, "Élément figé : ses pixels d’origine restent visibles. Réglages et liaisons conservés.")
+      },
+      {
+        label: isLight ? "Suivre les flammes" : "Animer",
+        note: isFlame ? "Recette bougie supportée" : isLight ? "Lumière liée aux flammes" : "Recette supportée",
+        active: !still,
+        onClick: () => mutate(() => {
+          element.operation = "animate";
+          delete element.animationEnabled;
+        }, isLight ? "La lumière peut suivre ses flammes liées." : "Élément animé avec la recette supportée.")
+      }
+    ]);
+
+    simpleToggle(box, "Animation activée", animated, (checked) => {
+      mutate(() => {
+        const groupEnabled = group ? group.animationEnabled !== false : true;
+        if (checked === groupEnabled) delete element.animationEnabled;
+        else element.animationEnabled = checked;
+      }, checked ? "Animation activée ; l’élément reste dans la scène." : "Animation désactivée ; l’élément statique reste visible.");
+    }, element.operation === "protect"
+      ? "L’élément est protégé : aucune écriture de rendu."
+      : !groupOn
+        ? "Le groupe est figé : réactivez-le pour voir le mouvement."
+        : "", element.operation === "protect");
+  }
+
+  if (isFlame && element.operation !== "protect") {
+    const intensity = Number(resolveField(state.plan, element, "intensity").value);
+    const speed = Number(resolveField(state.plan, element, "flame.harmonic").value);
+    simpleRange(box, {
+      label: "Intensité (surcharge)",
+      value: intensity,
+      min: 0.2, max: 1.8, step: 0.01, digits: 2,
+      onInput: (value) => { setPath(element.overrides, "intensity", value); },
+      note: "Cette valeur locale prime sur le groupe et le preset."
+    });
+    simpleRange(box, {
+      label: "Vitesse (surcharge)",
+      value: speed,
+      min: 1, max: 4, step: 1,
+      format: (value) => `${value}×`,
+      onInput: (value) => { setPath(element.overrides, "flame.harmonic", value); },
+      note: "Fréquence harmonique locale ; ↺ dans Avancé retire la surcharge."
+    });
+  }
+
+  if (isLight) {
+    const sources = (element.sources || []).length;
+    const lightingAvailable = sources > 0 && groupOn;
+    simpleToggle(box, "Autoriser les changements de lumière", element.operation !== "protect" && lightingAvailable, (checked) => {
+      mutate(() => { element.operation = checked ? "animate" : "protect"; }, checked ? "Cette lumière peut varier avec ses flammes." : "Lumière figée ; ses liaisons sont conservées.");
+    }, !groupOn
+      ? "Le groupe est figé : la lumière ne peut pas changer."
+      : sources === 0
+        ? "Aucune flamme liée : ajoutez une liaison dans Avancé."
+        : `${sources} flamme(s) liée(s).`, !lightingAvailable);
+  }
+
+  if (isFlame) {
+    const linked = linkedLightCount(element);
+    simpleNote(box, linked
+      ? `${linked} lumière(s) liée(s) suivent cet élément. Le détail des liaisons est dans Avancé.`
+      : "Aucune lumière liée : la flamme peut bouger sans éclairage local cohérent.");
+  }
+
+  if (element.operation === "transform") {
+    simpleNote(box, "Transformation conservée dans le projet mais non exécutable. Choisissez un comportement supporté pour la remplacer.", "warn");
+  }
+
+  simpleProtectionSummary(box, [
+    { label: "Position de l’image", value: "fixe", kind: "locked" },
+    { label: "Apparence", value: animated ? "animée" : "protégée", kind: animated ? "on" : "locked" },
+    { label: "Lumière", value: isLight ? (element.operation !== "protect" ? "peut varier" : "figée") : linkedLightCount(element) ? "liée" : "figée", kind: (isLight ? element.operation !== "protect" : linkedLightCount(element) > 0) ? "on" : "" },
+    { label: "Animation", value: animated ? "activée" : "désactivée", kind: animated ? "on" : "locked" }
+  ]);
+
+  const actions = [];
+  if (!groupOn) actions.push({ label: "Réactiver le groupe", className: "primary", onClick: () => mutate(() => { if (group) group.animationEnabled = true; }, "Groupe réactivé ; les réglages sont conservés.") });
+  if (group) actions.push({ label: "Voir le groupe", onClick: () => selectGroup(group.id) });
+  actions.push({ label: "Avancé", className: "ghost", onClick: openAdvanced });
+  simpleActions(box, actions);
+}
+
+function buildSimpleMulti(box, elements, meta) {
+  const flames = elements.filter((element) => element.role === "animated").length;
+  const lights = elements.filter((element) => element.role === "light-influence").length;
+  const movable = elements.filter((element) => isSupportedRecipe(recipeOf(element)) && recipeOf(element) !== "protect");
+  if (meta) meta.textContent = `${elements.length} éléments`;
+  simpleHeading(box, `${elements.length} éléments sélectionnés`, `${flames} flamme(s) · ${lights} lumière(s)`);
+  simpleNote(box, "Les réglages partagés se modifient sur le groupe ou sur un seul élément. Les actions ci-dessous s’appliquent à toute la sélection.");
+  simpleActions(box, [
+    { label: "Animer la sélection", className: "primary", disabled: !movable.length, onClick: () => mutate(() => {
+      for (const element of movable) {
+        element.operation = "animate";
+        delete element.animationEnabled;
+      }
+    }, "Sélection animée avec les recettes supportées.") },
+    { label: "Garder immobile", onClick: () => mutate(() => {
+      for (const element of elements) element.operation = "protect";
+    }, "Sélection figée ; les pixels d’origine restent visibles.") },
+    { label: "Voir le groupe", className: "ghost", onClick: () => selectGroup(groupFor(elements[0])?.id) }
+  ]);
+  if (!movable.length) simpleNote(box, "Aucune recette animée supportée dans cette sélection. Les éléments restent protégés.", "warn");
+  simpleProtectionSummary(box, [
+    { label: "Position de l’image", value: "fixe", kind: "locked" },
+    { label: "Apparence", value: elements.some((element) => isAnimated(element)) ? "partiellement animée" : "protégée", kind: elements.some((element) => isAnimated(element)) ? "on" : "locked" },
+    { label: "Lumière", value: lights ? "selon les liaisons" : "figée", kind: lights ? "on" : "" },
+    { label: "Animation", value: elements.some((element) => isAnimated(element)) ? "partielle" : "désactivée", kind: elements.some((element) => isAnimated(element)) ? "on" : "locked" }
+  ]);
 }
 
 /* ---------- presets ---------- */
 
 function buildPresets() {
   const grid = $("preset-grid");
+  const section = $("preset-section");
+  if (!grid) return;
   grid.replaceChildren();
-  const group = selectedGroup() || groups()[0];
+  const group = selectedGroup();
+  const supportedGroup = Boolean(group && group.category === "candles");
+  if (section) section.hidden = !supportedGroup;
+  if (!supportedGroup) {
+    if ($("preset-meta")) $("preset-meta").textContent = group ? `${group.label} · aucun preset` : "aucun groupe";
+    return;
+  }
   const preset = presetFor(group);
-  const items = state.plan.presets.filter((item) => !group || item.category === group.category);
-  for (const item of items.length ? items : state.plan.presets) {
+  const items = state.plan.presets.filter((item) => item.category === group.category);
+  for (const item of items) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "preset";
@@ -2439,7 +4128,13 @@ function buildPresets() {
     button.addEventListener("click", () => applyPreset(item.id));
     grid.append(button);
   }
-  $("preset-meta").textContent = group ? `${group.label} · ${preset.label} v${preset.version}` : `${state.plan.presets.length} presets`;
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "micro";
+    empty.textContent = "Aucun preset pour ce groupe : les réglages restent manuels.";
+    grid.append(empty);
+  }
+  $("preset-meta").textContent = group ? `${group.label} · ${preset ? `${preset.label} v${preset.version}` : "sans preset"}` : `${state.plan.presets.length} preset(s)`;
 }
 
 function applyPreset(id) {
@@ -2533,6 +4228,7 @@ function addSharedRange(parent, context, path, options) {
     const value = Number(input.value);
     setPath(target, path, value);
     editDirty = true;
+    markDirty();
     output.textContent = format(value);
     badge.className = "source-badge src-" + (context.kind === "group" ? "group" : "element");
     badge.textContent = context.kind === "group" ? "groupe" : "surchargé";
@@ -2607,6 +4303,7 @@ function addIntrinsicRange(parent, labelText, getValue, setValue, options = {}) 
     const value = Number(input.value);
     setValue(value);
     editDirty = true;
+    markDirty();
     output.textContent = format(value);
     draw();
   });
@@ -2702,14 +4399,57 @@ function buildEditor() {
   editor.append(empty);
 }
 
+function addGroupNameControl(parent, group) {
+  const wrap = document.createElement("div");
+  wrap.className = "control";
+  const head = document.createElement("div");
+  head.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = "Nom du groupe";
+  head.append(label, sourceBadge("intrinsic"));
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = group.label;
+  input.addEventListener("change", () => {
+    const value = input.value.trim();
+    if (!value || value === group.label) return;
+    mutate(() => { group.label = value; }, "Groupe renommé.");
+  });
+  wrap.append(head, input);
+  parent.append(wrap);
+}
+
 function buildGroupEditor(editor, group) {
   const preset = presetFor(group);
   const head = document.createElement("div");
   head.className = "editor-head";
-  head.innerHTML = `<strong>${group.label}</strong><span>${group.elementIds.length} éléments · preset ${preset.label} v${preset.version}</span>`;
+  head.innerHTML = `<strong>${group.label}</strong><span>${group.elementIds.length} éléments · ${preset ? `preset ${preset.label} v${preset.version}` : "sans preset"}</span>`;
   editor.append(head);
+  addGroupNameControl(editor, group);
+  if (group.category !== "candles") {
+    addNote(editor, "Groupe générique : les réglages communs du projet (durée, seed, approbations) sont dans « Détails du projet ». Ce groupe ne reçoit aucun paramètre de flamme.");
+    addToggle(editor, "Animer le groupe", group.animationEnabled !== false, (checked) => {
+      mutate(() => { group.animationEnabled = checked; }, checked ? "Groupe animé." : "Groupe statique ; les éléments restent visibles.");
+    }, "S’applique aux recettes supportées du groupe ; une région protégée reste inchangée.");
+    addButtonRow(editor, [
+      { label: "Ajouter une région", onClick: () => setAddRegionMode(true) }
+    ]);
+    addSection(editor, "Éléments du groupe");
+    if (!group.elementIds.length) addNote(editor, "Aucun élément. Utilisez « Ajouter une région » puis dessinez sur l’image.", "warn");
+    for (const id of group.elementIds) {
+      const element = elementById(id);
+      if (!element) continue;
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "btn small ghost";
+      row.textContent = element.label;
+      row.addEventListener("click", () => selectElement(element.id));
+      editor.append(row);
+    }
+    return;
+  }
   addNote(editor, "Groupe sélectionné. Les réglages ci-dessous deviennent la couche groupe ; chaque élément peut les surcharger. Précédence : élément > groupe > preset.");
-  addGroupPresetSelect(editor, group);
+  if (preset) addGroupPresetSelect(editor, group);
   addToggle(editor, "Animer le groupe", group.animationEnabled !== false, (checked) => {
     mutate(() => { group.animationEnabled = checked; }, checked ? "Groupe animé." : "Groupe statique ; tous les éléments restent visibles.");
   }, "Désactiver ne masque aucune flamme ni lumière.");
@@ -2727,7 +4467,6 @@ function buildGroupEditor(editor, group) {
   addSharedRange(editor, { kind: "group", group }, "wind.direction", { label: "Direction du vent", min: 0, max: 360, step: 1, digits: 0, unit: "°" });
   addSharedRange(editor, { kind: "group", group }, "wind.strength", { label: "Force du vent", min: 0, max: 0.6, step: 0.005, digits: 2 });
   addSharedRange(editor, { kind: "group", group }, "flame.windResponse", { label: "Réponse au vent (défaut)", min: 0, max: 1.8, step: 0.01, digits: 2 });
-  addSeed(editor);
   addSection(editor, "Lumière locale");
   addSharedRange(editor, { kind: "group", group }, "lightScale", { label: "Échelle de lumière", min: 0.1, max: 2.5, step: 0.01, digits: 2 });
   addSharedRange(editor, { kind: "group", group }, "lightModulation", { label: "Modulation de lumière", min: 0, max: 0.8, step: 0.005, digits: 2 });
@@ -2744,10 +4483,11 @@ function buildGroupEditor(editor, group) {
 
 function buildMultiEditor(editor, elements) {
   const flames = elements.filter((element) => element.role === "animated").length;
-  const lights = elements.length - flames;
+  const lights = elements.filter((element) => element.role === "light-influence").length;
+  const protectedElements = elements.length - flames - lights;
   const head = document.createElement("div");
   head.className = "editor-head";
-  head.innerHTML = `<strong>${elements.length} éléments sélectionnés</strong><span>${flames} flammes · ${lights} lumières</span>`;
+  head.innerHTML = `<strong>${elements.length} éléments sélectionnés</strong><span>${flames} animés · ${lights} lumières · ${protectedElements} protégés</span>`;
   editor.append(head);
   addNote(editor, "Sélection multiple. Les réglages partagés se modifient dans l’inspecteur du groupe ou sur un seul élément ; les actions ci-dessous s’appliquent à toute la sélection.");
   addButtonRow(editor, [
@@ -2778,10 +4518,13 @@ function addOperationControl(parent, element) {
   const badge = sourceBadge("intrinsic");
   head.append(label, badge);
   const select = document.createElement("select");
-  for (const [value, text] of [["animate", "Animer"], ["protect", "Protéger"], ["transform", "Transformer (proposé, non exécutable)"]]) {
+  const operationChoices = [["animate", "Animer"], ["protect", "Garder immobile"]];
+  if (element.operation === "transform") operationChoices.push(["transform", "Transformer — conservé, non exécutable"]);
+  for (const [value, text] of operationChoices) {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = text;
+    if (value === "transform") option.disabled = true;
     select.append(option);
   }
   select.value = element.operation || "animate";
@@ -2809,6 +4552,7 @@ function addTransformPlan(parent, element) {
     element.transformPlan.description = area.value;
     element.transformPlan.status = "proposed";
     editDirty = true;
+    markDirty();
   });
   area.addEventListener("change", () => {
     if (commitEdit()) setProjectStatus("ok", "Plan de transformation enregistré comme proposition non exécutable.");
@@ -2916,14 +4660,193 @@ function addSupportTools(parent, element) {
   ]);
 }
 
+function recipeDisplayName(recipe) {
+  return recipe === "candle-flame" ? "Flamme — bougies (supportée)"
+    : recipe === "candle-light" ? "Lumière chaude — bougies (supportée)"
+      : recipe === "protect" ? "Protéger — support seulement (supportée)"
+        : recipe === "foliage" ? "Feuillage (proposée, non exécutable)"
+          : recipe === "fabric" ? "Tissu (proposée, non exécutable)"
+            : recipe === "camera-transform" ? "Caméra / transformation (proposée, non exécutable)"
+              : `${recipe} (non exécutable)`;
+}
+
+function supportBounds(element) {
+  const points = element?.support?.points || [];
+  if (!points.length) return { x0: 0.35, y0: 0.35, x1: 0.65, y1: 0.65, cx: 0.5, cy: 0.5 };
+  const xs = points.map(([x]) => x);
+  const ys = points.map(([, y]) => y);
+  const x0 = Math.min(...xs);
+  const x1 = Math.max(...xs);
+  const y0 = Math.min(...ys);
+  const y1 = Math.max(...ys);
+  return { x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
+}
+
+function convertElementRecipe(element, recipe) {
+  const b = supportBounds(element);
+  element.recipe = recipe;
+  if (recipe === "candle-flame") {
+    element.role = "animated";
+    element.category = "flame";
+    element.operation = "protect";
+    element.anchor = [b.cx, b.y1];
+    element.height = Math.max(0.012, b.y1 - b.y0);
+    element.width = Math.max(0.004, b.x1 - b.x0);
+    element.size = 1;
+    element.motion = { action: "flame-shape", phase: 0.5 };
+    element.render = { method: "procedural-flame-v1", suppression: 0.92, workingSpace: "linear" };
+    element.notes = "Recette bougies supportée, activée seulement après passage explicite à Animer. Vérifier l’ancre et le support avant lecture.";
+  } else if (recipe === "candle-light") {
+    element.role = "light-influence";
+    element.category = "light";
+    element.operation = "protect";
+    element.center = [b.cx, b.cy];
+    element.radii = [Math.max(0.005, (b.x1 - b.x0) / 2), Math.max(0.005, (b.y1 - b.y0) / 2)];
+    element.sources = [];
+    element.motion = { action: "warm-pool", phase: 0.2 };
+    element.render = { method: "local-warm-pool-v1", gain: 0.008, color: [1, 0.42, 0.12], falloff: 1.6, workingSpace: "linear" };
+    element.notes = "Lumière chaude supportée, inactive sans source liée. Aucune source n’est inventée automatiquement.";
+  } else if (recipe === "protect") {
+    element.role = "protected";
+    element.category = "other";
+    element.operation = "protect";
+    delete element.anchor;
+    delete element.height;
+    delete element.width;
+    delete element.size;
+    delete element.center;
+    delete element.radii;
+    delete element.sources;
+    element.motion = { action: "none", phase: 0 };
+    element.render = { method: "none", workingSpace: "linear" };
+    element.notes = "Région protégée : aucune recette n’écrit de pixel. Le support reste modifiable manuellement.";
+  } else {
+    element.role = "protected";
+    element.category = recipe === "foliage" || recipe === "fabric" ? recipe : "other";
+    element.operation = "protect";
+    delete element.anchor;
+    delete element.height;
+    delete element.width;
+    delete element.size;
+    delete element.center;
+    delete element.radii;
+    delete element.sources;
+    element.motion = { action: "none", phase: 0 };
+    element.render = { method: "none", workingSpace: "linear" };
+    element.notes = "Recette proposée, non exécutable dans cette passe : aucun renderer feuillage, tissu ou transformation n’est branché. Le support reste protégé.";
+  }
+  delete element.animationEnabled;
+  delete element.transformPlan;
+  return element;
+}
+
+function addElementNameControl(parent, element) {
+  const wrap = document.createElement("div");
+  wrap.className = "control";
+  const head = document.createElement("div");
+  head.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = "Nom de la région";
+  head.append(label, sourceBadge("intrinsic"));
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = element.label;
+  input.addEventListener("change", () => {
+    const value = input.value.trim();
+    if (!value || value === element.label) return;
+    mutate(() => { element.label = value; }, "Région renommée.");
+  });
+  wrap.append(head, input);
+  parent.append(wrap);
+}
+
+function addGroupSelectControl(parent, element) {
+  const allGroups = groups();
+  if (!allGroups.length) return;
+  const wrap = document.createElement("div");
+  wrap.className = "control";
+  const head = document.createElement("div");
+  head.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = "Groupe";
+  head.append(label, sourceBadge("intrinsic"));
+  const select = document.createElement("select");
+  for (const group of allGroups) {
+    const option = document.createElement("option");
+    option.value = group.id;
+    option.textContent = group.label;
+    select.append(option);
+  }
+  select.value = element.groupId;
+  select.addEventListener("change", () => {
+    if (select.value === element.groupId) return;
+    mutate(() => { attachRegionToGroup(state.plan, element, select.value); }, "Groupe de la région mis à jour.");
+  });
+  wrap.append(head, select);
+  parent.append(wrap);
+}
+
+function buildGenericElementEditor(editor, element) {
+  const group = groupFor(element);
+  const recipe = recipeOf(element);
+  const head = document.createElement("div");
+  head.className = "editor-head";
+  head.innerHTML = `<strong>${element.label}</strong><span>${element.id}</span>`;
+  editor.append(head);
+  addNote(editor, group ? `Groupe ${group.label} · ${recipeDisplayName(recipe)}.` : recipeDisplayName(recipe));
+  addElementNameControl(editor, element);
+  addGroupSelectControl(editor, element);
+  addSection(editor, "Recette et opération");
+  const wrap = document.createElement("div");
+  wrap.className = "control";
+  const headRow = document.createElement("div");
+  headRow.className = "control-head";
+  const label = document.createElement("span");
+  label.textContent = "Recette";
+  headRow.append(label, sourceBadge("intrinsic"));
+  const select = document.createElement("select");
+  const recipeChoices = ["protect", "candle-flame", "candle-light"];
+  if (!isSupportedRecipe(recipe)) recipeChoices.unshift(recipe);
+  for (const value of recipeChoices) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = recipeDisplayName(value);
+    if (!isSupportedRecipe(value)) {
+      option.disabled = true;
+      option.textContent = `${recipeDisplayName(value)} — conservée, non exécutable`;
+    }
+    select.append(option);
+  }
+  select.value = recipe;
+  select.addEventListener("change", () => {
+    mutate(() => { convertElementRecipe(element, select.value); }, select.value === "protect" ? "Région protégée ; aucun rendu." : isSupportedRecipe(select.value) ? "Recette supportée sélectionnée ; activez Animer après contrôle." : "Recette proposée enregistrée ; aucun renderer n’est branché.");
+  });
+  wrap.append(headRow, select);
+  editor.append(wrap);
+  if (recipe === "protect") {
+    addNote(editor, "Protéger : aucune écriture procédurale. Le support et les pixels d’origine restent inchangés.", "ok");
+  } else if (!isSupportedRecipe(recipe)) {
+    addNote(editor, "Cette recette est une proposition de format. Aucun renderer feuillage/tissu/transformation n’est branché ; l’aperçu ne bougera pas.", "warn");
+  }
+  addSection(editor, "Support et corrections manuelles");
+  addSupportTools(editor, element);
+  addSection(editor, "Suppression");
+  addButtonRow(editor, [{ label: "Supprimer la région", onClick: removeCurrentElement }]);
+}
+
 function buildElementEditor(editor, element) {
+  if (!isCandleRecipe(recipeOf(element))) {
+    buildGenericElementEditor(editor, element);
+    return;
+  }
   const group = groupFor(element);
   const preset = presetFor(group);
   const head = document.createElement("div");
   head.className = "editor-head";
   head.innerHTML = `<strong>${element.label}</strong><span>${element.id}</span>`;
   editor.append(head);
-  addNote(editor, `Groupe ${group.label} · preset ${preset.label} v${preset.version} · ${element.role === "animated" ? "flamme" : "lumière"}.`);
+  addElementNameControl(editor, element);
+  addNote(editor, `Groupe ${group?.label || "—"} · ${preset ? `preset ${preset.label} v${preset.version}` : "sans preset"} · ${element.role === "animated" ? "flamme" : "lumière"}.`);
   const groupLink = document.createElement("button");
   groupLink.type = "button";
   groupLink.className = "btn small ghost";
@@ -2987,6 +4910,9 @@ function buildElementEditor(editor, element) {
     } }
   ]);
   addNote(editor, `${countLeaves(element.overrides)} surcharge(s) locale(s). Une surcharge d’élément prime sur le groupe et sur le preset.`);
+  addSection(editor, "Appartenance et suppression");
+  addGroupSelectControl(editor, element);
+  addButtonRow(editor, [{ label: "Supprimer la région", onClick: removeCurrentElement }]);
 }
 
 function setMaskTool(tool) {
@@ -3150,7 +5076,7 @@ function drawOverlay() {
       }
     }
   }
-  if (drag && drag.kind === "rect") {
+  if (drag && (drag.kind === "rect" || drag.kind === "new-region")) {
     const x0 = Math.min(drag.start.nx, drag.current.nx) * W;
     const y0 = Math.min(drag.start.ny, drag.current.ny) * H;
     const x1 = Math.max(drag.start.nx, drag.current.nx) * W;
@@ -3205,6 +5131,12 @@ function addBrushPoint(element, point) {
 overlay.addEventListener("pointerdown", (event) => {
   if (!state.ready) return;
   const point = canvasPoint(event);
+  if (state.addRegionMode) {
+    drag = { kind: "new-region", start: point, current: point };
+    overlay.setPointerCapture(event.pointerId);
+    drawOverlay();
+    return;
+  }
   const element = primaryElement();
   if (state.edit && element && state.maskTool) {
     if (state.maskTool === "polygon") {
@@ -3266,6 +5198,9 @@ overlay.addEventListener("pointermove", (event) => {
   } else if (drag.kind === "rect") {
     drag.current = point;
     drawOverlay();
+  } else if (drag.kind === "new-region") {
+    drag.current = point;
+    drawOverlay();
   } else if (drag.kind === "brush") {
     if (addBrushPoint(drag.element, point)) {
       editDirty = true;
@@ -3278,6 +5213,38 @@ function endDrag() {
   if (!drag) return;
   const current = drag;
   drag = null;
+  if (current.kind === "new-region") {
+    const x0 = Math.min(current.start.nx, current.current.nx);
+    const x1 = Math.max(current.start.nx, current.current.nx);
+    const y0 = Math.min(current.start.ny, current.current.ny);
+    const y1 = Math.max(current.start.ny, current.current.ny);
+    if (x1 - x0 > 0.002 && y1 - y0 > 0.002) {
+      let created = null;
+      mutate(() => {
+        const group = ensureDefaultGroup();
+        created = createProtectedRegion(state.plan, {
+          groupId: group.id,
+          label: `Région ${state.plan.regions.length + 1}`,
+          points: [
+            [Number(x0.toFixed(4)), Number(y0.toFixed(4))],
+            [Number(x1.toFixed(4)), Number(y0.toFixed(4))],
+            [Number(x1.toFixed(4)), Number(y1.toFixed(4))],
+            [Number(x0.toFixed(4)), Number(y1.toFixed(4))]
+          ]
+        });
+        state.selectedGroupId = null;
+        state.selectedIds = new Set([created.id]);
+        state.primaryId = created.id;
+      }, "Région protégée ajoutée. Aucune animation n’est activée.");
+    } else {
+      toast("Tracé trop petit : recommencez.");
+    }
+    setAddRegionMode(false);
+    buildSceneList();
+    buildEditor();
+    drawOverlay();
+    return;
+  }
   if (current.kind === "rect") {
     const x0 = Math.min(current.start.nx, current.current.nx);
     const x1 = Math.max(current.start.nx, current.current.nx);
@@ -3393,6 +5360,7 @@ $("reset").addEventListener("click", () => {
   state.playback = 0;
   state.edit = false;
   state.maskTool = null;
+  state.addRegionMode = false;
   state.compare = state.plan.previewSettings.compare === true;
   state.compareSplit = state.plan.previewSettings.compareSplit || 0.5;
   state.showRegions = state.plan.previewSettings.showRegions !== false;
@@ -3401,17 +5369,13 @@ $("reset").addEventListener("click", () => {
   $("scrub").value = "0";
   $("toggle-regions").setAttribute("aria-pressed", String(state.showRegions));
   overlay.classList.remove("editing");
-  T = state.plan.loop.durationSeconds;
-  FPS = state.plan.loop.fps;
-  N = state.plan.loop.samples;
-  $("scrub").max = String(T);
-  buildPresets();
-  buildSceneList();
-  buildEditor();
-  buildProposals();
-  updateHistoryButtons();
-  updateCompareUI();
+  syncTimeline();
+  refreshStaticUI();
+  setAddRegionMode(false);
+  overlay.classList.remove("editing");
   draw();
+  const demo = state.currentAsset?.origin === "declared-diagnostic";
+  setDirty(!state.persisted && !demo, demo ? "demo" : "saved");
   toast("Projet de base restauré ; temps remis à zéro.");
 });
 $("scrub").addEventListener("input", (event) => {
@@ -3436,11 +5400,16 @@ $("compare-split").addEventListener("input", (event) => {
 });
 $("undo").addEventListener("click", undo);
 $("redo").addEventListener("click", redo);
+$("add-group").addEventListener("click", addGroupAction);
+$("add-region").addEventListener("click", () => setAddRegionMode(!state.addRegionMode));
+$("add-region-cancel").addEventListener("click", () => setAddRegionMode(false));
 
 /* ---------- projet JSON ---------- */
 
 function projectFileName() {
-  return "candle-motion-project-v2.json";
+  return state.plan.groups?.some((group) => group.category === "candles")
+    ? "candle-motion-project-v2.json"
+    : "scene-motion-project-v2.json";
 }
 
 function downloadProject() {
@@ -3448,7 +5417,7 @@ function downloadProject() {
   const group = selectedGroup() || groups()[0];
   project.previewSettings = {
     ...project.previewSettings,
-    preset: group?.presetId || project.previewSettings.preset,
+    preset: group?.presetId || project.previewSettings?.preset || "none",
     showRegions: state.showRegions,
     compare: state.compare,
     compareSplit: state.compareSplit
@@ -3464,24 +5433,15 @@ function downloadProject() {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   setProjectStatus("ok", "Projet exporté en JSON versionné ; aucune image dupliquée.");
+  state.persisted = true;
+  setDirty(false, "saved");
   toast("Projet JSON exporté.");
 }
 
 async function verifySourceAsset(project) {
-  const path = String(project.source.path || "");
-  if (!path || /^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(path) || path.startsWith("data:")) {
-    throw new Error("Chemin source non local refusé ; le projet doit référencer l’asset du prototype.");
-  }
   if (!state.ready) throw new Error("Le fond n’est pas encore décodé.");
-  const target = new URL("../../../" + path.replace(/^\.\//, ""), location.href);
-  if (target.origin !== location.origin) throw new Error("La source doit rester sur l’origine locale du prototype.");
-  const response = await fetch(target.href, { cache: "no-store" });
-  if (!response.ok) throw new Error(`Asset source introuvable (${response.status}).`);
-  const bytes = await response.arrayBuffer();
-  if (!globalThis.crypto?.subtle) throw new Error("SHA-256 indisponible dans ce navigateur ; import bloqué.");
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  const sha256 = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
-  const compatibility = checkSourceCompatibility(project, { sha256, width: W, height: H });
+  if (!state.currentAsset) throw new Error("Aucune image source active. Importez l’image locale avant le projet.");
+  const compatibility = checkSourceCompatibility(project, state.currentAsset);
   if (!compatibility.ok) throw new Error(compatibility.message);
   return compatibility;
 }
@@ -3502,26 +5462,23 @@ async function loadProjectFile(file) {
     state.playback = 0;
     state.edit = false;
     state.maskTool = null;
+    state.addRegionMode = false;
     state.compare = project.previewSettings.compare === true;
     state.compareSplit = project.previewSettings.compareSplit || 0.5;
     state.showRegions = project.previewSettings.showRegions !== false;
-    T = project.loop.durationSeconds;
-    FPS = project.loop.fps;
-    N = project.loop.samples;
     history.clear();
     editBefore = null;
-    $("scrub").max = String(T);
     $("scrub").value = "0";
     $("toggle-regions").setAttribute("aria-pressed", String(state.showRegions));
     overlay.classList.remove("editing");
-    buildPresets();
-    buildSceneList();
-    buildEditor();
-    buildProposals();
-    updateHistoryButtons();
-    updateCompareUI();
+    $("add-region-cancel").hidden = true;
+    $("region-hint").hidden = true;
+    syncTimeline();
+    refreshStaticUI();
     draw();
     setProjectStatus("ok", "Projet chargé : asset compatible (dimensions et SHA-256).");
+    state.persisted = true;
+    setDirty(false, "saved");
     toast("Projet chargé.");
   } catch (error) {
     setProjectStatus("bad", error.message);
@@ -3538,11 +5495,107 @@ $("project-file").addEventListener("change", () => {
   if (file) loadProjectFile(file);
 });
 
+/* ---------- import d’image locale ---------- */
+
+function loadImageElement(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Image locale illisible ou format non décodable."));
+    image.src = src;
+  });
+}
+
+function sha256Hex(bytes) {
+  if (!globalThis.crypto?.subtle) throw new Error("SHA-256 indisponible dans ce navigateur ; import bloqué.");
+  return crypto.subtle.digest("SHA-256", bytes).then((digest) => [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join(""));
+}
+
+async function importLocalImage(file) {
+  if (!file) return;
+  if (!/^image\/(png|jpeg|webp)$/.test(file.type)) throw new Error("Format refusé : PNG, JPEG ou WebP attendu.");
+  stopPlayback();
+  setProjectStatus("pending", "Lecture de l’image locale, dimensions et SHA-256…");
+  const bytes = await file.arrayBuffer();
+  const sha256 = await sha256Hex(bytes);
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await loadImageElement(objectUrl);
+    const width = image.naturalWidth;
+    const height = image.naturalHeight;
+    if (!(width > 0) || !(height > 0)) throw new Error("Dimensions de l’image invalides.");
+    const project = createEmptyProject({
+      id: `local-${sha256.slice(0, 12)}`,
+      path: `local/${file.name}`,
+      sha256,
+      width,
+      height,
+      colorSpace: "sRGB navigateur (non certifié)",
+      role: "local-import"
+    }, { duration: 12, fps: 24, seed: 4243 });
+    configureCanvas(width, height);
+    baseCtx.clearRect(0, 0, W, H);
+    baseCtx.drawImage(image, 0, 0, W, H);
+    try {
+      baseRGBA = baseCtx.getImageData(0, 0, W, H).data;
+    } catch (error) {
+      showLoadError("Lecture pixel impossible", "Le navigateur bloque la lecture de cette image. Servez la page avec un serveur statique local.");
+      throw error;
+    }
+    state.currentAsset = { sha256, width, height, path: `local/${file.name}`, origin: "local-file" };
+    state.plan = project;
+    state.basePlan = clone(project);
+    state.selectedGroupId = null;
+    state.selectedIds = new Set();
+    state.primaryId = null;
+    state.time = 0;
+    state.playback = 0;
+    state.edit = false;
+    state.maskTool = null;
+    state.addRegionMode = false;
+    state.compare = false;
+    state.compareSplit = 0.5;
+    state.showRegions = true;
+    history.clear();
+    editBefore = null;
+    $("load-state").hidden = true;
+    $("toggle-regions").setAttribute("aria-pressed", "true");
+    $("add-region-cancel").hidden = true;
+    $("region-hint").hidden = true;
+    overlay.classList.remove("editing");
+    state.ready = true;
+    setReady("ok", "image locale prête · rendu déterministe");
+    setProjectStatus("ok", "Projet vide créé depuis l’image locale ; image et durée non approuvées.");
+    state.persisted = false;
+    setDirty(true);
+    syncTimeline();
+    refreshStaticUI();
+    draw();
+    toast("Image importée : projet vide, aucune région, aucun redimensionnement.");
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+    $("image-file").value = "";
+  }
+}
+
+$("import-image").addEventListener("click", () => $("image-file").click());
+$("image-file").addEventListener("change", async () => {
+  const file = $("image-file").files?.[0];
+  try {
+    await importLocalImage(file);
+  } catch (error) {
+    setProjectStatus("bad", error.message);
+    toast(error.message);
+  }
+});
+
 /* ---------- chargement du fond ---------- */
 
 const img = new Image();
 img.decoding = "async";
 img.onload = () => {
+  configureCanvas(PLAN_JSON.source.width, PLAN_JSON.source.height);
   baseCtx.drawImage(img, 0, 0, W, H);
   try {
     baseRGBA = baseCtx.getImageData(0, 0, W, H).data;
@@ -3555,23 +5608,26 @@ img.onload = () => {
     return;
   }
   outImage = viewCtx.createImageData(W, H);
+  state.currentAsset = {
+    sha256: PLAN_JSON.source.sha256,
+    width: W,
+    height: H,
+    path: PLAN_JSON.source.path,
+    origin: "declared-diagnostic"
+  };
   $("load-state").hidden = true;
   state.ready = true;
   setReady("ok", "prêt · rendu déterministe");
   setProjectStatus("ok", "Projet v2 chargé · asset de diagnostic non approuvé.");
-  buildPresets();
-  buildSceneList();
-  buildEditor();
-  buildProposals();
-  updateHistoryButtons();
-  updateCompareUI();
+  syncTimeline();
+  refreshStaticUI();
   draw();
   if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) startPlayback();
 };
 img.onerror = () => {
   showLoadError(
     "Fond introuvable",
-    "Le fichier reconstruction-seed-4243.png n’est pas accessible depuis cette page. Vérifiez le chemin relatif du plan.",
+    `Le fichier ${PLAN_JSON.source.path} n’est pas accessible depuis cette page. Vérifiez le chemin relatif du plan, ou importez une image locale.`,
   );
   setReady("bad", "fond introuvable");
 };
@@ -3639,8 +5695,13 @@ async function runChecks() {
   const b = new Uint8ClampedArray(base.length);
   const query = clone(state.plan);
 
+  if (!query.groups.length || !query.regions.length) {
+    addCheck("warn", "<strong>Projet générique</strong> — aucune région ou aucun groupe : ajoutez une région protégée avant de lancer les contrôles bougies.");
+    return;
+  }
+
   addCheck("", `Projet : <strong>${query.regions.filter((r) => r.role === "animated").length} flammes</strong>, ${query.regions.filter((r) => r.role === "light-influence").length} lumières, ${query.groups.length} groupe, ${query.presets.length} presets, T = ${fmt(T, 3)} s, N = ${N}.`);
-  addCheck("", "Vérifications calculées à 320×256 pour la boucle et le mouvement, puis à 1280×1024 natif pour la protection.");
+  addCheck("", `Vérifications calculées à 320×256 pour la boucle et le mouvement, puis à ${W}×${H} natif pour la protection.`);
   await new Promise((r) => setTimeout(r, 0));
 
   const precedence = clone(query);
@@ -3697,8 +5758,8 @@ async function runChecks() {
   addCheck(velMean < 1.5 ? "ok" : "warn",
     `<strong>Continuité au bord</strong> — pas avant / après : écart moyen ${fmt(velMean, 3)} niveau(x), max ${fmt(velMax, 0)}. Mesure de continuité, pas un seuil artistique.`);
 
-  const mask = supportMask(query, CW, CH);
-  const probeTimes = [0, 0.75, 1.5, 2.37, 4.5, 5.999];
+  const mask = renderWriteMask(query, CW, CH);
+  const probeTimes = [0, 0.125, 0.25, 0.375, 0.5, 0.75, 0.999].map((fraction) => fraction * T);
   let violations = 0;
   let violationMax = 0;
   for (const time of probeTimes) {
@@ -3750,7 +5811,7 @@ async function runChecks() {
   const meanLum = sumLum / sampleCount;
   const lumRange = maxLum > 0 ? (maxLum - minLum) / meanLum : 0;
 
-  const nativeItem = addCheck("", "<strong>Contrôle natif 1280×1024</strong> — calcul en cours…");
+  const nativeItem = addCheck("", `<strong>Contrôle natif ${W}×${H}</strong> — calcul en cours…`);
   await new Promise((r) => setTimeout(r, 16));
   const nativeA = new Uint8ClampedArray(baseRGBA.length);
   const nativeB = new Uint8ClampedArray(baseRGBA.length);
@@ -3759,10 +5820,10 @@ async function runChecks() {
   let nativeLoopMax = 0;
   for (let i = 0; i < nativeA.length; i++) nativeLoopMax = Math.max(nativeLoopMax, Math.abs(nativeA[i] - nativeB[i]));
   renderFrame(baseRGBA, query, 1.5, { width: W, height: H, out: nativeB });
-  const nativeMask = supportMask(query, W, H, ["animated", "light-influence"], { activeOnly: true });
+  const nativeMask = renderWriteMask(query, W, H);
   const nativeDiff = outsideDiff(nativeB, baseRGBA, nativeMask);
   nativeItem.className = nativeLoopMax === 0 && nativeDiff.count === 0 ? "ok" : "bad";
-  nativeItem.innerHTML = `<strong>Protection native 1280×1024</strong> — boucle écart max ${nativeLoopMax}/255 ; hors supports ${nativeDiff.count} octet(s), écart max ${nativeDiff.max}. Contrôle sur le fond décodé réel.`;
+  nativeItem.innerHTML = `<strong>Protection native ${W}×${H}</strong> — boucle écart max ${nativeLoopMax}/255 ; hors supports ${nativeDiff.count} octet(s), écart max ${nativeDiff.max}. Contrôle sur le fond décodé réel.`;
 
   const metrics = $("metrics");
   metrics.classList.add("visible");
@@ -3786,6 +5847,7 @@ $("run-checks").addEventListener("click", runChecks);
 
 window.addEventListener("keydown", (event) => {
   const editingField = event.target.matches("input, textarea, select");
+  const interactiveTarget = event.target.closest("button, a, summary, [role='button'], [role='link']");
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
     if (editingField) return;
     event.preventDefault();
@@ -3802,19 +5864,31 @@ window.addEventListener("keydown", (event) => {
     }
     return;
   }
-  if (event.code !== "Space" || editingField) return;
+  if (event.code !== "Space" || editingField || interactiveTarget) return;
   event.preventDefault();
   if (state.playing) stopPlayback();
   else startPlayback();
 });
 
+window.addEventListener("beforeunload", (event) => {
+  if (!state.dirty) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
+
 $("scrub").max = String(T);
+syncTimeline();
+buildProjectPanel();
+updateHeaderMeta();
 buildPresets();
+buildSimpleInspector();
 buildSceneList();
 buildEditor();
 buildProposals();
 updateHistoryButtons();
 updateCompareUI();
+buildVariantUI();
+syncAtmosphereUI();
 drawOverlay();
 </script>
 </body>
