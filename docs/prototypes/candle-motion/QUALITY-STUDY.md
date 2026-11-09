@@ -1,7 +1,9 @@
 # Étude de mouvement — air partagé, A corrigée et atmosphère B
 
-**Date :** 9 novembre 2026  
-**Branche :** `feature/motion-quality-study`  
+**Date :** 9 novembre 2026
+
+**Branche :** `feature/motion-quality-study`
+
 **Statut :** étude supervisée — **aucun master image ou vidéo approuvé**
 
 ## 1. Verdict enregistré
