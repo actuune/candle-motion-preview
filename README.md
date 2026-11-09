@@ -11,9 +11,9 @@ approuvée**.
 
 ## Ouvrir la page
 
-Une fois GitHub Pages activé sur la branche `main`, dossier `/` (racine) :
+La page est publiée par GitHub Pages (branche `main`, dossier `/`) :
 
-`https://<compte>.github.io/candle-motion-preview/docs/prototypes/candle-motion/`
+`https://actuune.github.io/candle-motion-preview/docs/prototypes/candle-motion/`
 
 La racine du site redirige vers cette page. En local :
 
